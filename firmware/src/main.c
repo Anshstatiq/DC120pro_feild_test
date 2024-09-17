@@ -7187,7 +7187,7 @@ void Start_FLASH_READ_TASK(void *argument) {
                         switch (flashreadmsg.PAGE_VIEW) {
                             case 1:
                                 Update_page4_line1_data(CHARGING_DATA_ARRAY_17_32);
-                                //WDT_Clear();
+       
                                 break;
                             case 2:
                                 Update_page4_line2_data(CHARGING_DATA_ARRAY_17_32);
