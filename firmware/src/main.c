@@ -7184,7 +7184,6 @@ void Start_FLASH_READ_TASK(void *argument) {
                     case 3:
                         Write_Sno_for_page4();
                         Update_page4_data(CHARGING_DATA_ARRAY_17_32);
-                        //WDT_Clear();
                         switch (flashreadmsg.PAGE_VIEW) {
                             case 1:
                                 Update_page4_line1_data(CHARGING_DATA_ARRAY_17_32);
