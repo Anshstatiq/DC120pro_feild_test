@@ -116,7 +116,13 @@ void Change_gun2_status_to(uint8_t status) {
     msg.DATA[4] = 0x12;
     msg.DATA[5] = 0x07;
     msg.DATA[7] = status;
-    xQueueSend(HMI_SEND_QUEUE, &msg, 100);
+    vTaskSuspend(HMI_SEND_TASKHandle);
+    ENABLE_HMI_Set();
+    SERCOM6_USART_Write(msg.DATA, (msg.DATA[2] + 3));
+    while (!(SERCOM6_USART_TransmitComplete()))
+        ;
+    ENABLE_HMI_Clear();
+    vTaskResume(HMI_SEND_TASKHandle);
 }
 
 void Change_Page_to(uint8_t page_no) {
