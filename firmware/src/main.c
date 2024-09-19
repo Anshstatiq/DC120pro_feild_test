@@ -320,7 +320,6 @@ void RFID_CALLBACK(uintptr_t context) {
 void HMI_CALLBACK(uintptr_t context) {
     ERROR_CODE_ARRAY[HMI_COMM_FAIL_IDX] = 0;
     xTimerStop(hmi_timer, 10);
-
     memcpy(hmi_msg.hmi_buff, hmi_rx, sizeof (hmi_rx));
     hmixYieldRequired = xTaskResumeFromISR(HMI_RX_TASKHandle);
     xQueueSendFromISR(HMI_RX_QUEUE, &hmi_msg, &hmixYieldRequired);
@@ -433,7 +432,6 @@ void MainsCallback(TimerHandle_t xTimer) {
     ERROR_CODE_ARRAY[MAIN_FAIL_IDX] = 101;
     CURRENT_PAGE = MAINS_FAIL_PAGE;
     Change_Page_to(CURRENT_PAGE);
-    page_change[2] = 1;
     vTaskResume(EMERGENCY_TASKHandle);
     if (mains_count < 4) {
         xTimerStart(live_mains_timer, 30000);
@@ -449,24 +447,24 @@ void RGB2_CALLBACK(uintptr_t context) {
 }
 
 void EMERGENCY_BUTTON_CALLBACK(uintptr_t context) {
-    xTimerStart(emergency_timer,2000);
+    xTimerStart(emergency_timer, 2000);
 }
 
 void GFCI_CALLBACK(uintptr_t context) {
-    xTimerStart(emergency_timer,2000);
+    xTimerStart(emergency_timer, 2000);
 }
 
 /**CALLBACK FUNCTION FOR SPD**/
 void SPD_DETECTION(uintptr_t context) {
-    xTimerStart(emergency_timer,2000);
+    xTimerStart(emergency_timer, 2000);
 }
 
 void IMD1_CALLBACK(uintptr_t context) {
-    xTimerStart(emergency_timer,2000);
+    xTimerStart(emergency_timer, 2000);
 }
 
 void IMD2_CALLBACK(uintptr_t context) {
-    xTimerStart(emergency_timer,2000);
+    xTimerStart(emergency_timer, 2000);
 }
 
 void EMERGENCY_TIMER_CALL(TimerHandle_t xTimer) {
@@ -745,7 +743,7 @@ int main(void) {
     HMI_DATA_T = xTimerCreate("HMI_DATA_T", 25, pdFALSE, (void *) 0, hmi_data_timercall);
     esp_data_timer = xTimerCreate("esp_data_timer", 200, pdFALSE, (void *) 0, esp_data_callback);
     rfid_send_timer = xTimerCreate("rfid_send_timer", 2000, pdFALSE, (void *) 0, rfid_send_callback);
-    emergency_timer = xTimerCreate("emergency_timer",2000,pdFALSE,(void *)0,EMERGENCY_TIMER_CALL);
+    emergency_timer = xTimerCreate("emergency_timer", 2000, pdFALSE, (void *) 0, EMERGENCY_TIMER_CALL);
 
     xTaskCreate(StartDefaultTask, "StartDefaultTask", 512, NULL, 1, &defaultTaskHandle); // 2048-256
     xTaskCreate(Start_50msecTask, "Start50msecTask", 128, NULL, 1, &_50msecTask); // 1024-512
@@ -1537,7 +1535,11 @@ void StartDefaultTask(void *argument) {
                 if (EMERGENCY_BUT_Get()) {
                     ERROR_CODE_ARRAY[ESD_PRESSED_IDX] = 0;
                     Update_Esd_Pressed_Status(0x00);
-                    page_change[0] = 0;
+                    if (page_change[0] == 1) {
+                        page_change[0] = 0;
+                        CURRENT_PAGE = INTRO_PAGE;
+                        Change_Page_to(CURRENT_PAGE);
+                    }
                     vTaskDelay(100);
                 } else {
                     START_STOP_AR[0] = 4;
@@ -1710,10 +1712,6 @@ void StartDefaultTask(void *argument) {
                     ERROR_CODE_ARRAY[ALL_DC_METER_FAIL_IDX] = 135;
                 }
                 MACHINE_STATE = PLUGIN_STATE;
-                if (page_change[0] == 0 && page_change[1] == 0 && page_change[2] == 0) {
-                    CURRENT_PAGE = INTRO_PAGE;
-                    Change_Page_to(CURRENT_PAGE);
-                }
                 break;
             case PLUGIN_STATE:
                 EIC_CallbackRegister(EIC_PIN_5, RGB1_CALLBACK, 0);
@@ -3767,7 +3765,7 @@ void Start_RGB_SEND_TASK(void *argument) {
         if (xQueueReceive(COLOR2_QUEUE, &color2msg, 0)) {
             COLOR2 = color2msg.COLOR2;
         }
-        if(mains_fail_led == 1){
+        if (mains_fail_led == 1) {
             COLOR = RED;
             COLOR2 = RED2;
         }
@@ -3987,8 +3985,8 @@ void StartCANrecieveTask(void *argument) {
     vTaskResume(SMOKE_LIMIT_TASKHandle);
     vTaskDelay(1000);
     ////////HMI/////////////
-    Change_Page_to(CURRENT_PAGE);
-    vTaskDelay(100);
+    //    Change_Page_to(CURRENT_PAGE);
+    //    vTaskDelay(100);
     Change_gun1_status_to(AVAILABLE);
     vTaskDelay(100);
     Change_gun2_status_to(AVAILABLE);
@@ -4788,7 +4786,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 vTaskDelay(10);
 
                 /////////HMI/////////////////////
-                Change_Page_to(CURRENT_PAGE);
+                Change_Page_to(GUN1_PARAM_PAGE);
 
                 //                }
                 if (xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0)) {
@@ -5647,7 +5645,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 xQueueSend(_50msQUEUE, &_50msmsg, 100);
                 vTaskDelay(100);
                 /////////HMI/////////////////////
-                Change_Page_to(CURRENT_PAGE);
+                Change_Page_to(GUN2_PARAM_PAGE);
 
                 //                }
                 if (xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0)) {
