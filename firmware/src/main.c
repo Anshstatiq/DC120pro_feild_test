@@ -5637,6 +5637,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         vTaskDelay(100);
                         Update_GUN2_Charging_Start_sec(sec);
                         vTaskDelay(100);
+                                
                         STARTING_UNIT = IMPORT_ENERGY2;
                         vTaskResume(LED_TASKHandle);
                         flashmsg.START_DATE = (year << 16) | (month << 8) | day;
@@ -5650,6 +5651,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         Change_Page_to(GUN2_FAILING_REASON_PAGE);
                     }
                 }
+                
+                
                 break;
             case _2_PLC_STATE_CURRENT_DEMAND_1:
                 FAN_ON(30000);
