@@ -56,8 +56,6 @@ TaskHandle_t DATA_POPULATE_TASKHandle;
 TaskHandle_t AC_METER_SEND_TASKHandle;
 TaskHandle_t DC1_METER_SEND_TASKHandle;
 TaskHandle_t DC2_METER_SEND_TASKHandle;
-
-
 QueueHandle_t GUN_DATAQUEUE = NULL;
 QueueHandle_t METER_QUEUE = NULL;
 QueueHandle_t ESP_QUEUE = NULL;
