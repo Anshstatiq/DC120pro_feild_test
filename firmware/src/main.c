@@ -4814,7 +4814,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         flashmsg.START_TIME = (hour << 16) | (minute << 8) | sec;
                     }
                     if (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE || _c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR || _c10bmsg._10B_SECC_STATUS3_t == seccStatus_IDLE) {
-                        CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+                        CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_1;
                         Stop_Code = 310;
                         Stop_connector_no = 1;
                         Update_GUN1_Session_End_Reason(0x08);
