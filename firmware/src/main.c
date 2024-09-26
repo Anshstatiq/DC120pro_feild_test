@@ -773,7 +773,7 @@ int main(void) {
     xTaskCreate(Start_GUN2_PARAM_TASK, "Start_GUN2_PARAM_TASK", 128, NULL, 2, &GUN2_PARAM_TASKHandle);
     xTaskCreate(Start_FLASH_READ_TASK, "Start_FLASH_READ_TASK", 1536, NULL, 1, &FLASH_READ_TASKHandle);
     xTaskCreate(Start_FLASH_WRITE_TASK, "Start_FLASH_WRITE_TASK", 1536, NULL, 3, &FLASH_WRITE_TASKHandle);
-    xTaskCreate(Start_DATA_POPULATE_TASK, "Start_DATA_POPULATE_TASK", 2048, NULL, 4, &DATA_POPULATE_TASKHandle);//1536-2048
+    xTaskCreate(Start_DATA_POPULATE_TASK, "Start_DATA_POPULATE_TASK", 2048, NULL, 4, &DATA_POPULATE_TASKHandle); //1536-2048
     xTaskCreate(Start_AC_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &AC_METER_SEND_TASKHandle);
     xTaskCreate(Start_DC1_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &DC1_METER_SEND_TASKHandle);
     xTaskCreate(Start_DC2_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &DC2_METER_SEND_TASKHandle);
@@ -2554,7 +2554,19 @@ void Start_ESP_SEND_TASK(void *argument) {
         txdata.Stop_connector_no = Stop_connector_no;
 
         if (xQueueReceive(ESP_S_METER_D_QUEUE, &esp_s_meter_data, 0)) {
-            memcpy(txdata.Meter_data, esp_s_meter_data.Meter_data, sizeof (txdata.Meter_data));
+            txdata.AC_CURRENT_L1 = esp_s_meter_data.AC_CURRENT_L1;
+            txdata.AC_CURRENT_L2 = esp_s_meter_data.AC_CURRENT_L2;
+            txdata.AC_CURRENT_L3 = esp_s_meter_data.AC_CURRENT_L3;
+            txdata.AC_FREQUENCY = esp_s_meter_data.AC_FREQUENCY;
+            txdata.AC_VOLT_L1 = esp_s_meter_data.AC_VOLT_L1;
+            txdata.AC_VOLT_L2 = esp_s_meter_data.AC_VOLT_L2;
+            txdata.AC_VOLT_L3 = esp_s_meter_data.AC_VOLT_L3;
+            txdata.DC1_CURRENT = esp_s_meter_data.DC1_CURRENT;
+            txdata.DC1_IMPORT_ENERGY = esp_s_meter_data.DC1_IMPORT_ENERGY;
+            txdata.DC1_VOLTAGE = esp_s_meter_data.DC1_VOLTAGE;
+            txdata.DC2_CURRENT = esp_s_meter_data.DC2_CURRENT;
+            txdata.DC2_VOLTAGE = esp_s_meter_data.DC2_VOLTAGE;
+            txdata.DC2_IMPORT_ENERGY = esp_s_meter_data.DC2_IMPORT_ENERGY;
         }
         SERCOM7_USART_Write(txdata.ESP_ARRAY, sizeof (txdata.ESP_ARRAY));
         while (!(SERCOM7_USART_TransmitComplete()))
@@ -3026,11 +3038,7 @@ void Start_METER_RX_TASK(void *arggument) {
     METER_DATA_Q meterdata;
     static uint8_t instance = 0;
     //    char data[35];
-    static uint8_t AC_METER_1[84] = {0};
-    static uint8_t AC_METER_2[84] = {0};
-    static uint8_t DC_METER_1[84] = {0};
-    static uint8_t DC_METER_2[84] = {0};
-    ESP_S_METER_D_Q esp_s_meter_data;
+    static ESP_S_METER_D_Q esp_s_meter_data;
     WHICH_METER_Q which_meter;
     static uint8_t WHICH_METER_t = 0;
     for (;;) {
@@ -3048,8 +3056,6 @@ void Start_METER_RX_TASK(void *arggument) {
                             ac_meter_comm = 0;
                             MACHINE_STATE = IDLE_STATE;
                         }
-                        AC_METER_1[0] = AC_METER_1_IDT;
-                        memcpy(&AC_METER_1[1], METER_DATA, 83);
                         if (DEFAULT_AC_METER_t == 'S') {
                             ac_volt1 = (METER_DATA[5] << 24 | METER_DATA[6] << 16 | METER_DATA[7] << 8 | METER_DATA[8]);
                             AC_VOLTAGE1_t = *((float *) &ac_volt1);
@@ -3145,8 +3151,13 @@ void Start_METER_RX_TASK(void *arggument) {
                             MACHINE_STATE = IDLE_STATE;
                             instance = 1;
                         }
-                        memcpy(esp_s_meter_data.Meter_data, AC_METER_1, sizeof (AC_METER_1));
-                        xQueueOverwrite(ESP_S_METER_D_QUEUE, &esp_s_meter_data);
+                        esp_s_meter_data.AC_CURRENT_L1 = (uint16_t) AC_CURRENT1;
+                        esp_s_meter_data.AC_CURRENT_L2 = (uint16_t) AC_CURRENT2;
+                        esp_s_meter_data.AC_CURRENT_L3 = (uint16_t) AC_CURRENT3;
+                        esp_s_meter_data.AC_VOLT_L1 = (uint16_t) AC_VOLTAGE1_t;
+                        esp_s_meter_data.AC_VOLT_L2 = (uint16_t) AC_VOLTAGE2;
+                        esp_s_meter_data.AC_VOLT_L3 = (uint16_t) AC_VOLTAGE3;
+
                     } else {
                         sprintf(buf, "CRC NOT MATCH AC1\r\n");
                         SERCOM5_USART_Write(buf, sizeof (buf));
@@ -3158,8 +3169,6 @@ void Start_METER_RX_TASK(void *arggument) {
                 case AC_METER_2_IDT:
                     xTimerStop(ac_timer, 10);
                     if (CRC16_modbus(meterdata.Meter_data, 83, 1)) {
-                        AC_METER_2[0] = AC_METER_2_IDT;
-                        memcpy(&AC_METER_2[1], METER_DATA, 83);
                         if (DEFAULT_AC_METER_t == 'S') {
                             ac_freq = (METER_DATA[37] << 24 | METER_DATA[38] << 16 | METER_DATA[39] << 8 | METER_DATA[40]);
                             AC_FREQUENCY = *((float *) &ac_freq);
@@ -3167,11 +3176,9 @@ void Start_METER_RX_TASK(void *arggument) {
                             ac_freq = (METER_DATA[63] << 24 | METER_DATA[64] << 16 | METER_DATA[65] << 8 | METER_DATA[66]);
                             AC_FREQUENCY = *((float *) &ac_freq);
                         }
-
+                        esp_s_meter_data.AC_FREQUENCY = (uint16_t) AC_FREQUENCY;
                         Update_AC_frequency((int) AC_FREQUENCY);
                         vTaskDelay(10);
-                        memcpy(esp_s_meter_data.Meter_data, AC_METER_2, sizeof (AC_METER_2));
-                        xQueueOverwrite(ESP_S_METER_D_QUEUE, &esp_s_meter_data);
                     } else {
                         sprintf(buf, "CRC NOT MATCH AC2\r\n");
                         SERCOM5_USART_Write(buf, sizeof (buf));
@@ -3187,8 +3194,6 @@ void Start_METER_RX_TASK(void *arggument) {
                             dc1_meter_comm = 0;
                             MACHINE_STATE = IDLE_STATE;
                         }
-                        DC_METER_1[0] = DC_METER_1_IDT;
-                        memcpy(&DC_METER_1[1], METER_DATA, 83);
                         volt1 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
                         VOLTAGE1 = *((float *) &volt1);
                         curr1 = METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10];
@@ -3243,8 +3248,9 @@ void Start_METER_RX_TASK(void *arggument) {
                         if (VOLTAGE1 > 200) {
                             act_volt_1 = VOLTAGE1;
                         }
-                        memcpy(esp_s_meter_data.Meter_data, DC_METER_1, sizeof (DC_METER_1));
-                        xQueueOverwrite(ESP_S_METER_D_QUEUE, &esp_s_meter_data);
+                        esp_s_meter_data.DC1_CURRENT = (uint16_t) CURRENT1;
+                        esp_s_meter_data.DC1_VOLTAGE = (uint16_t) VOLTAGE1;
+                        esp_s_meter_data.DC1_IMPORT_ENERGY = (uint16_t) IMPORT_ENERGY1;
 
                     } else {
                         sprintf(buf, "CRC NOT MATCH DC1\r\n");
@@ -3261,8 +3267,6 @@ void Start_METER_RX_TASK(void *arggument) {
                             dc2_meter_comm = 0;
                             MACHINE_STATE = IDLE_STATE;
                         }
-                        DC_METER_2[0] = DC_METER_2_IDT;
-                        memcpy(&DC_METER_2[1], METER_DATA, 83);
                         volt2 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
                         VOLTAGE2 = *((float *) &volt2);
                         curr2 = METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10];
@@ -3315,8 +3319,9 @@ void Start_METER_RX_TASK(void *arggument) {
                             ERROR_CODE_ARRAY[DC_OVER_CURR_IDX] = 0;
                             ERROR_CODE_ARRAY[DC_UNDER_VOLT_IDX] = 0;
                         }
-                        memcpy(esp_s_meter_data.Meter_data, DC_METER_2, sizeof (DC_METER_2));
-                        xQueueOverwrite(ESP_S_METER_D_QUEUE, &esp_s_meter_data);
+                        esp_s_meter_data.DC2_CURRENT = (uint16_t) CURRENT2;
+                        esp_s_meter_data.DC2_VOLTAGE = (uint16_t) VOLTAGE2;
+                        esp_s_meter_data.DC2_IMPORT_ENERGY = (uint16_t) IMPORT_ENERGY2;
 
                     } else {
                         sprintf(buf, "CRC NOT MATCH DC2\r\n");
@@ -3327,6 +3332,7 @@ void Start_METER_RX_TASK(void *arggument) {
                     }
                     break;
             }
+            xQueueOverwrite(ESP_S_METER_D_QUEUE, &esp_s_meter_data);
         }
         vTaskSuspend(METER_RECEIVE_TaskHandle);
         vTaskDelay(1);

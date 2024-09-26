@@ -98,9 +98,9 @@ extern "C" {
     char LIMIT_SW_NOT_OK[] = "GATE OPEN\r\n";
     uint16_t SA_Agent = 19119;
 
-    #define RFID_WAKEUP_RX_SIZE     15
-    #define RFID_PRE_RX_SIZE         6
-    #define ID_RX_SIZE              19
+#define RFID_WAKEUP_RX_SIZE     15
+#define RFID_PRE_RX_SIZE         6
+#define ID_RX_SIZE              19
 #define RFID_ERROR_SIZE 1
 #define RFID_DEFAULT_RX_SIZE    RFID_WAKEUP_RX_SIZE    
 #define RFID_BUFFER_SIZE        50
@@ -260,6 +260,7 @@ extern "C" {
         uint8_t Meter_data[170];
     } METER_DATA_Q;
     METER_DATA_Q meterrxdata;
+
     typedef struct {
         uint8_t Which_Meter_data[1];
     } WHICH_METER_Q;
@@ -274,7 +275,6 @@ extern "C" {
 
     } CAN0_RECIEVE_Q;
     CAN0_RECIEVE_Q sendbuf;
-
 
     typedef struct {
         uint32_t ID_t;
@@ -336,8 +336,8 @@ extern "C" {
     } CP_LEVEL2_Q;
 
     typedef union {
-//                uint8_t ESP_ARRAY[156];
-        uint8_t ESP_ARRAY[160];
+        uint8_t ESP_ARRAY[102];
+        //        uint8_t ESP_ARRAY[160];
 
         struct {
             uint32_t Start_bit;
@@ -361,10 +361,23 @@ extern "C" {
             uint16_t Demand_Volatge2; //4
             uint16_t Demand_Current1; //4
             uint16_t Demand_Current2; //4
-            uint8_t Meter_data[84]; //6
+            //            uint8_t Meter_data[84]; //6
+            uint16_t AC_VOLT_L1;
+            uint16_t AC_VOLT_L2;
+            uint16_t AC_VOLT_L3;
+            uint16_t AC_CURRENT_L1;
+            uint16_t AC_CURRENT_L2;
+            uint16_t AC_CURRENT_L3;
+            uint16_t AC_FREQUENCY;
+            uint16_t DC1_VOLTAGE;
+            uint16_t DC1_CURRENT;
+            uint16_t DC2_VOLTAGE;
+            uint16_t DC2_CURRENT;
+            uint16_t DC1_IMPORT_ENERGY;
+            uint16_t DC2_IMPORT_ENERGY;
             uint8_t MAC_ID[6]; //7
-//            uint8_t RFID_ID[4]; //8
-                        uint8_t RFID_ID[8]; //8
+            //            uint8_t RFID_ID[4]; //8
+            uint8_t RFID_ID[8]; //8
             uint8_t rfid_conn_no; //8
             uint8_t MAC_ID_CONN_NO; //7
             uint8_t SOC_1; //4
@@ -435,7 +448,19 @@ extern "C" {
     } ESP_S_GUN2_P_Q;
 
     typedef struct {
-        uint8_t Meter_data[84]; //6
+        uint16_t AC_VOLT_L1;
+        uint16_t AC_VOLT_L2;
+        uint16_t AC_VOLT_L3;
+        uint16_t AC_CURRENT_L1;
+        uint16_t AC_CURRENT_L2;
+        uint16_t AC_CURRENT_L3;
+        uint16_t AC_FREQUENCY;
+        uint16_t DC1_VOLTAGE;
+        uint16_t DC1_CURRENT;
+        uint16_t DC2_VOLTAGE;
+        uint16_t DC2_CURRENT;
+        uint16_t DC1_IMPORT_ENERGY;
+        uint16_t DC2_IMPORT_ENERGY; //6
     } ESP_S_METER_D_Q;
 
     typedef struct {
@@ -495,12 +520,12 @@ extern "C" {
             uint8_t Stop_bit : 8;
         };
     } ESP_RX_DATA;
-    
-    typedef struct{
+
+    typedef struct {
         uint8_t ESP_DATA[1];
-    }ESP_RX_Q;
+    } ESP_RX_Q;
     ESP_RX_Q esp_data;
-    
+
     typedef struct {
         uint8_t COLOR1;
     } COLOR1_Q;
