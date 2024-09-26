@@ -4814,7 +4814,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         flashmsg.START_TIME = (hour << 16) | (minute << 8) | sec;
                     }
                     if (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE || _c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR || _c10bmsg._10B_SECC_STATUS3_t == seccStatus_IDLE) {
-                        CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_1;
+                        CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                         Stop_Code = 310;
                         Stop_connector_no = 1;
                         Update_GUN1_Session_End_Reason(0x08);
@@ -5041,24 +5041,6 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
                 }
                 if ((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
-                    GUN1_CONNECTED = 0;
-
-                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                    rectimsg.PLC_ID[0] = 0x01;
-                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                    vTaskDelay(3000);
-                    _50msmsg.DATA[1] = _1_PLC_tx_50_t._002_EVSE_CHARGING_CONTROL_DATA1_t =
-                            Charging_Control_Normal_Stop;
-                    _50msmsg.ID_t = _002;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    _50msmsg.DATA[0] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
-
-                    _50msmsg.DATA[1] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
-                    _50msmsg.ID_t = _005;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    DC1_Contactor_Set();
                     CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                     CP_Level_1 = 9;
                     Stop_Code = 202;
@@ -5067,24 +5049,6 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     STOPING_UNIT = IMPORT_ENERGY1;
                 }
                 if (_c108msg.Charging_Complete_t == CHARGING_COMPLETE) {
-                    GUN1_CONNECTED = 0;
-
-                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                    rectimsg.PLC_ID[0] = 0x01;
-                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                    vTaskDelay(3000);
-                    _50msmsg.DATA[1] = _1_PLC_tx_50_t._002_EVSE_CHARGING_CONTROL_DATA1_t =
-                            Charging_Control_Normal_Stop;
-                    _50msmsg.ID_t = _002;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    _50msmsg.DATA[0] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
-
-                    _50msmsg.DATA[1] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
-                    _50msmsg.ID_t = _005;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    DC1_Contactor_Set();
                     CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                     CP_Level_1 = 9;
                     Stop_Code = 201;
@@ -5093,25 +5057,6 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     STOPING_UNIT = IMPORT_ENERGY1;
                 }
                 if (START_STOP_AR[0] == 1 && START_STOP_AR[2] == 1) {
-                    GUN1_CONNECTED = 0;
-
-                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                    rectimsg.PLC_ID[0] = 0x01;
-
-                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                    vTaskDelay(3000);
-                    _50msmsg.DATA[1] = _1_PLC_tx_50_t._002_EVSE_CHARGING_CONTROL_DATA1_t =
-                            Charging_Control_Normal_Stop;
-                    _50msmsg.ID_t = _002;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    _50msmsg.DATA[0] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
-
-                    _50msmsg.DATA[1] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
-                    _50msmsg.ID_t = _005;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    DC1_Contactor_Set();
                     CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                     CP_Level_1 = 9;
                     memset(START_STOP_AR, 0, 3);
@@ -5122,6 +5067,24 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 STOPING_UNIT = IMPORT_ENERGY1;
                 leddata.GUN1 = 0;
                 xQueueOverwrite(LED1_QUEUE, &leddata);
+                GUN1_CONNECTED = 0;
+
+                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+                rectimsg.PLC_ID[0] = 0x01;
+                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                vTaskDelay(3000);
+                _50msmsg.DATA[1] = _1_PLC_tx_50_t._002_EVSE_CHARGING_CONTROL_DATA1_t =
+                        Charging_Control_Normal_Stop;
+                _50msmsg.ID_t = _002;
+                xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                vTaskDelay(50);
+                _50msmsg.DATA[0] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
+
+                _50msmsg.DATA[1] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
+                _50msmsg.ID_t = _005;
+                xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                vTaskDelay(50);
+                DC1_Contactor_Set();
                 if ((GUN2_CONNECTED == 0) && (GUN1_CONNECTED == 0)) {
                     vTaskSuspend(LED_TASKHandle);
                 }
@@ -5673,7 +5636,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         flashmsg.START_TIME = (hour << 16) | (minute << 8) | sec;
                     }
                     if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
+                        CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
                         Stop_Code = 310;
                         Stop_connector_no = 2;
                         Update_GUN2_Session_End_Reason(0x08);
@@ -5903,25 +5866,6 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
                 }
                 if ((_c50bmsg._50B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR)) {
-                    GUN2_CONNECTED = 0;
-
-                    rectimsg.PLC_ID[0] = 0x02;
-
-                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                    rectimsg.PLC_ID[0] = 0x02;
-                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                    vTaskDelay(3000);
-                    _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
-                            Charging_Control_Normal_Stop;
-                    _50msmsg.ID_t = _402;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
-                    _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
-                    _50msmsg.ID_t = _405;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    DC2_Contactor_Set();
                     CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
                     CP_Level_2 = 9;
                     Stop_Code = 202;
@@ -5930,23 +5874,6 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     STOPING_UNIT = IMPORT_ENERGY2;
                 }
                 if (_c508msg.Charging_Complete_t == CHARGING_COMPLETE) {
-                    GUN2_CONNECTED = 0;
-                    rectimsg.PLC_ID[0] = 0x02;
-                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                    rectimsg.PLC_ID[0] = 0x02;
-                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                    vTaskDelay(3000);
-                    _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
-                            Charging_Control_Normal_Stop;
-                    _50msmsg.ID_t = _402;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
-                    _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
-                    _50msmsg.ID_t = _405;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    DC2_Contactor_Set();
                     CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
                     CP_Level_2 = 9;
                     Stop_Code = 201;
@@ -5955,23 +5882,6 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     STOPING_UNIT = IMPORT_ENERGY2;
                 }
                 if (START_STOP_AR1[0] == 2 && START_STOP_AR1[2] == 1) {
-                    GUN2_CONNECTED = 0;
-
-                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                    rectimsg.PLC_ID[0] = 0x02;
-                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                    vTaskDelay(3000);
-                    _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
-                            Charging_Control_Normal_Stop;
-                    _50msmsg.ID_t = _402;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
-                    _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
-                    _50msmsg.ID_t = _405;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
-                    DC2_Contactor_Set();
                     CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
                     CP_Level_2 = 9;
                     memset(START_STOP_AR1, 0, 3);
@@ -5982,6 +5892,25 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 STOPING_UNIT = IMPORT_ENERGY2;
                 leddata.GUN2 = 0;
                 xQueueOverwrite(LED2_QUEUE, &leddata);
+                GUN2_CONNECTED = 0;
+
+                rectimsg.PLC_ID[0] = 0x02;
+
+                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+                rectimsg.PLC_ID[0] = 0x02;
+                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                vTaskDelay(3000);
+                _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
+                        Charging_Control_Normal_Stop;
+                _50msmsg.ID_t = _402;
+                xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                vTaskDelay(50);
+                _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
+                _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
+                _50msmsg.ID_t = _405;
+                xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                vTaskDelay(50);
+                DC2_Contactor_Set();
                 if ((GUN2_CONNECTED == 0) && (GUN1_CONNECTED == 0)) {
                     vTaskSuspend(LED_TASKHandle);
                 }
