@@ -217,6 +217,7 @@ static uint8_t DEFAULT_GUN1_TEMP_ALARM_t = DEFAULT_GUN1_TEMP_ALARM;
 static uint8_t DEFAULT_GUN2_TEMP_ALARM_t = DEFAULT_GUN2_TEMP_ALARM;
 static uint8_t DEFAULT_LED_FAULT_ALARM_t = DEFAULT_LED_FAULT_ALARM;
 static uint8_t DEFAULT_RFID_FAULT_ALARM_t = DEFAULT_RFID_FAULT_ALARM;
+static uint8_t DEFAULT_AC_METER_t = DEFAULT_AC_METER_TYPE;
 static uint8_t NO_OF_RECTIFIER = 4;
 volatile uint8_t MACHINE_STATE = IDLE_STATE;
 uint8_t em_rx_buff[170] = {0};
@@ -772,7 +773,7 @@ int main(void) {
     xTaskCreate(Start_GUN2_PARAM_TASK, "Start_GUN2_PARAM_TASK", 128, NULL, 2, &GUN2_PARAM_TASKHandle);
     xTaskCreate(Start_FLASH_READ_TASK, "Start_FLASH_READ_TASK", 1536, NULL, 1, &FLASH_READ_TASKHandle);
     xTaskCreate(Start_FLASH_WRITE_TASK, "Start_FLASH_WRITE_TASK", 1536, NULL, 3, &FLASH_WRITE_TASKHandle);
-    xTaskCreate(Start_DATA_POPULATE_TASK, "Start_DATA_POPULATE_TASK", 1536, NULL, 4, &DATA_POPULATE_TASKHandle);
+    xTaskCreate(Start_DATA_POPULATE_TASK, "Start_DATA_POPULATE_TASK", 2048, NULL, 4, &DATA_POPULATE_TASKHandle);//1536-2048
     xTaskCreate(Start_AC_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &AC_METER_SEND_TASKHandle);
     xTaskCreate(Start_DC1_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &DC1_METER_SEND_TASKHandle);
     xTaskCreate(Start_DC2_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &DC2_METER_SEND_TASKHandle);
@@ -2923,8 +2924,8 @@ void Start_ESP_RX_TASK(void *argument) {
 
 void Start_AC_METER_SEND_TASK(void *argument) {
     SERCOM2_USART_ReadCallbackRegister(ENERGY_METER_CALLBACK, 0);
-    uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
-    uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
+    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
+    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
     static uint8_t count = 0;
     WHICH_METER_Q which_meter;
     NEXT_METER_Q next_meter;
@@ -3049,18 +3050,34 @@ void Start_METER_RX_TASK(void *arggument) {
                         }
                         AC_METER_1[0] = AC_METER_1_IDT;
                         memcpy(&AC_METER_1[1], METER_DATA, 83);
-                        ac_volt1 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
-                        AC_VOLTAGE1_t = *((float *) &ac_volt1);
-                        ac_volt2 = (METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10]);
-                        AC_VOLTAGE2 = *((float *) &ac_volt2);
-                        ac_volt3 = (METER_DATA[11] << 24 | METER_DATA[12] << 16 | METER_DATA[13] << 8 | METER_DATA[14]);
-                        AC_VOLTAGE3 = *((float *) &ac_volt3);
-                        ac_curr1 = (METER_DATA[15] << 24 | METER_DATA[16] << 16 | METER_DATA[17] << 8 | METER_DATA[18]);
-                        AC_CURRENT1 = *((float *) &ac_curr1);
-                        ac_curr2 = (METER_DATA[19] << 24 | METER_DATA[20] << 16 | METER_DATA[21] << 8 | METER_DATA[22]);
-                        AC_CURRENT2 = *((float *) &ac_curr2);
-                        ac_curr3 = (METER_DATA[23] << 24 | METER_DATA[24] << 16 | METER_DATA[25] << 8 | METER_DATA[26]);
-                        AC_CURRENT3 = *((float *) &ac_curr3);
+                        if (DEFAULT_AC_METER_t == 'S') {
+                            ac_volt1 = (METER_DATA[5] << 24 | METER_DATA[6] << 16 | METER_DATA[7] << 8 | METER_DATA[8]);
+                            AC_VOLTAGE1_t = *((float *) &ac_volt1);
+                            ac_volt2 = (METER_DATA[9] << 24 | METER_DATA[10] << 16 | METER_DATA[11] << 8 | METER_DATA[12]);
+                            AC_VOLTAGE2 = *((float *) &ac_volt2);
+                            ac_volt3 = (METER_DATA[13] << 24 | METER_DATA[14] << 16 | METER_DATA[15] << 8 | METER_DATA[16]);
+                            AC_VOLTAGE3 = *((float *) &ac_volt3);
+                            ac_curr1 = (METER_DATA[37] << 24 | METER_DATA[38] << 16 | METER_DATA[39] << 8 | METER_DATA[40]);
+                            AC_CURRENT1 = *((float *) &ac_curr1);
+                            ac_curr2 = (METER_DATA[41] << 24 | METER_DATA[42] << 16 | METER_DATA[43] << 8 | METER_DATA[44]);
+                            AC_CURRENT2 = *((float *) &ac_curr2);
+                            ac_curr3 = (METER_DATA[45] << 24 | METER_DATA[46] << 16 | METER_DATA[27] << 8 | METER_DATA[48]);
+                            AC_CURRENT3 = *((float *) &ac_curr3);
+                        } else {
+                            ac_volt1 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
+                            AC_VOLTAGE1_t = *((float *) &ac_volt1);
+                            ac_volt2 = (METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10]);
+                            AC_VOLTAGE2 = *((float *) &ac_volt2);
+                            ac_volt3 = (METER_DATA[11] << 24 | METER_DATA[12] << 16 | METER_DATA[13] << 8 | METER_DATA[14]);
+                            AC_VOLTAGE3 = *((float *) &ac_volt3);
+                            ac_curr1 = (METER_DATA[15] << 24 | METER_DATA[16] << 16 | METER_DATA[17] << 8 | METER_DATA[18]);
+                            AC_CURRENT1 = *((float *) &ac_curr1);
+                            ac_curr2 = (METER_DATA[19] << 24 | METER_DATA[20] << 16 | METER_DATA[21] << 8 | METER_DATA[22]);
+                            AC_CURRENT2 = *((float *) &ac_curr2);
+                            ac_curr3 = (METER_DATA[23] << 24 | METER_DATA[24] << 16 | METER_DATA[25] << 8 | METER_DATA[26]);
+                            AC_CURRENT3 = *((float *) &ac_curr3);
+                        }
+
                         Update_AC_CURRENT1((int) AC_CURRENT1);
                         vTaskDelay(10);
                         Update_AC_CURRENT2((int) AC_CURRENT2);
@@ -3143,8 +3160,14 @@ void Start_METER_RX_TASK(void *arggument) {
                     if (CRC16_modbus(meterdata.Meter_data, 83, 1)) {
                         AC_METER_2[0] = AC_METER_2_IDT;
                         memcpy(&AC_METER_2[1], METER_DATA, 83);
-                        ac_freq = (METER_DATA[63] << 24 | METER_DATA[64] << 16 | METER_DATA[65] << 8 | METER_DATA[66]);
-                        AC_FREQUENCY = *((float *) &ac_freq);
+                        if (DEFAULT_AC_METER_t == 'S') {
+                            ac_freq = (METER_DATA[37] << 24 | METER_DATA[38] << 16 | METER_DATA[39] << 8 | METER_DATA[40]);
+                            AC_FREQUENCY = *((float *) &ac_freq);
+                        } else {
+                            ac_freq = (METER_DATA[63] << 24 | METER_DATA[64] << 16 | METER_DATA[65] << 8 | METER_DATA[66]);
+                            AC_FREQUENCY = *((float *) &ac_freq);
+                        }
+
                         Update_AC_frequency((int) AC_FREQUENCY);
                         vTaskDelay(10);
                         memcpy(esp_s_meter_data.Meter_data, AC_METER_2, sizeof (AC_METER_2));
@@ -5637,7 +5660,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         vTaskDelay(100);
                         Update_GUN2_Charging_Start_sec(sec);
                         vTaskDelay(100);
-                                
+
                         STARTING_UNIT = IMPORT_ENERGY2;
                         vTaskResume(LED_TASKHandle);
                         flashmsg.START_DATE = (year << 16) | (month << 8) | day;
@@ -5651,8 +5674,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         Change_Page_to(GUN2_FAILING_REASON_PAGE);
                     }
                 }
-                
-                
+
+
                 break;
             case _2_PLC_STATE_CURRENT_DEMAND_1:
                 FAN_ON(30000);
@@ -6918,6 +6941,16 @@ void Start_FLASH_WRITE_TASK(void *argument) {
                             ;
                         DEFAULT_RFID_FAULT_ALARM_t = BT_DATA_ARRAY_0_127[RFID_FAULT_ALARM_IDX];
                         break;
+                    case ACEM_TYPE_IDX:
+                        BT_DATA_ARRAY_0_127[ACEM_TYPE_IDX] = flashmsg.DATA_t;
+                        NVMCTRL_BlockErase((uint32_t) FLASH_START_ADDRESS_BT);
+                        while (NVMCTRL_IsBusy())
+                            ;
+                        NVMCTRL_PageWrite((uint32_t *) BT_DATA_ARRAY_0_127, (uint32_t) FLASH_START_ADDRESS_BT);
+                        while (NVMCTRL_IsBusy())
+                            ;
+                        DEFAULT_RFID_FAULT_ALARM_t = BT_DATA_ARRAY_0_127[ACEM_TYPE_IDX];
+                        break;
                 }
             }
             if (flashmsg.WHAT_TYPE_OF_DATA == CHARGING_DATA) {
@@ -7635,6 +7668,11 @@ void Start_DATA_POPULATE_TASK(void *argument) {
             DEFAULT_RFID_FAULT_ALARM_t = BT_DATA_ARRAY_0_127[RFID_FAULT_ALARM_IDX];
         }
 
+        if (BT_DATA_ARRAY_0_127[ACEM_TYPE_IDX] == BLANK_DATA) {
+            BT_DATA_ARRAY_0_127[ACEM_TYPE_IDX] = DEFAULT_RFID_FAULT_ALARM;
+        } else {
+            DEFAULT_RFID_FAULT_ALARM_t = BT_DATA_ARRAY_0_127[ACEM_TYPE_IDX];
+        }
         //        if (BT_DATA_ARRAY[] == BLANK_DATA) {
         //            BT_DATA_ARRAY[] =;
         //        } else {
