@@ -3262,7 +3262,7 @@ void Start_METER_RX_TASK(void *arggument) {
                         esp_s_meter_data.DC1_CURRENT = curr1;
                         esp_s_meter_data.DC1_VOLTAGE = volt1;
                         esp_s_meter_data.DC1_IMPORT_ENERGY = imp_energy1;
-                        esp_s_meter_data.DC1_POWER = *((uint32_t *) &POWER1);
+                        esp_s_meter_data.DC1_POWER = *((uint32_t *) & POWER1);
 
                     } else {
                         sprintf(buf, "CRC NOT MATCH DC1\r\n");
@@ -3334,7 +3334,7 @@ void Start_METER_RX_TASK(void *arggument) {
                         esp_s_meter_data.DC2_CURRENT = curr2;
                         esp_s_meter_data.DC2_VOLTAGE = volt2;
                         esp_s_meter_data.DC2_IMPORT_ENERGY = imp_energy2;
-                        esp_s_meter_data.DC2_POWER = *((uint32_t *) &POWER2);
+                        esp_s_meter_data.DC2_POWER = *((uint32_t *) & POWER2);
 
                     } else {
                         sprintf(buf, "CRC NOT MATCH DC2\r\n");
@@ -4025,8 +4025,8 @@ void StartCANrecieveTask(void *argument) {
     vTaskResume(SMOKE_LIMIT_TASKHandle);
     vTaskDelay(1000);
     ////////HMI/////////////
-    //    Change_Page_to(CURRENT_PAGE);
-    //    vTaskDelay(100);
+    Change_Page_to(CURRENT_PAGE);
+    vTaskDelay(100);
     Change_gun1_status_to(AVAILABLE);
     vTaskDelay(100);
     Change_gun2_status_to(AVAILABLE);
@@ -4501,6 +4501,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         ////////HMI/////////////
                         Change_gun1_status_to(CONNECTED);
                         ////////HMI/////////////
+                        vTaskResume(LED_TASKHandle);
                         AC_Contactor_Relay_Clear();
                         leddata.GUN1 = 3;
                         xQueueOverwrite(LED1_QUEUE, &leddata);
@@ -4524,6 +4525,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     }
                     if ((((_c102msg.cpVoltage_msb) / 10) >= 11)) {
                         if (GUN2_CONNECTED == 0) {
+                            vTaskSuspend(LED_TASKHandle);
                             AC_Contactor_Relay_Set();
                             FAN_ON(65535);
                             instance = 0;
@@ -5345,7 +5347,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 8) && (((_c502msg.cpVoltage_msb) / 10) <= 10)) {
                         ////////HMI/////////////
                         Change_gun2_status_to(CONNECTED);
-
+                        vTaskResume(LED_TASKHandle);
                         ////////HMI/////////////
                         AC_Contactor_Relay_Clear();
                         leddata.GUN2 = 4;
@@ -5371,6 +5373,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     }
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
                         if (GUN1_CONNECTED == 0) {
+                            vTaskSuspend(LED_TASKHandle);
                             AC_Contactor_Relay_Set();
                             FAN_ON(65535);
                             instance = 0;
