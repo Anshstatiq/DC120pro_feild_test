@@ -3037,7 +3037,7 @@ void Start_METER_RX_TASK(void *arggument) {
     char buf[30];
     BaseType_t xTaskWokenByReceive = pdFALSE;
     float VOLTAGE1 = 0, CURRENT1 = 0, POWER1 = 0, VOLTAGE2 = 0, CURRENT2 = 0, POWER2 = 0;
-    float AC_VOLTAGE1_t, AC_VOLTAGE2, AC_VOLTAGE3, AC_CURRENT1, AC_CURRENT2, AC_CURRENT3, AC_FREQUENCY, AC_IMP_POWER, AC_ENERGY;
+    float AC_VOLTAGE1_t, AC_VOLTAGE2, AC_VOLTAGE3, AC_CURRENT1, AC_CURRENT2, AC_CURRENT3, AC_FREQUENCY;
     ;
     uint32_t volt1, curr1, volt2, curr2, ac_volt1, ac_volt2, ac_volt3, ac_curr1, ac_curr2, ac_curr3, ac_freq, imp_energy1, imp_energy2, ac_imp_power_t, ac_energy_t;
     METER_DATA_Q meterdata;
@@ -3156,12 +3156,12 @@ void Start_METER_RX_TASK(void *arggument) {
                             MACHINE_STATE = IDLE_STATE;
                             instance = 1;
                         }
-                        esp_s_meter_data.AC_CURRENT_L1 = (uint16_t) AC_CURRENT1;
-                        esp_s_meter_data.AC_CURRENT_L2 = (uint16_t) AC_CURRENT2;
-                        esp_s_meter_data.AC_CURRENT_L3 = (uint16_t) AC_CURRENT3;
-                        esp_s_meter_data.AC_VOLT_L1 = (uint16_t) AC_VOLTAGE1_t;
-                        esp_s_meter_data.AC_VOLT_L2 = (uint16_t) AC_VOLTAGE2;
-                        esp_s_meter_data.AC_VOLT_L3 = (uint16_t) AC_VOLTAGE3;
+                        esp_s_meter_data.AC_CURRENT_L1 = ac_curr1;
+                        esp_s_meter_data.AC_CURRENT_L2 = ac_curr2;
+                        esp_s_meter_data.AC_CURRENT_L3 = ac_curr3;
+                        esp_s_meter_data.AC_VOLT_L1 = ac_volt1;
+                        esp_s_meter_data.AC_VOLT_L2 = ac_volt2;
+                        esp_s_meter_data.AC_VOLT_L3 = ac_volt3;
 
                     } else {
                         sprintf(buf, "CRC NOT MATCH AC1\r\n");
@@ -3178,20 +3178,16 @@ void Start_METER_RX_TASK(void *arggument) {
                             ac_freq = (METER_DATA[37] << 24 | METER_DATA[38] << 16 | METER_DATA[39] << 8 | METER_DATA[40]);
                             AC_FREQUENCY = *((float *) &ac_freq);
                             ac_energy_t = (METER_DATA[41] << 24 | METER_DATA[42] << 16 | METER_DATA[43] << 8 | METER_DATA[44]);
-                            AC_ENERGY = *((float*) &ac_energy_t);
                             ac_imp_power_t = (METER_DATA[9] << 24 | METER_DATA[10] << 16 | METER_DATA[11] << 8 | METER_DATA[12]);
-                            AC_IMP_POWER = *((float*) &ac_imp_power_t);
                         } else {
                             ac_freq = (METER_DATA[63] << 24 | METER_DATA[64] << 16 | METER_DATA[65] << 8 | METER_DATA[66]);
                             AC_FREQUENCY = *((float *) &ac_freq);
                             ac_energy_t = (METER_DATA[67] << 24 | METER_DATA[68] << 16 | METER_DATA[69] << 8 | METER_DATA[70]);
-                            AC_ENERGY = *((float*) &ac_energy_t);
                             ac_imp_power_t = (METER_DATA[27] << 24 | METER_DATA[28] << 16 | METER_DATA[29] << 8 | METER_DATA[30]);
-                            AC_IMP_POWER = *((float*) &ac_imp_power_t);
                         }
-                        esp_s_meter_data.AC_FREQUENCY = (uint16_t) AC_FREQUENCY;
-                        esp_s_meter_data.AC_POWER = (uint16_t) AC_IMP_POWER;
-                        esp_s_meter_data.AC_ENERGY = (uint16_t) AC_ENERGY;
+                        esp_s_meter_data.AC_FREQUENCY = ac_freq;
+                        esp_s_meter_data.AC_POWER = ac_imp_power_t;
+                        esp_s_meter_data.AC_ENERGY = ac_energy_t;
                         Update_AC_frequency((int) AC_FREQUENCY);
                         vTaskDelay(10);
                     } else {
@@ -3263,10 +3259,10 @@ void Start_METER_RX_TASK(void *arggument) {
                         if (VOLTAGE1 > 200) {
                             act_volt_1 = VOLTAGE1;
                         }
-                        esp_s_meter_data.DC1_CURRENT = (uint16_t) CURRENT1;
-                        esp_s_meter_data.DC1_VOLTAGE = (uint16_t) VOLTAGE1;
-                        esp_s_meter_data.DC1_IMPORT_ENERGY = (uint16_t) IMPORT_ENERGY1;
-                        esp_s_meter_data.DC1_POWER = (uint16_t) POWER1;
+                        esp_s_meter_data.DC1_CURRENT = curr1;
+                        esp_s_meter_data.DC1_VOLTAGE = volt1;
+                        esp_s_meter_data.DC1_IMPORT_ENERGY = imp_energy1;
+                        esp_s_meter_data.DC1_POWER = *((uint32_t *) &POWER1);
 
                     } else {
                         sprintf(buf, "CRC NOT MATCH DC1\r\n");
@@ -3335,10 +3331,10 @@ void Start_METER_RX_TASK(void *arggument) {
                             ERROR_CODE_ARRAY[DC_OVER_CURR_IDX] = 0;
                             ERROR_CODE_ARRAY[DC_UNDER_VOLT_IDX] = 0;
                         }
-                        esp_s_meter_data.DC2_CURRENT = (uint16_t) CURRENT2;
-                        esp_s_meter_data.DC2_VOLTAGE = (uint16_t) VOLTAGE2;
-                        esp_s_meter_data.DC2_IMPORT_ENERGY = (uint16_t) IMPORT_ENERGY2;
-                        esp_s_meter_data.DC2_POWER = (uint16_t) POWER2;
+                        esp_s_meter_data.DC2_CURRENT = curr2;
+                        esp_s_meter_data.DC2_VOLTAGE = volt2;
+                        esp_s_meter_data.DC2_IMPORT_ENERGY = imp_energy2;
+                        esp_s_meter_data.DC2_POWER = *((uint32_t *) &POWER2);
 
                     } else {
                         sprintf(buf, "CRC NOT MATCH DC2\r\n");

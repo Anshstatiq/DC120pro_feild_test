@@ -336,14 +336,31 @@ extern "C" {
     } CP_LEVEL2_Q;
 
     typedef union {
-        uint8_t ESP_ARRAY[110];
+        uint8_t ESP_ARRAY[144];
         //        uint8_t ESP_ARRAY[160];
 
         struct {
             uint32_t Start_bit;
-
             uint32_t IDX_DATA;
-            uint32_t FW_Version; //1
+            uint32_t FW_Version;
+            uint32_t AC_VOLT_L1;
+            uint32_t AC_VOLT_L2;
+            uint32_t AC_VOLT_L3;
+            uint32_t AC_CURRENT_L1;
+            uint32_t AC_CURRENT_L2;
+            uint32_t AC_CURRENT_L3;
+            uint32_t AC_FREQUENCY;
+            uint32_t DC1_VOLTAGE;
+            uint32_t DC1_CURRENT;
+            uint32_t DC2_VOLTAGE;
+            uint32_t DC2_CURRENT;
+            uint32_t DC1_IMPORT_ENERGY;
+            uint32_t DC2_IMPORT_ENERGY;
+            uint32_t DC1_POWER;
+            uint32_t DC2_POWER;
+            uint32_t AC_POWER;
+            uint32_t AC_ENERGY;
+            //1
             uint16_t Ground_Monitor_volt; //2
             uint16_t body_temp; //3
             uint16_t Gun_temp_1; //3
@@ -362,23 +379,6 @@ extern "C" {
             uint16_t Demand_Current1; //4
             uint16_t Demand_Current2; //4
             //            uint8_t Meter_data[84]; //6
-            uint16_t AC_VOLT_L1;
-            uint16_t AC_VOLT_L2;
-            uint16_t AC_VOLT_L3;
-            uint16_t AC_CURRENT_L1;
-            uint16_t AC_CURRENT_L2;
-            uint16_t AC_CURRENT_L3;
-            uint16_t AC_FREQUENCY;
-            uint16_t DC1_VOLTAGE;
-            uint16_t DC1_CURRENT;
-            uint16_t DC2_VOLTAGE;
-            uint16_t DC2_CURRENT;
-            uint16_t DC1_IMPORT_ENERGY;
-            uint16_t DC2_IMPORT_ENERGY;
-            uint16_t DC1_POWER;
-            uint16_t DC2_POWER;
-            uint16_t AC_POWER;
-            uint16_t AC_ENERGY;
             uint8_t MAC_ID[6]; //7
             //            uint8_t RFID_ID[4]; //8
             uint8_t RFID_ID[8]; //8
@@ -452,23 +452,23 @@ extern "C" {
     } ESP_S_GUN2_P_Q;
 
     typedef struct {
-        uint16_t AC_VOLT_L1;
-        uint16_t AC_VOLT_L2;
-        uint16_t AC_VOLT_L3;
-        uint16_t AC_CURRENT_L1;
-        uint16_t AC_CURRENT_L2;
-        uint16_t AC_CURRENT_L3;
-        uint16_t AC_FREQUENCY;
-        uint16_t DC1_VOLTAGE;
-        uint16_t DC1_CURRENT;
-        uint16_t DC2_VOLTAGE;
-        uint16_t DC2_CURRENT;
-        uint16_t DC1_IMPORT_ENERGY;
-        uint16_t DC2_IMPORT_ENERGY; //6
-        uint16_t DC1_POWER;
-        uint16_t DC2_POWER;
-        uint16_t AC_POWER;
-        uint16_t AC_ENERGY;
+        uint32_t AC_VOLT_L1;
+        uint32_t AC_VOLT_L2;
+        uint32_t AC_VOLT_L3;
+        uint32_t AC_CURRENT_L1;
+        uint32_t AC_CURRENT_L2;
+        uint32_t AC_CURRENT_L3;
+        uint32_t AC_FREQUENCY;
+        uint32_t DC1_VOLTAGE;
+        uint32_t DC1_CURRENT;
+        uint32_t DC2_VOLTAGE;
+        uint32_t DC2_CURRENT;
+        uint32_t DC1_IMPORT_ENERGY;
+        uint32_t DC2_IMPORT_ENERGY; //6
+        uint32_t DC1_POWER;
+        uint32_t DC2_POWER;
+        uint32_t AC_POWER;
+        uint32_t AC_ENERGY;
     } ESP_S_METER_D_Q;
 
     typedef struct {
