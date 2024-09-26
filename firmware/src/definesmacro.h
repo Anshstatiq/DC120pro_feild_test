@@ -336,7 +336,7 @@ extern "C" {
     } CP_LEVEL2_Q;
 
     typedef union {
-        uint8_t ESP_ARRAY[102];
+        uint8_t ESP_ARRAY[110];
         //        uint8_t ESP_ARRAY[160];
 
         struct {
@@ -375,6 +375,10 @@ extern "C" {
             uint16_t DC2_CURRENT;
             uint16_t DC1_IMPORT_ENERGY;
             uint16_t DC2_IMPORT_ENERGY;
+            uint16_t DC1_POWER;
+            uint16_t DC2_POWER;
+            uint16_t AC_POWER;
+            uint16_t AC_ENERGY;
             uint8_t MAC_ID[6]; //7
             //            uint8_t RFID_ID[4]; //8
             uint8_t RFID_ID[8]; //8
@@ -461,6 +465,10 @@ extern "C" {
         uint16_t DC2_CURRENT;
         uint16_t DC1_IMPORT_ENERGY;
         uint16_t DC2_IMPORT_ENERGY; //6
+        uint16_t DC1_POWER;
+        uint16_t DC2_POWER;
+        uint16_t AC_POWER;
+        uint16_t AC_ENERGY;
     } ESP_S_METER_D_Q;
 
     typedef struct {
