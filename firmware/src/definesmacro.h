@@ -75,6 +75,8 @@ extern "C" {
 #define RED_MAGENTA2         25            //Define to state & write duty cycle to timer for red-magenta color. 
 #define NO_COLOR2         26            //Define to state & write duty cycle to timer for green blink color.
 #define WHITE2               27  
+#define ONLINE               1
+#define OFFLINE              0
 
     char PHASE_OK[] = "PHASE_OK\r\n";
     char PHASE_NOT_OK[] = "PHASE NOT OK\r\n";
@@ -320,12 +322,10 @@ extern "C" {
     RFID_DATA_COMPLETE_Q rfid_data_complete;
 
     typedef struct {
-        uint8_t GUN1;
+        uint8_t GUN;
     } LED1_Q;
 
-    typedef struct {
-        uint8_t GUN2;
-    } LED2_Q;
+
 
     typedef struct {
         uint8_t CP_LEVEL1[1];

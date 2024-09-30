@@ -97,7 +97,7 @@ QueueHandle_t HMI_RX_QUEUE = NULL;
 QueueHandle_t RFID_MSG_QUEUE = NULL;
 QueueHandle_t RFID_COUNT_QUEUE = NULL;
 QueueHandle_t LED1_QUEUE = NULL;
-QueueHandle_t LED2_QUEUE = NULL;
+//QueueHandle_t LED2_QUEUE = NULL;
 QueueHandle_t ESP_S_GROUND_M_V_QUEUE = NULL;
 QueueHandle_t ESP_S_TEMP_QUEUE = NULL;
 QueueHandle_t ESP_S_ERROR_W_QUEUE = NULL;
@@ -653,7 +653,7 @@ int main(void) {
     ESP_QUEUE = xQueueCreate(1, sizeof (ESP_Q_DATA));
     ESP_RX_QUEUE = xQueueCreate(80, sizeof (ESP_RX_Q));
     LED1_QUEUE = xQueueCreate(1, sizeof (LED1_Q));
-    LED2_QUEUE = xQueueCreate(1, sizeof (LED2_Q));
+    //    LED2_QUEUE = xQueueCreate(1, sizeof (LED2_Q));
     CAN0_QUEUE = xQueueCreate(20, sizeof (CAN0_RECIEVE_Q));
     _50msQUEUE = xQueueCreate(5, sizeof (_50MS_Q));
     _200msQUEUE = xQueueCreate(5, sizeof (_200MS_Q));
@@ -801,7 +801,7 @@ int main(void) {
     vTaskSuspend(canrecievetask);
     vTaskSuspend(EMERGENCY_TASKHandle);
     vTaskSuspend(SMOKE_LIMIT_TASKHandle);
-    vTaskSuspend(LED_TASKHandle);
+       vTaskSuspend(LED_TASKHandle);
     vTaskSuspend(GUN1_PARAM_TASKHandle);
     vTaskSuspend(GUN2_PARAM_TASKHandle);
     vTaskSuspend(FLASH_READ_TASKHandle);
@@ -2615,14 +2615,17 @@ void Start_ESP_RX_TASK(void *argument) {
     ESP_RX_DATA esprxdata;
     FLASH_WRITE_Q flashmsg;
     FLASH_READ_Q flashreadmsg;
-    COLOR1_Q color1msg;
-    COLOR2_Q color2msg;
+    LED1_Q leddata;
+    
     memset(esprxdata.DATA_ARRAY, 0, sizeof (esprxdata.DATA_ARRAY));
     ESP_RX_Q esprxdata_t;
     char buffer[70];
     static uint32_t rssi = 0;
     uint8_t OCPP_ID_t[30];
     uint8_t BLE_ID_t[30];
+
+    uint8_t wifi_state = 0;
+    uint8_t rssi_state = 0;
     ESP_S_RFID_Q rfid_data;
     static uint8_t i = 0;
     uint8_t ESP_DATA_t[80] = {0};
@@ -2771,19 +2774,23 @@ void Start_ESP_RX_TASK(void *argument) {
                 if ((rssi <= 0x18) && (rssi >= 0x00)) {
                     Update_GSM_Signal_Strength(0x03);
                     Update_RSSI_Value((uint16_t) rssi);
+                    rssi_state = 1;
                 }
                 if ((rssi <= 0x31) && (rssi >= 0x19)) {
                     Update_GSM_Signal_Strength(0x02);
                     Update_RSSI_Value((uint16_t) rssi);
+                    rssi_state = 1;
                 }
                 if ((rssi <= 0x4B) && (rssi >= 0x32)) {
                     Update_GSM_Signal_Strength(0x01);
                     Update_RSSI_Value((uint16_t) rssi);
+                    rssi_state = 1;
                 }
                 if ((rssi <= 0x63) && (rssi >= 0x4B)) {
                     Update_GSM_Signal_Strength(0x00);
                     Update_RSSI_Value((uint16_t) rssi);
-                    CURRENT_PAGE = NO_NETWORK_PAGE;
+                    rssi_state = 0;
+                    //                    CURRENT_PAGE = NO_NETWORK_PAGE;
                 }
                 Update_RSSI_Value((uint16_t) rssi);
                 if (esprxdata.auth_status == 1) {
@@ -2795,45 +2802,51 @@ void Start_ESP_RX_TASK(void *argument) {
 
                     case 0:
                         Update_Wifi_Status(0x00);
+                        wifi_state = 0;
                         break;
                     case 1:
                         Update_Wifi_Status(0x01);
+                        wifi_state = 1;
                         break;
                 }
                 switch (esprxdata.server_connection) {
                     case 0:
                         Update_OCPP_Symbol(0x00);
-                        if (GUN1_CONNECTED == 0 && GUN2_CONNECTED == 0) {
-                            color1msg.COLOR1 = MAGENTA;
-                            color2msg.COLOR2 = MAGENTA2;
-                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
-                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
-                        }
-                        if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 0) {
-                            color2msg.COLOR2 = MAGENTA2;
-                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
-                        }
-                        if (GUN1_CONNECTED == 0 && GUN2_CONNECTED == 1) {
-                            color1msg.COLOR1 = MAGENTA;
-                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
-                        }
+                        leddata.GUN = OFFLINE;
+                        xQueueOverwrite(LED1_QUEUE, &leddata);
+                        //                        if (GUN1_CONNECTED == 0 && GUN2_CONNECTED == 0) {
+                        //                            color1msg.COLOR1 = MAGENTA;
+                        //                            color2msg.COLOR2 = MAGENTA2;
+                        //                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                        //                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                        //                        }
+                        //                        if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 0) {
+                        //                            color2msg.COLOR2 = MAGENTA2;
+                        //                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                        //                        }
+                        //                        if (GUN1_CONNECTED == 0 && GUN2_CONNECTED == 1) {
+                        //                            color1msg.COLOR1 = MAGENTA;
+                        //                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                        //                        }
                         break;
                     case 1:
                         Update_OCPP_Symbol(0x01);
-                        if (GUN1_CONNECTED == 0 && GUN2_CONNECTED == 0) {
-                            color1msg.COLOR1 = WHITE;
-                            color2msg.COLOR2 = WHITE2;
-                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
-                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
-                        }
-                        if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 0) {
-                            color2msg.COLOR2 = WHITE2;
-                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
-                        }
-                        if (GUN1_CONNECTED == 0 && GUN2_CONNECTED == 1) {
-                            color1msg.COLOR1 = WHITE;
-                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
-                        }
+                        leddata.GUN = ONLINE;
+                        xQueueOverwrite(LED1_QUEUE, &leddata);
+                        //                        if (GUN1_CONNECTED == 0 && GUN2_CONNECTED == 0) {
+                        //                            color1msg.COLOR1 = WHITE;
+                        //                            color2msg.COLOR2 = WHITE2;
+                        //                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                        //                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                        //                        }
+                        //                        if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 0) {
+                        //                            color2msg.COLOR2 = WHITE2;
+                        //                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                        //                        }
+                        //                        if (GUN1_CONNECTED == 0 && GUN2_CONNECTED == 1) {
+                        //                            color1msg.COLOR1 = WHITE;
+                        //                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                        //                        }
                         break;
                 }
 
@@ -2845,6 +2858,10 @@ void Start_ESP_RX_TASK(void *argument) {
                         Update_Ethernet_status(0x01);
                         break;
                 }
+                if (wifi_state == 0 && rssi_state == 0) {
+                    CURRENT_PAGE = NO_NETWORK_PAGE;
+                }
+
                 switch (esprxdata.limit_connector) {
                     case 5:
                         SINGLE_GUN1_POWER = 0;
@@ -2932,6 +2949,7 @@ void Start_ESP_RX_TASK(void *argument) {
                     xQueueSend(FLASH_READ_QUEUE, &flashreadmsg, 100);
                     vTaskResume(FLASH_READ_TASKHandle);
                 }
+
             }
         }
         vTaskDelay(1);
@@ -4428,6 +4446,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
         switch (CURRENT_PLC1_STATE) {
 
             case _1_PLC_STATE_IDLE_1:
+                vTaskResume(LED_TASKHandle);
                 initial_SOC1 = 0;
                 Demand_Current1 = 0;
                 Demand_Voltage1 = 0;
@@ -4460,8 +4479,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         xQueueSend(_50msQUEUE, &_50msmsg, 100);
                         vTaskDelay(100);
                         CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_2;
-                        leddata.GUN1 = 3;
-                        xQueueOverwrite(LED1_QUEUE, &leddata);
+                        //                        leddata.GUN1 = 3;
+                        //                        xQueueOverwrite(LED1_QUEUE, &leddata);
                     }
                 }
                 break;
@@ -4501,10 +4520,10 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         ////////HMI/////////////
                         Change_gun1_status_to(CONNECTED);
                         ////////HMI/////////////
-                        vTaskResume(LED_TASKHandle);
+                        //                        vTaskResume(LED_TASKHandle);
                         AC_Contactor_Relay_Clear();
-                        leddata.GUN1 = 3;
-                        xQueueOverwrite(LED1_QUEUE, &leddata);
+                        //                        leddata.GUN1 = 3;
+                        //                        xQueueOverwrite(LED1_QUEUE, &leddata);
                         CP_Level_1 = 9;
                         GUN1_CONNECTED = 1;
                         if (instance == 1) {
@@ -4525,7 +4544,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     }
                     if ((((_c102msg.cpVoltage_msb) / 10) >= 11)) {
                         if (GUN2_CONNECTED == 0) {
-                            vTaskSuspend(LED_TASKHandle);
+                            //                            vTaskSuspend(LED_TASKHandle);
                             AC_Contactor_Relay_Set();
                             FAN_ON(65535);
                             instance = 0;
@@ -4853,7 +4872,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         Update_GUN1_Charging_Start_sec(sec);
                         vTaskDelay(100);
                         STARTING_UNIT = IMPORT_ENERGY1;
-                        vTaskResume(LED_TASKHandle);
+                        //                        vTaskResume(LED_TASKHandle);
                         flashmsg.START_DATE = (year << 16) | (month << 8) | day;
                         flashmsg.START_TIME = (hour << 16) | (minute << 8) | sec;
                     }
@@ -4871,8 +4890,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     GUN1_CHARGING_TIME = GUN1_CHARGING_TIME + value.value[0];
                 }
                 FAN_ON(30000);
-                leddata.GUN1 = 1;
-                xQueueOverwrite(LED1_QUEUE, &leddata);
+                //                leddata.GUN1 = 1;
+                //                xQueueOverwrite(LED1_QUEUE, &leddata);
                 Change_gun1_status_to(CHARGING);
                 Update_GUN1_Duration(GUN1_CHARGING_TIME);
                 if (initial_SOC1 == 7) {
@@ -5125,8 +5144,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 vTaskDelay(50);
                 DC1_Contactor_Set();
                 STOPING_UNIT = IMPORT_ENERGY1;
-                leddata.GUN1 = 0;
-                xQueueOverwrite(LED1_QUEUE, &leddata);
+                //                leddata.GUN1 = 0;
+                //                xQueueOverwrite(LED1_QUEUE, &leddata);
                 GUN1_CONNECTED = 0;
 
                 rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
@@ -5145,9 +5164,9 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 xQueueSend(_50msQUEUE, &_50msmsg, 100);
                 vTaskDelay(50);
                 DC1_Contactor_Set();
-                if ((GUN2_CONNECTED == 0) && (GUN1_CONNECTED == 0)) {
-                    vTaskSuspend(LED_TASKHandle);
-                }
+                //                if ((GUN2_CONNECTED == 0) && (GUN1_CONNECTED == 0)) {
+                //                    vTaskSuspend(LED_TASKHandle);
+                //                }
                 xTimerStop(Gun1_Charging_timer, 10);
                 /////////HMI/////////////////////
                 Update_GUN1_Charging_Stop_date(day);
@@ -5226,7 +5245,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
     _2_PLC_tx_200 _2_PLC_tx_200_t = {0};
     RECTIFIER_Q rectimsg;
     FLASH_WRITE_Q flashmsg;
-    LED2_Q leddata;
+//    LED2_Q leddata;
     ESP_Q_DATA espmsg;
     memset(espmsg.ESP_ARRAY, 0, sizeof (espmsg.ESP_ARRAY));
     RELAY_Q relaymsg;
@@ -5274,6 +5293,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
         }
         switch (CURRENT_PLC2_STATE) {
             case _2_PLC_STATE_IDLE_1:
+                  vTaskResume(LED_TASKHandle);
                 Demand_Current2 = 0;
                 Demand_Voltage2 = 0;
                 initial_SOC2 = 0;
@@ -5306,8 +5326,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         xQueueSend(_50msQUEUE, &_50msmsg, 100);
                         vTaskDelay(100);
                         CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_2;
-                        leddata.GUN2 = 4;
-                        xQueueOverwrite(LED2_QUEUE, &leddata);
+                        //                        leddata.GUN2 = 4;
+                        //                        xQueueOverwrite(LED2_QUEUE, &leddata);
                     }
                 }
 
@@ -5347,11 +5367,11 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 8) && (((_c502msg.cpVoltage_msb) / 10) <= 10)) {
                         ////////HMI/////////////
                         Change_gun2_status_to(CONNECTED);
-                        vTaskResume(LED_TASKHandle);
+                        //                        vTaskResume(LED_TASKHandle);
                         ////////HMI/////////////
                         AC_Contactor_Relay_Clear();
-                        leddata.GUN2 = 4;
-                        xQueueOverwrite(LED2_QUEUE, &leddata);
+                        //                        leddata.GUN2 = 4;
+                        //                        xQueueOverwrite(LED2_QUEUE, &leddata);
                         CP_Level_2 = 9;
                         GUN2_CONNECTED = 1;
                         if (instance == 1) {
@@ -5373,7 +5393,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     }
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
                         if (GUN1_CONNECTED == 0) {
-                            vTaskSuspend(LED_TASKHandle);
+                            //                            vTaskSuspend(LED_TASKHandle);
                             AC_Contactor_Relay_Set();
                             FAN_ON(65535);
                             instance = 0;
@@ -5693,7 +5713,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         vTaskDelay(100);
 
                         STARTING_UNIT = IMPORT_ENERGY2;
-                        vTaskResume(LED_TASKHandle);
+                        //                        vTaskResume(LED_TASKHandle);
                         flashmsg.START_DATE = (year << 16) | (month << 8) | day;
                         flashmsg.START_TIME = (hour << 16) | (minute << 8) | sec;
                     }
@@ -5710,8 +5730,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 break;
             case _2_PLC_STATE_CURRENT_DEMAND_1:
                 FAN_ON(30000);
-                leddata.GUN2 = 1;
-                xQueueOverwrite(LED2_QUEUE, &leddata);
+                //                leddata.GUN2 = 1;
+                //                xQueueOverwrite(LED2_QUEUE, &leddata);
                 Change_gun2_status_to(CHARGING);
                 Update_GUN2_Duration(GUN2_CHARGING_TIME);
                 if (initial_SOC2 == 7) {
@@ -5971,8 +5991,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 vTaskDelay(50);
                 DC2_Contactor_Set();
                 STOPING_UNIT = IMPORT_ENERGY2;
-                leddata.GUN2 = 0;
-                xQueueOverwrite(LED2_QUEUE, &leddata);
+                //                leddata.GUN2 = 0;
+                //                xQueueOverwrite(LED2_QUEUE, &leddata);
                 GUN2_CONNECTED = 0;
 
                 rectimsg.PLC_ID[0] = 0x02;
@@ -5992,9 +6012,9 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 xQueueSend(_50msQUEUE, &_50msmsg, 100);
                 vTaskDelay(50);
                 DC2_Contactor_Set();
-                if ((GUN2_CONNECTED == 0) && (GUN1_CONNECTED == 0)) {
-                    vTaskSuspend(LED_TASKHandle);
-                }
+                //                if ((GUN2_CONNECTED == 0) && (GUN1_CONNECTED == 0)) {
+                //                    vTaskSuspend(LED_TASKHandle);
+                //                }
                 xTimerStop(Gun2_Charging_timer, 10);
                 /////////HMI/////////////////////
                 Update_GUN2_Charging_Stop_date(day);
@@ -6517,88 +6537,191 @@ void Start_MAINS_TASK(void *argument) {
 
 void Start_LED_TASK(void *argument) {
     LED1_Q led1data;
-    LED2_Q led2data;
+    //    LED2_Q led2data;
     static uint8_t colo_state = 0;
     static uint8_t colo_state1 = 0;
-    static uint8_t GUN1_state = 0;
-    static uint8_t GUN2_state = 0;
+    static uint8_t GUN_state = 0;
+    //    static uint8_t GUN2_state = 0;
     static uint8_t Battery_icon1 = 0;
     static uint8_t Battery_icon2 = 0;
     COLOR1_Q color1msg;
     COLOR2_Q color2msg;
     for (;;) {
-
+    
         if (xQueueReceive(LED1_QUEUE, &led1data, 0)) {
-            GUN1_state = led1data.GUN1;
+            GUN_state = led1data.GUN;
         }
-        if (xQueueReceive(LED2_QUEUE, &led2data, 0)) {
-            GUN2_state = led2data.GUN2;
-        }
-        if (GUN1_state == 3) {
-            color1msg.COLOR1 = GREEN;
-            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
-        }
-        if (GUN2_state == 4) {
-            color2msg.COLOR2 = GREEN2;
-            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
-        }
-        if (GUN1_state == 1) {
-            switch (colo_state) {
-                case 0:
-                    colo_state = 1;
-                    color1msg.COLOR1 = NO_COLOR;
-                    xQueueOverwrite(COLOR1_QUEUE, &color1msg);
-                    break;
-                case 1:
-                    color1msg.COLOR1 = GREEN;
-                    colo_state = 0;
-                    xQueueOverwrite(COLOR1_QUEUE, &color1msg);
-                    break;
-            }
-            switch (Battery_icon1) {
-                case 0:
-                    Update_GUN1_Battery_Percent(0);
-                    Battery_icon1 = 1;
-                    break;
-                case 1:
-                    Update_GUN1_Battery_Percent(3);
-                    Battery_icon1 = 2;
-                    break;
-                case 2:
-                    Update_GUN1_Battery_Percent(6);
-                    Battery_icon1 = 0;
-                    break;
-            }
-        }
-        if (GUN2_state == 1) {
-            switch (colo_state1) {
-                case 0:
-                    colo_state1 = 1;
-                    color2msg.COLOR2 = NO_COLOR2;
-                    xQueueOverwrite(COLOR2_QUEUE, &color2msg);
-                    break;
-                case 1:
-                    color2msg.COLOR2 = GREEN2;
-                    colo_state1 = 0;
-                    xQueueOverwrite(COLOR2_QUEUE, &color2msg);
-                    break;
-            }
-            switch (Battery_icon2) {
-                case 0:
-                    Update_GUN2_Battery_Percent(0);
-                    Battery_icon2 = 1;
-                    break;
-                case 1:
-                    Update_GUN2_Battery_Percent(3);
-                    Battery_icon2 = 2;
-                    break;
-                case 2:
-                    Update_GUN2_Battery_Percent(6);
-                    Battery_icon2 = 0;
+        //        if (xQueueReceive(LED2_QUEUE, &led2data, 0)) {
+        //            GUN2_state = led2data.GUN2;
+        //        }
+        switch (GUN1_CONNECTED) {
+            case 0:
+                if (GUN_state == OFFLINE) {
+                    color1msg.COLOR1 = MAGENTA;
 
-                    break;
-            }
+                    xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+
+                } else if (GUN_state == ONLINE) {
+                    color1msg.COLOR1 = WHITE;
+
+                    xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                }
+                break;
+            case 1:
+                if (CURRENT_PLC1_STATE <= _1_PLC_STATE_PRE_CHARGE) {
+                    color1msg.COLOR1 = GREEN;
+
+                    xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                }
+                if (CURRENT_PLC1_STATE == _1_PLC_STATE_CURRENT_DEMAND_1) {
+                    switch (colo_state) {
+                        case 0:
+                            colo_state = 1;
+                            color1msg.COLOR1 = NO_COLOR;
+                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                            break;
+                        case 1:
+                            color1msg.COLOR1 = GREEN;
+                            colo_state = 0;
+                            xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                            break;
+                    }
+                    switch (Battery_icon1) {
+                        case 0:
+                            Update_GUN1_Battery_Percent(0);
+                            Battery_icon1 = 1;
+                            break;
+                        case 1:
+                            Update_GUN1_Battery_Percent(3);
+                            Battery_icon1 = 2;
+                            break;
+                        case 2:
+                            Update_GUN1_Battery_Percent(6);
+                            Battery_icon1 = 0;
+                            break;
+                    }
+                }
+                break;
+
         }
+        switch (GUN2_CONNECTED) {
+            case 0:
+                if (GUN_state == OFFLINE) {
+                    color2msg.COLOR2 = MAGENTA2;
+
+                    xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+
+                } else if (GUN_state == ONLINE) {
+                    color2msg.COLOR2 = WHITE2;
+
+                    xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                }
+                break;
+            case 1:
+                if (CURRENT_PLC2_STATE <= _2_PLC_STATE_PRE_CHARGE) {
+                    color2msg.COLOR2 = GREEN2;
+
+                    xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                }
+                if (CURRENT_PLC2_STATE == _2_PLC_STATE_CURRENT_DEMAND_1) {
+                    switch (colo_state1) {
+                        case 0:
+                            colo_state1 = 1;
+                            color2msg.COLOR2 = NO_COLOR;
+                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                            break;
+                        case 1:
+                            color2msg.COLOR2 = GREEN2;
+                            colo_state1 = 0;
+                            xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                            break;
+                    }
+                    switch (Battery_icon2) {
+                        case 0:
+                            Update_GUN2_Battery_Percent(0);
+                            Battery_icon2 = 1;
+                            break;
+                        case 1:
+                            Update_GUN2_Battery_Percent(3);
+                            Battery_icon2 = 2;
+                            break;
+                        case 2:
+                            Update_GUN2_Battery_Percent(6);
+                            Battery_icon2 = 0;
+                            break;
+                    }
+                }
+                break;
+
+        }
+
+
+
+        /* if (GUN1_state == 3) {
+             color1msg.COLOR1 = GREEN;
+             xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+         }
+         if (GUN2_state == 4) {
+             color2msg.COLOR2 = GREEN2;
+             xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+         }
+         if (GUN1_state == 1) {
+             switch (colo_state) {
+                 case 0:
+                     colo_state = 1;
+                     color1msg.COLOR1 = NO_COLOR;
+                     xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                     break;
+                 case 1:
+                     color1msg.COLOR1 = GREEN;
+                     colo_state = 0;
+                     xQueueOverwrite(COLOR1_QUEUE, &color1msg);
+                     break;
+             }
+             switch (Battery_icon1) {
+                 case 0:
+                     Update_GUN1_Battery_Percent(0);
+                     Battery_icon1 = 1;
+                     break;
+                 case 1:
+                     Update_GUN1_Battery_Percent(3);
+                     Battery_icon1 = 2;
+                     break;
+                 case 2:
+                     Update_GUN1_Battery_Percent(6);
+                     Battery_icon1 = 0;
+                     break;
+             }
+         }
+         if (GUN2_state == 1) {
+             switch (colo_state1) {
+                 case 0:
+                     colo_state1 = 1;
+                     color2msg.COLOR2 = NO_COLOR2;
+                     xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                     break;
+                 case 1:
+                     color2msg.COLOR2 = GREEN2;
+                     colo_state1 = 0;
+                     xQueueOverwrite(COLOR2_QUEUE, &color2msg);
+                     break;
+             }
+             switch (Battery_icon2) {
+                 case 0:
+                     Update_GUN2_Battery_Percent(0);
+                     Battery_icon2 = 1;
+                     break;
+                 case 1:
+                     Update_GUN2_Battery_Percent(3);
+                     Battery_icon2 = 2;
+                     break;
+                 case 2:
+                     Update_GUN2_Battery_Percent(6);
+                     Battery_icon2 = 0;
+
+                     break;
+             }
+         }*/
         vTaskDelay(1000);
     }
 }
