@@ -2678,7 +2678,9 @@ void Start_ESP_RX_TASK(void *argument) {
                     xQueueSend(FLASH_WRITE_QUEUE, &flashmsg, 100);
                     vTaskResume(FLASH_WRITE_TASKHandle);
                 }
-
+                if(esprxdata.restart==1){
+                    NVIC_SystemReset();
+                }
                 year = esprxdata.year;
                 month = esprxdata.month;
                 day = esprxdata.day;
