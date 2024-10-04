@@ -801,7 +801,7 @@ int main(void) {
     vTaskSuspend(canrecievetask);
     vTaskSuspend(EMERGENCY_TASKHandle);
     vTaskSuspend(SMOKE_LIMIT_TASKHandle);
-       vTaskSuspend(LED_TASKHandle);
+    vTaskSuspend(LED_TASKHandle);
     vTaskSuspend(GUN1_PARAM_TASKHandle);
     vTaskSuspend(GUN2_PARAM_TASKHandle);
     vTaskSuspend(FLASH_READ_TASKHandle);
@@ -2616,7 +2616,7 @@ void Start_ESP_RX_TASK(void *argument) {
     FLASH_WRITE_Q flashmsg;
     FLASH_READ_Q flashreadmsg;
     LED1_Q leddata;
-    
+
     memset(esprxdata.DATA_ARRAY, 0, sizeof (esprxdata.DATA_ARRAY));
     ESP_RX_Q esprxdata_t;
     char buffer[70];
@@ -2678,7 +2678,7 @@ void Start_ESP_RX_TASK(void *argument) {
                     xQueueSend(FLASH_WRITE_QUEUE, &flashmsg, 100);
                     vTaskResume(FLASH_WRITE_TASKHandle);
                 }
-                if(esprxdata.restart==1){
+                if (esprxdata.restart == 1) {
                     NVIC_SystemReset();
                 }
                 year = esprxdata.year;
@@ -5129,10 +5129,19 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 }
                 break;
             case _1_PLC_STATE_TERMINATED:
-                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                rectimsg.PLC_ID[0] = 0x01;
-                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                vTaskDelay(3000);
+                if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 0) {
+                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+                    rectimsg.PLC_ID[0] = 0x03;
+                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    vTaskDelay(3000);
+                }
+                if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 1) {
+                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+                    rectimsg.PLC_ID[0] = 0x01;
+                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    vTaskDelay(3000);
+                }
+ 
                 _50msmsg.DATA[1] = _1_PLC_tx_50_t._002_EVSE_CHARGING_CONTROL_DATA1_t =
                         Charging_Control_Normal_Stop;
                 _50msmsg.ID_t = _002;
@@ -5247,7 +5256,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
     _2_PLC_tx_200 _2_PLC_tx_200_t = {0};
     RECTIFIER_Q rectimsg;
     FLASH_WRITE_Q flashmsg;
-//    LED2_Q leddata;
+    //    LED2_Q leddata;
     ESP_Q_DATA espmsg;
     memset(espmsg.ESP_ARRAY, 0, sizeof (espmsg.ESP_ARRAY));
     RELAY_Q relaymsg;
@@ -5295,7 +5304,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
         }
         switch (CURRENT_PLC2_STATE) {
             case _2_PLC_STATE_IDLE_1:
-                  vTaskResume(LED_TASKHandle);
+                vTaskResume(LED_TASKHandle);
                 Demand_Current2 = 0;
                 Demand_Voltage2 = 0;
                 initial_SOC2 = 0;
@@ -5975,12 +5984,19 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 }
                 break;
             case _2_PLC_STATE_TERMINATED:
-                rectimsg.PLC_ID[0] = 0x02;
-
-                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                rectimsg.PLC_ID[0] = 0x02;
-                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                vTaskDelay(3000);
+                if (GUN2_CONNECTED == 1 && GUN1_CONNECTED == 0) {
+                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+                    rectimsg.PLC_ID[0] = 0x03;
+                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    vTaskDelay(3000);
+                }
+                if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 1) {
+                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+                    rectimsg.PLC_ID[0] = 0x02;
+                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    vTaskDelay(3000);
+                }
+ 
                 _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
                         Charging_Control_Normal_Stop;
                 _50msmsg.ID_t = _402;
@@ -6549,7 +6565,7 @@ void Start_LED_TASK(void *argument) {
     COLOR1_Q color1msg;
     COLOR2_Q color2msg;
     for (;;) {
-    
+
         if (xQueueReceive(LED1_QUEUE, &led1data, 0)) {
             GUN_state = led1data.GUN;
         }
