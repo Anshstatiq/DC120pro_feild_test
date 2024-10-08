@@ -243,7 +243,7 @@ volatile uint8_t GUN1_CONNECTED = 0;
 volatile uint8_t GUN2_CONNECTED = 0;
 char Simulator_buff[10] = {0};
 static uint8_t GUN1_50_clear = 0, GUN1_200_clear = 0, GUN1_500_clear = 0, GUN1_1000_clear = 0, GUN2_50_clear = 0, GUN2_200_clear = 0, GUN2_500_clear = 0, GUN2_1000_clear = 0;
-
+uint8_t GUN2_summary_close_flag=0,GUN1_summary_close_flag=0;
 uint8_t OTP[4] = {0};
 char bufferr[] = "INTERRUPTED\r\n";
 uint8_t hmi_rx[1] = {0};
@@ -1922,10 +1922,12 @@ void Start_HMI_RX_TASK(void *argument) {
                     }
                 }
                 if (data[4] == 0x12 && data[5] == 0x17) {
+                    GUN1_summary_close_flag = 1;
                     CURRENT_PAGE = INTRO_PAGE;
                     Change_Page_to(CURRENT_PAGE);
                 }
                 if (data[4] == 0x12 && data[5] == 0x18) {
+                    GUN2_summary_close_flag = 1;
                     CURRENT_PAGE = INTRO_PAGE;
                     Change_Page_to(CURRENT_PAGE);
                 }
@@ -6129,6 +6131,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                         setRectifierVoltMode(RECTIFIER2_GROUP1, LOW_V_MODE);
                         vTaskDelay(50);
                     }
+                    if ((current_t * 2) >= 250) {
+                        current_t = 62;
+                    }
                     setRectifierVoltage(RECTIFIER1_GROUP1, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
                     setRectifierCurrent(RECTIFIER1_GROUP1, (uint32_t) (current_t * 1000));
@@ -6170,6 +6175,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                     if (current_t < 1) {
                         current_t = 1;
                     }
+                    if ((current_t * 2) >= 250) {
+                        current_t = 62;
+                    }
                     setRectifierVoltage_2(RECTIFIER1_GROUP2, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
                     setRectifierCurrent_2(RECTIFIER1_GROUP2, (uint32_t) (current_t * 1000));
@@ -6198,6 +6206,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                     current_t = msg.CURRENT_VALUE[0];
                     if (current_t < 1) {
                         current_t = 2;
+                    }
+                    if ((current_t * 4) >= 250) {
+                        current_t = 62;
                     }
                     voltage_t = msg.VOLTAGE_VALUE[0];
                     if (voltage_t > 500) {
@@ -6797,6 +6808,9 @@ void Start_GUN1_PARAM_TASK(void *argument) {
         CURRENT_PAGE = GUN1_SUMMARY_PAGE;
         Change_Page_to(CURRENT_PAGE);
         Change_gun1_status_to(CHARGING_COMPLETED);
+        if (GUN1_summary_close_flag == 1) {
+            count = 5;
+        }
         if (count == 5) {
 
             FAN_ON(65535);
@@ -6813,8 +6827,7 @@ void Start_GUN1_PARAM_TASK(void *argument) {
             Update_GUN1_Battery_Percent(0);
             Update_GUN1_Session_End_Reason(0x00);
             count = 0;
-            CURRENT_PAGE = INTRO_PAGE;
-            Change_Page_to(CURRENT_PAGE);
+            GUN1_summary_close_flag = 0;
             vTaskResume(_1_PLC_MANAGE_TASKHandle);
             vTaskSuspend(GUN1_PARAM_TASKHandle);
         }
@@ -6830,6 +6843,9 @@ void Start_GUN2_PARAM_TASK(void *argument) {
         CURRENT_PAGE = GUN2_SUMMARY_PAGE;
         Change_Page_to(CURRENT_PAGE);
         Change_gun2_status_to(CHARGING_COMPLETED);
+        if (GUN2_summary_close_flag == 1) {
+            count = 5;
+        }
         if (count == 5) {
 
             FAN_ON(65535);
@@ -6846,8 +6862,7 @@ void Start_GUN2_PARAM_TASK(void *argument) {
             Update_GUN2_Battery_Percent(0);
             Update_GUN2_Session_End_Reason(0x00);
             count = 0;
-            CURRENT_PAGE = INTRO_PAGE;
-            Change_Page_to(CURRENT_PAGE);
+            GUN2_summary_close_flag = 0;
             vTaskResume(_2_PLC_MANAGE_TASKHandle);
             vTaskSuspend(GUN2_PARAM_TASKHandle);
         }
