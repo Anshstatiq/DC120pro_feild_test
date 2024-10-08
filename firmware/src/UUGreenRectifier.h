@@ -115,5 +115,5 @@ bool rectifierPowerOff_2(uint32_t);
 uint32_t getRectifierStatus(uint32_t);
 uint32_t getRectifierStatus_2(uint32_t);
 bool setRectifierVoltMode(uint32_t, high_low_v_mode);
-
+bool setRectifierVoltMode2(uint32_t rAddr, high_low_v_mode vMode);
 #endif /* _UUGREEN_RECTIFIER_H_ */

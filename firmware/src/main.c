@@ -5141,7 +5141,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
                     vTaskDelay(3000);
                 }
- 
+
                 _50msmsg.DATA[1] = _1_PLC_tx_50_t._002_EVSE_CHARGING_CONTROL_DATA1_t =
                         Charging_Control_Normal_Stop;
                 _50msmsg.ID_t = _002;
@@ -5996,7 +5996,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
                     vTaskDelay(3000);
                 }
- 
+
                 _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
                         Charging_Control_Normal_Stop;
                 _50msmsg.ID_t = _402;
@@ -6101,6 +6101,7 @@ void Start_RECTIFIER_TASK(void *argument) {
     memset(relaymsg.RELAY_DATA, 0, sizeof (relaymsg.RELAY_DATA));
     static uint8_t merger_flag = 0;
     char buffer[50] = {0};
+
     for (;;) {
 
         if (xQueueReceive(RECTIFIER_QUEUE, &msg, 0)) {
@@ -6116,6 +6117,18 @@ void Start_RECTIFIER_TASK(void *argument) {
                         current_t = 2;
                     }
                     voltage_t = msg.VOLTAGE_VALUE[0];
+                    if (voltage_t > 500) {
+                        setRectifierVoltMode(RECTIFIER1_GROUP1, HIGH_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode(RECTIFIER2_GROUP1, HIGH_V_MODE);
+                        vTaskDelay(50);
+                    }
+                    if (voltage_t <= 500) {
+                        setRectifierVoltMode(RECTIFIER1_GROUP1, LOW_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode(RECTIFIER2_GROUP1, LOW_V_MODE);
+                        vTaskDelay(50);
+                    }
                     setRectifierVoltage(RECTIFIER1_GROUP1, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
                     setRectifierCurrent(RECTIFIER1_GROUP1, (uint32_t) (current_t * 1000));
@@ -6142,6 +6155,18 @@ void Start_RECTIFIER_TASK(void *argument) {
 
                     current_t = msg.CURRENT_VALUE[0];
                     voltage_t = msg.VOLTAGE_VALUE[0];
+                    if (voltage_t > 500) {
+                        setRectifierVoltMode2(RECTIFIER1_GROUP2, HIGH_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode2(RECTIFIER2_GROUP2, HIGH_V_MODE);
+                        vTaskDelay(50);
+                    }
+                    if (voltage_t <= 500) {
+                        setRectifierVoltMode2(RECTIFIER1_GROUP2, LOW_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode2(RECTIFIER2_GROUP2, LOW_V_MODE);
+                        vTaskDelay(50);
+                    }
                     if (current_t < 1) {
                         current_t = 1;
                     }
@@ -6175,6 +6200,26 @@ void Start_RECTIFIER_TASK(void *argument) {
                         current_t = 2;
                     }
                     voltage_t = msg.VOLTAGE_VALUE[0];
+                    if (voltage_t > 500) {
+                        setRectifierVoltMode2(RECTIFIER1_GROUP2, HIGH_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode2(RECTIFIER2_GROUP2, HIGH_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode(RECTIFIER1_GROUP1, HIGH_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode(RECTIFIER2_GROUP1, HIGH_V_MODE);
+                        vTaskDelay(50);
+                    }
+                    if (voltage_t <= 500) {
+                        setRectifierVoltMode2(RECTIFIER1_GROUP2, LOW_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode2(RECTIFIER2_GROUP2, LOW_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode(RECTIFIER1_GROUP1, LOW_V_MODE);
+                        vTaskDelay(50);
+                        setRectifierVoltMode(RECTIFIER2_GROUP1, LOW_V_MODE);
+                        vTaskDelay(50);
+                    }
                     setRectifierVoltage(RECTIFIER1_GROUP1, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
                     setRectifierCurrent(RECTIFIER1_GROUP1, (uint32_t) (current_t * 1000));
