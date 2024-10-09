@@ -123,6 +123,10 @@ QueueHandle_t GUN1_CHARGING_TIME_QUEUE = NULL;
 QueueHandle_t GUN2_CHARGING_TIME_QUEUE = NULL;
 QueueHandle_t REC_TEMP_QUEUE = NULL;
 QueueHandle_t REC2_TEMP_QUEUE = NULL;
+QueueHandle_t ESP_S_REC_TEMP_QUEUE = NULL;
+
+
+
 
 TimerHandle_t _50_sec_timer = NULL;
 TimerHandle_t _200_sec_timer = NULL;
@@ -738,6 +742,8 @@ int main(void) {
     ESP_S_MAC_ID_CONN_NO_QUEUE = xQueueCreate(1, sizeof (ESP_S_RFID_CONN_NO_Q));
     REC_TEMP_QUEUE = xQueueCreate(10, sizeof (CAN1_RECIEVE_Q));
     REC2_TEMP_QUEUE = xQueueCreate(20, sizeof (CAN2_RECIEVE_Q));
+    ESP_S_REC_TEMP_QUEUE = xQueueCreate(2, sizeof (ESP_S_REC_TEMP_Q));
+
 
     all_rec_timer = xTimerCreate("all_rec_timer", 10000, pdFALSE, (void *) 0, all_rec_Callback);
     rec1_timer = xTimerCreate("rec1_timer", 10000, pdFALSE, (void *) 0, rec1_Callback);
@@ -2509,6 +2515,7 @@ void Start_ESP_SEND_TASK(void *argument) {
     ESP_S_RFID_CONN_NO_Q rfid_conn_no_data;
     ESP_S_MAC_ID_CONN_NO_Q mac_id_conn_no_data;
     ESP_S_MAC_ID_Q mac_id_data;
+    ESP_S_REC_TEMP_Q esp_s_temp_data;
     xTimerStart(modem_timer, 40000);
     for (;;) {
 
@@ -2599,6 +2606,11 @@ void Start_ESP_SEND_TASK(void *argument) {
             txdata.DC2_POWER = esp_s_meter_data.DC2_POWER;
             txdata.AC_ENERGY = esp_s_meter_data.AC_ENERGY;
         }
+        if(xQueueReceive(ESP_S_REC_TEMP_QUEUE,&esp_s_temp_data,0)){
+            txdata.REC_Group1=esp_s_temp_data.rec_group1;
+            txdata.REC_Group2=esp_s_temp_data.rec_group2;
+        }
+        
         SERCOM7_USART_Write(txdata.ESP_ARRAY, sizeof (txdata.ESP_ARRAY));
         while (!(SERCOM7_USART_TransmitComplete()))
             ;
@@ -6548,6 +6560,7 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
     COLOR2_Q color2msg;
     CAN1_RECIEVE_Q msg;
     CAN2_RECIEVE_Q msg1;
+    ESP_S_REC_TEMP_Q espdata;
     static uint8_t read_temp[4] = {0};
     BaseType_t xTaskWokenByReceive = pdFALSE;
     char buffer[50] = {0};
@@ -6640,16 +6653,18 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
 
             }
             if ((read_temp[0] > 0) && (read_temp[1] > 0)) {
-                GUN1_RECT_AVG_TEMP = (read_temp[0] + read_temp[1])>>1;
-                if(GUN1_RECT_AVG_TEMP!=0){
-                Update_REC_GUN1_Temp((uint16_t) GUN1_RECT_AVG_TEMP);
+                GUN1_RECT_AVG_TEMP = (read_temp[0] + read_temp[1]) >> 1;
+                if (GUN1_RECT_AVG_TEMP != 0) {
+                    Update_REC_GUN1_Temp((uint16_t) GUN1_RECT_AVG_TEMP);
+                    espdata.rec_group1 = (uint8_t)((int)(GUN1_RECT_AVG_TEMP));
                 }
-//                vTaskDelay(50);
+                //                vTaskDelay(50);
                 memset(buffer, 0, sizeof (buffer));
                 sprintf(buffer, "GUN1_TEMP : %f\r\n", GUN1_RECT_AVG_TEMP);
                 SERCOM5_USART_Write(buffer, sizeof (buffer));
                 while (!(SERCOM5_USART_TransmitComplete()));
             }
+            
         }
 
         if (xQueueReceiveFromISR(REC2_TEMP_QUEUE, &msg1, &xTaskWokenByReceive)) {
@@ -6667,18 +6682,23 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
             }
             if ((read_temp[2] > 0) && (read_temp[3] > 0)) {
 
-                GUN2_RECT_AVG_TEMP = (read_temp[2] + read_temp[3])>>1;
-                if(GUN2_RECT_AVG_TEMP!=0){
-                Update_REC_GUN2_Temp((uint16_t) GUN2_RECT_AVG_TEMP);
+                GUN2_RECT_AVG_TEMP = (read_temp[2] + read_temp[3]) >> 1;
+                if (GUN2_RECT_AVG_TEMP != 0) {
+                    Update_REC_GUN2_Temp((uint16_t) GUN2_RECT_AVG_TEMP);
+                    espdata.rec_group2 = (uint8_t)((int)(GUN2_RECT_AVG_TEMP));
                 }
-//                vTaskDelay(50);
+                //                vTaskDelay(50);
                 memset(buffer, 0, sizeof (buffer));
                 sprintf(buffer, "GUN2_TEMP : %f\r\n", GUN2_RECT_AVG_TEMP);
                 SERCOM5_USART_Write(buffer, sizeof (buffer));
                 while (!(SERCOM5_USART_TransmitComplete()));
             }
-        }
 
+        }
+            
+            
+
+            xQueueOverwrite(ESP_S_REC_TEMP_QUEUE, &espdata);
 
 
 

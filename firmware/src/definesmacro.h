@@ -336,7 +336,7 @@ extern "C" {
     } CP_LEVEL2_Q;
 
     typedef union {
-        uint8_t ESP_ARRAY[144];
+        uint8_t ESP_ARRAY[146];
         //        uint8_t ESP_ARRAY[160];
 
         struct {
@@ -394,6 +394,8 @@ extern "C" {
             uint8_t Charge_history_bit;
             uint8_t OTP[4];
             uint8_t IDX;
+            uint8_t REC_Group1;
+            uint8_t REC_Group2;
             uint8_t Stop_bit;
         };
     } ESP_Q_DATA;
@@ -426,6 +428,14 @@ extern "C" {
         uint16_t Gun_temp_2_1; //3
     } ESP_S_TEMP_Q;
 
+    
+       typedef struct {
+        uint8_t rec_group1; //3
+        uint8_t rec_group2; //3
+
+    } ESP_S_REC_TEMP_Q; 
+    
+    
     typedef struct {
         uint16_t Error_Code0; //5
         uint16_t Error_Code1; //5
