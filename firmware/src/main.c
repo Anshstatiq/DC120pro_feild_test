@@ -6641,7 +6641,9 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
             }
             if ((read_temp[0] > 0) && (read_temp[1] > 0)) {
                 GUN1_RECT_AVG_TEMP = (read_temp[0] + read_temp[1])>>1;
+                if(GUN1_RECT_AVG_TEMP!=0){
                 Update_REC_GUN1_Temp((uint16_t) GUN1_RECT_AVG_TEMP);
+                }
 //                vTaskDelay(50);
                 memset(buffer, 0, sizeof (buffer));
                 sprintf(buffer, "GUN1_TEMP : %f\r\n", GUN1_RECT_AVG_TEMP);
@@ -6663,10 +6665,12 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
                     break;
 
             }
-            if ((read_temp[3] > 0) && (read_temp[4] > 0)) {
+            if ((read_temp[2] > 0) && (read_temp[3] > 0)) {
 
-                GUN2_RECT_AVG_TEMP = (read_temp[3] + read_temp[4])>>1;
+                GUN2_RECT_AVG_TEMP = (read_temp[2] + read_temp[3])>>1;
+                if(GUN2_RECT_AVG_TEMP!=0){
                 Update_REC_GUN2_Temp((uint16_t) GUN2_RECT_AVG_TEMP);
+                }
 //                vTaskDelay(50);
                 memset(buffer, 0, sizeof (buffer));
                 sprintf(buffer, "GUN2_TEMP : %f\r\n", GUN2_RECT_AVG_TEMP);

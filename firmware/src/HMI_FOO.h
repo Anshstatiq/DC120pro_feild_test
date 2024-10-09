@@ -166,10 +166,10 @@ extern QueueHandle_t HMI_SEND_QUEUE;
 #define GUN1_TEMP_ADD_LSB   0x8E
 #define GUN2_TEMP_ADD_MSB   0x10
 #define GUN2_TEMP_ADD_LSB   0x90
-#define REC_GUN1_TEMP_ADD_MSB   0x10
-#define REC_GUN1_TEMP_ADD_LSB   0x92
-#define REC_GUN2_TEMP_ADD_MSB   0x10
-#define REC_GUN2_TEMP_ADD_LSB   0x94
+#define REC_GUN1_TEMP_ADD_MSB   0x20
+#define REC_GUN1_TEMP_ADD_LSB   0x00
+#define REC_GUN2_TEMP_ADD_MSB   0x20
+#define REC_GUN2_TEMP_ADD_LSB   0x02
 
 
 
