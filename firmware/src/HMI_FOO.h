@@ -166,6 +166,13 @@ extern QueueHandle_t HMI_SEND_QUEUE;
 #define GUN1_TEMP_ADD_LSB   0x8E
 #define GUN2_TEMP_ADD_MSB   0x10
 #define GUN2_TEMP_ADD_LSB   0x90
+#define REC_GUN1_TEMP_ADD_MSB   0x10
+#define REC_GUN1_TEMP_ADD_LSB   0x92
+#define REC_GUN2_TEMP_ADD_MSB   0x10
+#define REC_GUN2_TEMP_ADD_LSB   0x94
+
+
+
 
 #define MAIN_FAIL_ADD_MSB 0x13
 #define MAIN_FAIL_ADD_LSB 0x00
@@ -475,3 +482,5 @@ void Update_Rec4_status(uint8_t data[]);
 
 void Update_Gun1_stop_btn(void);
 void Update_Gun2_stop_btn(void);
+void Update_REC_GUN2_Temp(uint16_t temp);
+void Update_REC_GUN1_Temp(uint16_t temp);

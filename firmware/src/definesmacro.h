@@ -543,7 +543,18 @@ extern "C" {
     } COLOR2_Q;
 
 
+    typedef struct {
+        uint8_t data[8];
+        uint32_t ID;
 
+    } CAN1_RECIEVE_Q;
+    CAN1_RECIEVE_Q sendbuf1;
+        typedef struct {
+        uint8_t data[8];
+        uint32_t ID;
+
+    } CAN2_RECIEVE_Q;
+    CAN2_RECIEVE_Q sendbuf2;
 #ifdef	__cplusplus
 }
 #endif

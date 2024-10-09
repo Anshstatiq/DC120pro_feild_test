@@ -121,6 +121,8 @@ QueueHandle_t WHICH_METER_QUEUE = NULL;
 QueueHandle_t NEXT_METER_QUEUE = NULL;
 QueueHandle_t GUN1_CHARGING_TIME_QUEUE = NULL;
 QueueHandle_t GUN2_CHARGING_TIME_QUEUE = NULL;
+QueueHandle_t REC_TEMP_QUEUE = NULL;
+QueueHandle_t REC2_TEMP_QUEUE = NULL;
 
 TimerHandle_t _50_sec_timer = NULL;
 TimerHandle_t _200_sec_timer = NULL;
@@ -243,7 +245,7 @@ volatile uint8_t GUN1_CONNECTED = 0;
 volatile uint8_t GUN2_CONNECTED = 0;
 char Simulator_buff[10] = {0};
 static uint8_t GUN1_50_clear = 0, GUN1_200_clear = 0, GUN1_500_clear = 0, GUN1_1000_clear = 0, GUN2_50_clear = 0, GUN2_200_clear = 0, GUN2_500_clear = 0, GUN2_1000_clear = 0;
-uint8_t GUN2_summary_close_flag=0,GUN1_summary_close_flag=0;
+uint8_t GUN2_summary_close_flag = 0, GUN1_summary_close_flag = 0;
 uint8_t OTP[4] = {0};
 char bufferr[] = "INTERRUPTED\r\n";
 uint8_t hmi_rx[1] = {0};
@@ -365,6 +367,7 @@ void APP_CAN_RxFifo0Callback(uint8_t numberOfMessage, uintptr_t context) {
 
 void APP_CAN_RxFifo1Callback(uint8_t numberOfMessage, uintptr_t context) {
     all_rec_status = 1;
+    BaseType_t xYieldRequired;
 
     memset(rxFiFo1, 0x00, (1 * CAN1_RX_FIFO0_ELEMENT_SIZE));
     CAN1_MessageReceiveFifo(CAN_RX_FIFO_1, 1, (CAN_RX_BUFFER *) rxFiFo1);
@@ -380,6 +383,26 @@ void APP_CAN_RxFifo1Callback(uint8_t numberOfMessage, uintptr_t context) {
     }
     if (rxBuf1->id == RESP_RECTIFIER2_GROUP2) {
         rec4_status = 1;
+    }
+    if ((rxBuf1->id == TEMP_RESP_RECTIFIER1_GROUP1) || (rxBuf1->id == TEMP_RESP_RECTIFIER2_GROUP1)) {
+        if ((rxBuf1->data[0] == 0x13) && rxBuf1->data[1] == 0x1E) {
+            sendbuf1.ID = rxBuf1->id;
+
+            memcpy(sendbuf1.data, (rxBuf1->data), rxBuf1->dlc);
+            xYieldRequired = xTaskResumeFromISR(SMOKE_LIMIT_TASKHandle);
+            xQueueSendFromISR(REC_TEMP_QUEUE, &sendbuf1, &xYieldRequired);
+            portYIELD_FROM_ISR(xYieldRequired);
+        }
+    }
+    if ((rxBuf1->id == TEMP_RESP_RECTIFIER1_GROUP2) || (rxBuf1->id == TEMP_RESP_RECTIFIER2_GROUP2)) {
+        if ((rxBuf1->data[0] == 0x23) && rxBuf1->data[1] == 0x1E) {
+            sendbuf2.ID = rxBuf1->id;
+
+            memcpy(sendbuf2.data, (rxBuf1->data), rxBuf1->dlc);
+            xYieldRequired = xTaskResumeFromISR(SMOKE_LIMIT_TASKHandle);
+            xQueueSendFromISR(REC2_TEMP_QUEUE, &sendbuf2, &xYieldRequired);
+            portYIELD_FROM_ISR(xYieldRequired);
+        }
     }
 }
 
@@ -713,6 +736,8 @@ int main(void) {
     ESP_S_RFID_CONN_NO_QUEUE = xQueueCreate(1, sizeof (ESP_S_RFID_CONN_NO_Q));
     ESP_S_MAC_ID_QUEUE = xQueueCreate(1, sizeof (ESP_S_RFID_Q));
     ESP_S_MAC_ID_CONN_NO_QUEUE = xQueueCreate(1, sizeof (ESP_S_RFID_CONN_NO_Q));
+    REC_TEMP_QUEUE = xQueueCreate(10, sizeof (CAN1_RECIEVE_Q));
+    REC2_TEMP_QUEUE = xQueueCreate(20, sizeof (CAN2_RECIEVE_Q));
 
     all_rec_timer = xTimerCreate("all_rec_timer", 10000, pdFALSE, (void *) 0, all_rec_Callback);
     rec1_timer = xTimerCreate("rec1_timer", 10000, pdFALSE, (void *) 0, rec1_Callback);
@@ -756,7 +781,7 @@ int main(void) {
     xTaskCreate(Start_RFID_SEND_TASk, "Start_RFID_SEND_TASk", 128, NULL, 1, &RFID_SEND_TASKHandle); // 512-256
     xTaskCreate(Start_ADC_TASK, "Start_ADC_TASK", 256, NULL, 1, &ADC_TASKHandle); // 1536-512
     xTaskCreate(Start_RGB_SEND_TASK, "Start_RGB_SEND_TASK", 128, NULL, 1, &RGB_SEND_TaskHandle); // 512-256
-    xTaskCreate(Start_SMOKE_LIMIT_TASK, "Start_SMOKE_LIMIT_TASK", 128, NULL, 1, &SMOKE_LIMIT_TASKHandle);
+    xTaskCreate(Start_SMOKE_LIMIT_TASK, "Start_SMOKE_LIMIT_TASK", 512, NULL, 1, &SMOKE_LIMIT_TASKHandle);
     xTaskCreate(Start_I2C_TMP_HUM_TASK, "Start_I2C_TMP_HUM_TASK", 128, NULL, 1, &I2c_TEMP_HUM_TASKHandle);
     xTaskCreate(Start_METER_RX_TASK, "Start_METER_RX_TASK", 512, NULL, 1, &METER_RECEIVE_TaskHandle); // 3072-512
     xTaskCreate(Start_RFID_RX_TASK, "Start_RFID_RX_TASK", 256, NULL, 1, &RFID_RX_TASKHandle); // 1024-512
@@ -6275,25 +6300,42 @@ void Start_RECTIFIER_TASK(void *argument) {
             }
         }
         if (GUN1_CONNECTED == 1 && merger_flag == 0) {
-            getRectifierStatus(RECTIFIER1_GROUP1);
+            //            getRectifierStatus(RECTIFIER1_GROUP1);
+            //            vTaskDelay(50);
+            //            getRectifierStatus(RECTIFIER2_GROUP1);
+            //            vTaskDelay(50);
+            getRectifiertempMode(RECTIFIER1_GROUP1);
             vTaskDelay(50);
-            getRectifierStatus(RECTIFIER2_GROUP1);
-            vTaskDelay(50);
+            getRectifiertempMode(RECTIFIER2_GROUP1);
+
         }
         if (GUN2_CONNECTED == 1 && merger_flag == 0) {
-            getRectifierStatus_2(RECTIFIER1_GROUP2);
+            //            getRectifierStatus_2(RECTIFIER1_GROUP2);
+            //            vTaskDelay(50);
+            //            getRectifierStatus_2(RECTIFIER2_GROUP2);
+            //            vTaskDelay(50);
+            getRectifiertemp2Mode(RECTIFIER1_GROUP2);
             vTaskDelay(50);
-            getRectifierStatus_2(RECTIFIER2_GROUP2);
+            getRectifiertemp2Mode(RECTIFIER2_GROUP2);
         }
         if (merger_flag == 1) {
 
-            getRectifierStatus(RECTIFIER1_GROUP1);
+            //            getRectifierStatus(RECTIFIER1_GROUP1);
+            //            vTaskDelay(50);
+            //            getRectifierStatus(RECTIFIER2_GROUP1);
+            //            vTaskDelay(50);
+            //            getRectifierStatus_2(RECTIFIER1_GROUP2);
+            //            vTaskDelay(50);
+            //            getRectifierStatus_2(RECTIFIER2_GROUP2);
+            //            vTaskDelay(50);
+            getRectifiertemp2Mode(RECTIFIER1_GROUP2);
             vTaskDelay(50);
-            getRectifierStatus(RECTIFIER2_GROUP1);
+            getRectifiertemp2Mode(RECTIFIER2_GROUP2);
             vTaskDelay(50);
-            getRectifierStatus_2(RECTIFIER1_GROUP2);
+            getRectifiertempMode(RECTIFIER1_GROUP1);
             vTaskDelay(50);
-            getRectifierStatus_2(RECTIFIER2_GROUP2);
+            getRectifiertempMode(RECTIFIER2_GROUP1);
+
         }
         vTaskDelay(100);
     }
@@ -6504,6 +6546,12 @@ void Start_SIMULATOR_TASK(void *argument) {
 void Start_SMOKE_LIMIT_TASK(void *argument) {
     COLOR1_Q color1msg;
     COLOR2_Q color2msg;
+    CAN1_RECIEVE_Q msg;
+    CAN2_RECIEVE_Q msg1;
+    static uint8_t read_temp[4] = {0};
+    BaseType_t xTaskWokenByReceive = pdFALSE;
+    char buffer[50] = {0};
+    static float GUN1_RECT_AVG_TEMP = 0.0, GUN2_RECT_AVG_TEMP = 0.0;
     char tilted[] = "CHARGER IS TILTED\r\n";
     char water_level[] = "WATER LEVEL IS HIGH\r\n";
     for (;;) {
@@ -6580,6 +6628,57 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
             Update_Rectifier4_Comm_Fail_Status(0x00);
             xTimerStart(rec4_timer, 60000);
         }
+        if (xQueueReceiveFromISR(REC_TEMP_QUEUE, &msg, &xTaskWokenByReceive)) {
+            switch (msg.ID) {
+                case 0x2205C50:
+
+                    read_temp[0] = (uint8_t) ((int) (((msg.data[4] << 24) | (msg.data[5] << 16) | (msg.data[6] << 8) | (msg.data[7])) / 1000));
+                    break;
+                case 0x220A1DA:
+                    read_temp[1] = (uint8_t) ((int) (((msg.data[4] << 24) | (msg.data[5] << 16) | (msg.data[6] << 8) | (msg.data[7])) / 1000));
+                    break;
+
+            }
+            if ((read_temp[0] > 0) && (read_temp[1] > 0)) {
+                GUN1_RECT_AVG_TEMP = (read_temp[0] + read_temp[1])>>1;
+                Update_REC_GUN1_Temp((uint16_t) GUN1_RECT_AVG_TEMP);
+//                vTaskDelay(50);
+                memset(buffer, 0, sizeof (buffer));
+                sprintf(buffer, "GUN1_TEMP : %f\r\n", GUN1_RECT_AVG_TEMP);
+                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                while (!(SERCOM5_USART_TransmitComplete()));
+            }
+        }
+
+        if (xQueueReceiveFromISR(REC2_TEMP_QUEUE, &msg1, &xTaskWokenByReceive)) {
+            switch (msg1.ID) {
+                case 0x220D767:
+                    read_temp[2] = (uint8_t) ((int) (((msg1.data[4] << 24) | (msg1.data[5] << 16) | (msg1.data[6] << 8) | (msg1.data[7])) / 1000));
+
+                    break;
+                case 0x22120CC:
+
+                    read_temp[3] = (uint8_t) ((int) (((msg1.data[4] << 24) | (msg1.data[5] << 16) | (msg1.data[6] << 8) | (msg1.data[7])) / 1000));
+
+                    break;
+
+            }
+            if ((read_temp[3] > 0) && (read_temp[4] > 0)) {
+
+                GUN2_RECT_AVG_TEMP = (read_temp[3] + read_temp[4])>>1;
+                Update_REC_GUN2_Temp((uint16_t) GUN2_RECT_AVG_TEMP);
+//                vTaskDelay(50);
+                memset(buffer, 0, sizeof (buffer));
+                sprintf(buffer, "GUN2_TEMP : %f\r\n", GUN2_RECT_AVG_TEMP);
+                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                while (!(SERCOM5_USART_TransmitComplete()));
+            }
+        }
+
+
+
+
+
         vTaskDelay(5000);
     }
 }

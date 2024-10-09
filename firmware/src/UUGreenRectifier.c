@@ -406,3 +406,47 @@ bool setRectifierVoltMode2(uint32_t rAddr, high_low_v_mode vMode)
     //vTaskDelay(200/portTICK_PERIOD_MS);
 	return bStatus;		
 }
+
+bool getRectifiertempMode(uint32_t rAddr)
+{
+    bool bStatus = false;
+	memset(CAN1_txfif1, 0x00, CAN1_TX_FIFO_BUFFER_ELEMENT_SIZE);
+    CAN1_txbuffer = (CAN_TX_BUFFER *)CAN1_txfif1;
+    CAN1_txbuffer->id = rAddr;
+    CAN1_txbuffer->xtd = 1;
+    CAN1_txbuffer->dlc = 8;
+    memset(CAN1_txbuffer->data, 0, CAN1_txbuffer->dlc);
+	CAN1_txbuffer->data[0] = READ_DATA;
+	CAN1_txbuffer->data[1] = INLET_TEMPERATURE;
+	if (CAN1_MessageTransmitFifo(1, CAN1_txbuffer) == true){ 
+	        ;
+        }
+//	memset(CAN1_rxFiFo1, 0x00, (1* CAN1_RX_FIFO0_ELEMENT_SIZE));	
+//    if (CAN1_MessageReceiveFifo(CAN_RX_FIFO_0,1, (CAN_RX_BUFFER *)CAN1_rxFiFo1) == true){
+//		bStatus = true;
+//	}
+    //vTaskDelay(200/portTICK_PERIOD_MS);
+	return bStatus;		
+}
+
+bool getRectifiertemp2Mode(uint32_t rAddr)
+{
+    bool bStatus = false;
+	memset(CAN1_txfif1, 0x00, CAN1_TX_FIFO_BUFFER_ELEMENT_SIZE);
+    CAN1_txbuffer = (CAN_TX_BUFFER *)CAN1_txfif1;
+    CAN1_txbuffer->id = rAddr;
+    CAN1_txbuffer->xtd = 1;
+    CAN1_txbuffer->dlc = 8;
+    memset(CAN1_txbuffer->data, 0, CAN1_txbuffer->dlc);
+	CAN1_txbuffer->data[0] = READ_DATA_2;
+	CAN1_txbuffer->data[1] = INLET_TEMPERATURE;
+	if (CAN1_MessageTransmitFifo(1, CAN1_txbuffer) == true){ 
+	        ;
+        }
+//	memset(CAN1_rxFiFo1, 0x00, (1* CAN1_RX_FIFO0_ELEMENT_SIZE));	
+//    if (CAN1_MessageReceiveFifo(CAN_RX_FIFO_0,1, (CAN_RX_BUFFER *)CAN1_rxFiFo1) == true){
+//		bStatus = true;
+//	}
+    //vTaskDelay(200/portTICK_PERIOD_MS);
+	return bStatus;		
+}

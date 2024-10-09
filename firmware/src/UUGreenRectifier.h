@@ -22,6 +22,11 @@
 #define RESP_RECTIFIER1_GROUP2      35708013
 #define RECTIFIER2_GROUP2      0x02210000
 #define RESP_RECTIFIER2_GROUP2      35724390
+#define TEMP_RESP_RECTIFIER1_GROUP1    35675216
+#define TEMP_RESP_RECTIFIER2_GROUP1    35693018
+#define TEMP_RESP_RECTIFIER1_GROUP2    35706727
+#define TEMP_RESP_RECTIFIER2_GROUP2    35725516
+
 
 #define SET_DATA             	0x10
 #define SET_DATA_RESPONSE    	0x11
@@ -116,4 +121,6 @@ uint32_t getRectifierStatus(uint32_t);
 uint32_t getRectifierStatus_2(uint32_t);
 bool setRectifierVoltMode(uint32_t, high_low_v_mode);
 bool setRectifierVoltMode2(uint32_t rAddr, high_low_v_mode vMode);
+bool getRectifiertemp2Mode(uint32_t rAddr);
+bool getRectifiertempMode(uint32_t rAddr);
 #endif /* _UUGREEN_RECTIFIER_H_ */

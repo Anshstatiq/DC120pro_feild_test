@@ -1668,6 +1668,35 @@ void Update_GUN2_Temp(uint16_t temp) {
 
 }
 
+void Update_REC_GUN1_Temp(uint16_t temp) {
+
+    DOUBLE_BYTE_HEADER();
+    msg.DATA[4] = REC_GUN1_TEMP_ADD_MSB;
+    msg.DATA[5] = REC_GUN1_TEMP_ADD_LSB;
+    msg.DATA[6] = temp >> 8;
+    msg.DATA[7] = temp & 0x00FF;
+    xQueueSend(HMI_SEND_QUEUE, &msg, 100);
+
+
+
+
+}
+
+void Update_REC_GUN2_Temp(uint16_t temp) {
+
+    DOUBLE_BYTE_HEADER();
+    msg.DATA[4] = REC_GUN2_TEMP_ADD_MSB;
+    msg.DATA[5] = REC_GUN2_TEMP_ADD_LSB;
+    msg.DATA[6] = temp >> 8;
+    msg.DATA[7] = temp & 0x00FF;
+    xQueueSend(HMI_SEND_QUEUE, &msg, 100);
+
+}
+
+
+
+
+
 void Update_MCU_FW_VERSION(uint8_t data1, uint8_t data2, uint8_t data3, uint8_t data4, uint8_t data5, uint8_t data6) {
 
     msg.DATA[0] = 0x5A;
