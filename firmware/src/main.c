@@ -56,6 +56,7 @@ TaskHandle_t DATA_POPULATE_TASKHandle;
 TaskHandle_t AC_METER_SEND_TASKHandle;
 TaskHandle_t DC1_METER_SEND_TASKHandle;
 TaskHandle_t DC2_METER_SEND_TASKHandle;
+TaskHandle_t FAN_TASKHandle;
 QueueHandle_t GUN_DATAQUEUE = NULL;
 QueueHandle_t METER_QUEUE = NULL;
 QueueHandle_t ESP_QUEUE = NULL;
@@ -124,6 +125,7 @@ QueueHandle_t GUN2_CHARGING_TIME_QUEUE = NULL;
 QueueHandle_t REC_TEMP_QUEUE = NULL;
 QueueHandle_t REC2_TEMP_QUEUE = NULL;
 QueueHandle_t ESP_S_REC_TEMP_QUEUE = NULL;
+QueueHandle_t RECTIFIERS_TEMP_QUEUE = NULL;
 
 
 
@@ -199,6 +201,7 @@ void Start_DATA_POPULATE_TASK(void *argument);
 void Start_AC_METER_SEND_TASK(void *argument);
 void Start_DC1_METER_SEND_TASK(void *argument);
 void Start_DC2_METER_SEND_TASK(void *argument);
+void Start_FAN_TASK(void *argument);
 
 static uint8_t GUN1_ENABLE_DISABLE = DEFAULT_GUN1_ENABLE;
 static uint8_t GUN2_ENABLE_DISABLE = DEFAULT_GUN2_ENABLE;
@@ -728,7 +731,14 @@ int main(void) {
     NEXT_METER_QUEUE = xQueueCreate(1, sizeof (NEXT_METER_Q));
     GUN1_CHARGING_TIME_QUEUE = xQueueCreate(1, sizeof (GUN1_CHARGING_TIME_Q));
     GUN2_CHARGING_TIME_QUEUE = xQueueCreate(1, sizeof (GUN2_CHARGING_TIME_Q));
-
+    RECTIFIERS_TEMP_QUEUE = xQueueCreate(1, sizeof (RECTIFIERS_TEMP_Q));
+    
+    
+    
+    
+    
+    
+    
     ESP_S_GROUND_M_V_QUEUE = xQueueCreate(1, sizeof (ESP_S_GROUND_M_V_Q));
     ESP_S_TEMP_QUEUE = xQueueCreate(1, sizeof (ESP_S_TEMP_Q));
     ESP_S_ERROR_W_QUEUE = xQueueCreate(1, sizeof (ESP_S_ERROR_W_Q));
@@ -808,6 +818,9 @@ int main(void) {
     xTaskCreate(Start_AC_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &AC_METER_SEND_TASKHandle);
     xTaskCreate(Start_DC1_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &DC1_METER_SEND_TASKHandle);
     xTaskCreate(Start_DC2_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &DC2_METER_SEND_TASKHandle);
+    xTaskCreate(Start_FAN_TASK, "Start_FAN_TASK", 256, NULL, 1, &FAN_TASKHandle);
+
+
 
     SERCOM5_USART_ReadCallbackRegister(SIMULATOR_CALLBACK, 0);
     SERCOM5_USART_Read(Simulator_buff, SIM_RX_SIZE);
@@ -841,6 +854,7 @@ int main(void) {
     vTaskSuspend(AC_METER_SEND_TASKHandle);
     vTaskSuspend(DC1_METER_SEND_TASKHandle);
     vTaskSuspend(DC2_METER_SEND_TASKHandle);
+    vTaskSuspend(FAN_TASKHandle);
     vTaskStartScheduler();
     while (true) {
     }
@@ -2606,11 +2620,11 @@ void Start_ESP_SEND_TASK(void *argument) {
             txdata.DC2_POWER = esp_s_meter_data.DC2_POWER;
             txdata.AC_ENERGY = esp_s_meter_data.AC_ENERGY;
         }
-        if(xQueueReceive(ESP_S_REC_TEMP_QUEUE,&esp_s_temp_data,0)){
-            txdata.REC_Group1=esp_s_temp_data.rec_group1;
-            txdata.REC_Group2=esp_s_temp_data.rec_group2;
+        if (xQueueReceive(ESP_S_REC_TEMP_QUEUE, &esp_s_temp_data, 0)) {
+            txdata.REC_Group1 = esp_s_temp_data.rec_group1;
+            txdata.REC_Group2 = esp_s_temp_data.rec_group2;
         }
-        
+
         SERCOM7_USART_Write(txdata.ESP_ARRAY, sizeof (txdata.ESP_ARRAY));
         while (!(SERCOM7_USART_TransmitComplete()))
             ;
@@ -4587,6 +4601,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         if (GUN2_CONNECTED == 0) {
                             //                            vTaskSuspend(LED_TASKHandle);
                             AC_Contactor_Relay_Set();
+                            vTaskSuspend(FAN_TASKHandle);
                             FAN_ON(65535);
                             instance = 0;
                             instance1 = 0;
@@ -4930,7 +4945,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 if (xQueueReceive(GUN1_CHARGING_TIME_QUEUE, &value, 0)) {
                     GUN1_CHARGING_TIME = GUN1_CHARGING_TIME + value.value[0];
                 }
-                FAN_ON(30000);
+                vTaskResume(FAN_TASKHandle);
                 //                leddata.GUN1 = 1;
                 //                xQueueOverwrite(LED1_QUEUE, &leddata);
                 Change_gun1_status_to(CHARGING);
@@ -5445,6 +5460,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         if (GUN1_CONNECTED == 0) {
                             //                            vTaskSuspend(LED_TASKHandle);
                             AC_Contactor_Relay_Set();
+                            vTaskSuspend(FAN_TASKHandle);
                             FAN_ON(65535);
                             instance = 0;
                             instance1 = 0;
@@ -5766,6 +5782,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         //                        vTaskResume(LED_TASKHandle);
                         flashmsg.START_DATE = (year << 16) | (month << 8) | day;
                         flashmsg.START_TIME = (hour << 16) | (minute << 8) | sec;
+                        
                     }
                     if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
                         CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
@@ -5779,7 +5796,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
 
                 break;
             case _2_PLC_STATE_CURRENT_DEMAND_1:
-                FAN_ON(30000);
+                vTaskResume(FAN_TASKHandle);
                 //                leddata.GUN2 = 1;
                 //                xQueueOverwrite(LED2_QUEUE, &leddata);
                 Change_gun2_status_to(CHARGING);
@@ -6023,6 +6040,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 }
                 break;
             case _2_PLC_STATE_TERMINATED:
+                
                 if (GUN2_CONNECTED == 1 && GUN1_CONNECTED == 0) {
                     rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
                     rectimsg.PLC_ID[0] = 0x03;
@@ -6567,6 +6585,7 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
     static float GUN1_RECT_AVG_TEMP = 0.0, GUN2_RECT_AVG_TEMP = 0.0;
     char tilted[] = "CHARGER IS TILTED\r\n";
     char water_level[] = "WATER LEVEL IS HIGH\r\n";
+    RECTIFIERS_TEMP_Q temp_data;
     for (;;) {
 
         if (!TILT_Get()) {
@@ -6656,7 +6675,7 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
                 GUN1_RECT_AVG_TEMP = (read_temp[0] + read_temp[1]) >> 1;
                 if (GUN1_RECT_AVG_TEMP != 0) {
                     Update_REC_GUN1_Temp((uint16_t) GUN1_RECT_AVG_TEMP);
-                    espdata.rec_group1 = (uint8_t)((int)(GUN1_RECT_AVG_TEMP));
+                    espdata.rec_group1 = (uint8_t) ((int) (GUN1_RECT_AVG_TEMP));
                 }
                 //                vTaskDelay(50);
                 memset(buffer, 0, sizeof (buffer));
@@ -6664,7 +6683,7 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
                 SERCOM5_USART_Write(buffer, sizeof (buffer));
                 while (!(SERCOM5_USART_TransmitComplete()));
             }
-            
+
         }
 
         if (xQueueReceiveFromISR(REC2_TEMP_QUEUE, &msg1, &xTaskWokenByReceive)) {
@@ -6685,7 +6704,7 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
                 GUN2_RECT_AVG_TEMP = (read_temp[2] + read_temp[3]) >> 1;
                 if (GUN2_RECT_AVG_TEMP != 0) {
                     Update_REC_GUN2_Temp((uint16_t) GUN2_RECT_AVG_TEMP);
-                    espdata.rec_group2 = (uint8_t)((int)(GUN2_RECT_AVG_TEMP));
+                    espdata.rec_group2 = (uint8_t) ((int) (GUN2_RECT_AVG_TEMP));
                 }
                 //                vTaskDelay(50);
                 memset(buffer, 0, sizeof (buffer));
@@ -6695,10 +6714,11 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
             }
 
         }
-            
-            
 
-            xQueueOverwrite(ESP_S_REC_TEMP_QUEUE, &espdata);
+
+        memcpy(temp_data.TEMPS, read_temp, 4);
+        xQueueOverwrite(RECTIFIERS_TEMP_QUEUE, &temp_data);
+        xQueueOverwrite(ESP_S_REC_TEMP_QUEUE, &espdata);
 
 
 
@@ -6936,6 +6956,7 @@ void Start_GUN1_PARAM_TASK(void *argument) {
         }
         if (count == 5) {
 
+            vTaskSuspend(FAN_TASKHandle);
             FAN_ON(65535);
             START_BY2 = 0;
             STOP_BY = 0;
@@ -6971,6 +6992,7 @@ void Start_GUN2_PARAM_TASK(void *argument) {
         }
         if (count == 5) {
 
+            vTaskSuspend(FAN_TASKHandle);
             FAN_ON(65535);
             START_BY2 = 0;
             STOP_BY = 0;
@@ -7367,6 +7389,34 @@ void Start_FLASH_WRITE_TASK(void *argument) {
         }
         vTaskSuspend(FLASH_WRITE_TASKHandle);
         vTaskDelay(1);
+    }
+}
+
+void Start_FAN_TASK(void *argument) {
+    RECTIFIERS_TEMP_Q temp_data;
+    uint8_t i;
+    uint8_t max = 0;
+    for (;;) {
+        if (xQueueReceive(RECTIFIERS_TEMP_QUEUE, &temp_data, 0)) {
+            max = 0;
+            for (i = 0; i < 4; i++) {
+                if (temp_data.TEMPS[i] > max) {
+                    max = temp_data.TEMPS[i];
+                }
+            }
+            if (max <= 25) {
+                FAN_ON(40000);
+            } else if (max <= 35) {
+                FAN_ON(20000);
+            } else if (max <= 45) {
+                FAN_ON(10000);
+            } else if (max <= 55) {
+                FAN_ON(1000);
+            } else if (max <= 65) {
+                FAN_ON(10);
+            }
+        }
+        vTaskDelay(1000);
     }
 }
 

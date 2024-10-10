@@ -547,6 +547,10 @@ extern "C" {
     typedef struct {
         uint8_t COLOR1;
     } COLOR1_Q;
+    
+    typedef struct {
+        uint8_t TEMPS[4];
+    }RECTIFIERS_TEMP_Q;
 
     typedef struct {
         uint8_t COLOR2;
