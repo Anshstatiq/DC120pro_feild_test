@@ -3,12 +3,7 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/Ansh%20Bhatnagar/Documents/DC120pro/firmware/src/definesmacro.h</file>
-            <file>file:/C:/Users/Ansh%20Bhatnagar/Documents/DC120pro/firmware/src/HMI_FOO.c</file>
-            <file>file:/C:/Users/Ansh%20Bhatnagar/Documents/DC120pro/firmware/src/UUGreenRectifier.c</file>
-            <file>file:/C:/Users/Ansh%20Bhatnagar/Documents/DC120pro/firmware/src/flashdata.h</file>
-            <file>file:/C:/Users/Ansh%20Bhatnagar/Documents/DC120pro/firmware/src/PLC1.h</file>
-            <file>file:/C:/Users/Ansh%20Bhatnagar/Documents/DC120pro/firmware/src/UUGreenRectifier.h</file>
+            <file>file:/C:/Users/Ansh%20Bhatnagar/Documents/DC120pro/firmware/src/config/default/peripheral/can/plib_can0.h</file>
             <file>file:/C:/Users/Ansh%20Bhatnagar/Documents/DC120pro/firmware/src/main.c</file>
         </group>
     </open-files>

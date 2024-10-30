@@ -1,7 +1,8 @@
-build/default/production/_ext/1360937237/main.o: ../src/main.c \
- ../src/config/default/definitions.h \
- ../src/config/default/peripheral/sercom/i2c_master/plib_sercom3_i2c_master.h \
- ../src/config/default/peripheral/sercom/i2c_master/plib_sercom_i2c_master_common.h \
+build/default/production/_ext/17022449/plib_sercom1_spi_master.o: \
+ ../src/config/default/peripheral/sercom/spi_master/plib_sercom1_spi_master.c \
+ ../src/config/default/interrupts.h \
+ ../src/config/default/peripheral/sercom/spi_master/plib_sercom1_spi_master.h \
+ ../src/config/default/peripheral/sercom/spi_master/plib_sercom_spi_master_common.h \
  ../src/config/default/device.h \
  ../src/packs/ATSAME51N20A_DFP/same51n20a.h \
  ../src/packs/CMSIS/CMSIS/Core/Include/core_cm4.h \
@@ -109,56 +110,13 @@ build/default/production/_ext/1360937237/main.o: ../src/main.c \
  ../src/packs/ATSAME51N20A_DFP/pio/same51n20a.h \
  ../src/config/default/device_cache.h ../src/config/default/device.h \
  ../src/config/default/toolchain_specifics.h \
- ../src/packs/CMSIS/CMSIS/Core/Include/cmsis_compiler.h \
- ../src/config/default/peripheral/nvmctrl/plib_nvmctrl.h \
- ../src/config/default/peripheral/sercom/usart/plib_sercom2_usart.h \
- ../src/config/default/peripheral/sercom/usart/plib_sercom_usart_common.h \
- ../src/config/default/peripheral/sercom/spi_master/plib_sercom1_spi_master.h \
- ../src/config/default/peripheral/sercom/spi_master/plib_sercom_spi_master_common.h \
- ../src/config/default/peripheral/evsys/plib_evsys.h \
- ../src/config/default/peripheral/can/plib_can1.h \
- ../src/config/default/peripheral/can/plib_can_common.h \
- ../src/config/default/peripheral/sercom/usart/plib_sercom7_usart.h \
- ../src/config/default/peripheral/sercom/usart/plib_sercom6_usart.h \
- ../src/config/default/peripheral/port/plib_port.h \
- ../src/config/default/peripheral/clock/plib_clock.h \
- ../src/config/default/peripheral/nvic/plib_nvic.h \
- ../src/config/default/peripheral/wdt/plib_wdt.h \
- ../src/config/default/peripheral/cmcc/plib_cmcc.h \
- ../src/config/default/peripheral/sercom/usart/plib_sercom5_usart.h \
- ../src/config/default/peripheral/can/plib_can0.h \
- ../src/config/default/peripheral/sercom/usart/plib_sercom4_usart.h \
- ../src/config/default/peripheral/eic/plib_eic.h \
- ../src/config/default/peripheral/tc/plib_tc7.h \
- ../src/config/default/peripheral/tc/plib_tc_common.h \
- ../src/config/default/peripheral/adc/plib_adc0.h \
- ../src/config/default/peripheral/adc/plib_adc_common.h \
- ../src/config/default/peripheral/adc/plib_adc1.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/FreeRTOS.h \
- ../src/config/default/FreeRTOSConfig.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/projdefs.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/portable.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/deprecated_definitions.h \
- ../src/third_party/rtos/FreeRTOS/Source/portable/GCC/SAM/ARM_CM4F/portmacro.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/mpu_wrappers.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/task.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/list.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/timers.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/task.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/queue.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/semphr.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/queue.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/event_groups.h \
- ../src/third_party/rtos/FreeRTOS/Source/include/timers.h \
- ../src/definesmacro.h ../src/pwm_fan.h ../src/PLC1.h \
- ../src/UUGreenRectifier.h ../src/HMI_FOO.h \
- ../src/config/default/peripheral/wdt/plib_wdt.h ../src/flashdata.h
+ ../src/packs/CMSIS/CMSIS/Core/Include/cmsis_compiler.h
 
-../src/config/default/definitions.h:
+../src/config/default/interrupts.h:
 
-../src/config/default/peripheral/sercom/i2c_master/plib_sercom3_i2c_master.h:
+../src/config/default/peripheral/sercom/spi_master/plib_sercom1_spi_master.h:
 
-../src/config/default/peripheral/sercom/i2c_master/plib_sercom_i2c_master_common.h:
+../src/config/default/peripheral/sercom/spi_master/plib_sercom_spi_master_common.h:
 
 ../src/config/default/device.h:
 
@@ -377,97 +335,3 @@ build/default/production/_ext/1360937237/main.o: ../src/main.c \
 ../src/config/default/toolchain_specifics.h:
 
 ../src/packs/CMSIS/CMSIS/Core/Include/cmsis_compiler.h:
-
-../src/config/default/peripheral/nvmctrl/plib_nvmctrl.h:
-
-../src/config/default/peripheral/sercom/usart/plib_sercom2_usart.h:
-
-../src/config/default/peripheral/sercom/usart/plib_sercom_usart_common.h:
-
-../src/config/default/peripheral/sercom/spi_master/plib_sercom1_spi_master.h:
-
-../src/config/default/peripheral/sercom/spi_master/plib_sercom_spi_master_common.h:
-
-../src/config/default/peripheral/evsys/plib_evsys.h:
-
-../src/config/default/peripheral/can/plib_can1.h:
-
-../src/config/default/peripheral/can/plib_can_common.h:
-
-../src/config/default/peripheral/sercom/usart/plib_sercom7_usart.h:
-
-../src/config/default/peripheral/sercom/usart/plib_sercom6_usart.h:
-
-../src/config/default/peripheral/port/plib_port.h:
-
-../src/config/default/peripheral/clock/plib_clock.h:
-
-../src/config/default/peripheral/nvic/plib_nvic.h:
-
-../src/config/default/peripheral/wdt/plib_wdt.h:
-
-../src/config/default/peripheral/cmcc/plib_cmcc.h:
-
-../src/config/default/peripheral/sercom/usart/plib_sercom5_usart.h:
-
-../src/config/default/peripheral/can/plib_can0.h:
-
-../src/config/default/peripheral/sercom/usart/plib_sercom4_usart.h:
-
-../src/config/default/peripheral/eic/plib_eic.h:
-
-../src/config/default/peripheral/tc/plib_tc7.h:
-
-../src/config/default/peripheral/tc/plib_tc_common.h:
-
-../src/config/default/peripheral/adc/plib_adc0.h:
-
-../src/config/default/peripheral/adc/plib_adc_common.h:
-
-../src/config/default/peripheral/adc/plib_adc1.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/FreeRTOS.h:
-
-../src/config/default/FreeRTOSConfig.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/projdefs.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/portable.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/deprecated_definitions.h:
-
-../src/third_party/rtos/FreeRTOS/Source/portable/GCC/SAM/ARM_CM4F/portmacro.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/mpu_wrappers.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/task.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/list.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/timers.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/task.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/queue.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/semphr.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/queue.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/event_groups.h:
-
-../src/third_party/rtos/FreeRTOS/Source/include/timers.h:
-
-../src/definesmacro.h:
-
-../src/pwm_fan.h:
-
-../src/PLC1.h:
-
-../src/UUGreenRectifier.h:
-
-../src/HMI_FOO.h:
-
-../src/config/default/peripheral/wdt/plib_wdt.h:
-
-../src/flashdata.h:

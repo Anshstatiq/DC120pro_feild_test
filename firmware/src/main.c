@@ -203,6 +203,11 @@ void Start_DC1_METER_SEND_TASK(void *argument);
 void Start_DC2_METER_SEND_TASK(void *argument);
 void Start_FAN_TASK(void *argument);
 
+char bootloader_done[] = {"Application run after recieving command through bootloader done....\r\n"};
+#define BTL_TRIGGER_PATTERN (0x5048434DUL)
+#define BTL_TRIGGER_RAM_START  0x20000000U
+static uint32_t *ramStart = (uint32_t *) BTL_TRIGGER_RAM_START;
+
 static uint8_t GUN1_ENABLE_DISABLE = DEFAULT_GUN1_ENABLE;
 static uint8_t GUN2_ENABLE_DISABLE = DEFAULT_GUN2_ENABLE;
 static uint8_t DEFAULT_BODY_TEMP_UPPER_LIMIT_t = DEFAULT_BODY_TEMP_UPPER_LIMIT;
@@ -371,7 +376,8 @@ void APP_CAN_RxFifo0Callback(uint8_t numberOfMessage, uintptr_t context) {
     xQueueSendFromISR(CAN0_QUEUE, &sendbuf, &xYieldRequired);
     portYIELD_FROM_ISR(xYieldRequired);
 }
-static uint32_t rect_address=0;
+static uint32_t rect_address = 0;
+
 void APP_CAN_RxFifo1Callback(uint8_t numberOfMessage, uintptr_t context) {
     all_rec_status = 1;
     BaseType_t xYieldRequired;
@@ -379,7 +385,7 @@ void APP_CAN_RxFifo1Callback(uint8_t numberOfMessage, uintptr_t context) {
     memset(rxFiFo1, 0x00, (1 * CAN1_RX_FIFO0_ELEMENT_SIZE));
     CAN1_MessageReceiveFifo(CAN_RX_FIFO_1, 1, (CAN_RX_BUFFER *) rxFiFo1);
     rxBuf1 = (CAN_RX_BUFFER *) rxFiFo1;
-    rect_address=(rxBuf1->id>>16);
+    rect_address = (rxBuf1->id >> 16);
     if (rect_address == Shift_rectifier_address1) {
         rec1_status = 1;
     }
@@ -1789,6 +1795,8 @@ void StartDefaultTask(void *argument) {
                     instance = 2;
                 }
                 break;
+                SERCOM5_USART_Write(bootloader_done, sizeof (bootloader_done));
+                while (!SERCOM5_USART_TransmitComplete());
         }
         vTaskDelay(3000);
     }
@@ -2734,6 +2742,16 @@ void Start_ESP_RX_TASK(void *argument) {
                 }
                 if (esprxdata.restart == 1) {
                     NVIC_SystemReset();
+                }
+                if (esprxdata.bootloader == 1) {
+
+
+                    ramStart[0] = BTL_TRIGGER_PATTERN;
+                    ramStart[1] = BTL_TRIGGER_PATTERN;
+                    ramStart[2] = BTL_TRIGGER_PATTERN;
+                    ramStart[3] = BTL_TRIGGER_PATTERN;
+                    NVIC_SystemReset();
+
                 }
                 year = esprxdata.year;
                 month = esprxdata.month;
@@ -5114,18 +5132,18 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     Demand_Voltage1_ARRAY[j_count] = act_volt_1;
                     Demand_Current1_ARRAY[j_count] = ((uint16_t) (((((_c109msg.targetCurrentlsb) << 8) + _c109msg.targetCurrentmsb)) / 10));
                     j_count = j_count + 1;
-//                                    vTaskDelay(100);
-                _50msmsg.DATA[0] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_MSB_DATA0 =
-                        _c109msg.targetVoltagemsb;
-                _50msmsg.DATA[1] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_LSB_DATA1 =
-                        _c109msg.targetVoltagelsb;
-                _50msmsg.DATA[2] = _1_PLC_tx_50_t._005_EVSE_PRESENT_CURRENT_MSB_DATA2 =
-                        _c109msg.targetCurrentmsb;
-                _50msmsg.DATA[3] = _1_PLC_tx_50_t._005_EVSE_PRESENT_CURRENT_LSB_DATA3 =
-                        _c109msg.targetCurrentlsb;
-                _50msmsg.ID_t = _005;
-                xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                vTaskDelay(50);
+                    //                                    vTaskDelay(100);
+                    _50msmsg.DATA[0] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_MSB_DATA0 =
+                            _c109msg.targetVoltagemsb;
+                    _50msmsg.DATA[1] = _1_PLC_tx_50_t._005_EVSE_PRESENT_VOLTAGE_LSB_DATA1 =
+                            _c109msg.targetVoltagelsb;
+                    _50msmsg.DATA[2] = _1_PLC_tx_50_t._005_EVSE_PRESENT_CURRENT_MSB_DATA2 =
+                            _c109msg.targetCurrentmsb;
+                    _50msmsg.DATA[3] = _1_PLC_tx_50_t._005_EVSE_PRESENT_CURRENT_LSB_DATA3 =
+                            _c109msg.targetCurrentlsb;
+                    _50msmsg.ID_t = _005;
+                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                    vTaskDelay(50);
                 }
 
                 ///////////HMI////////////////
@@ -5973,20 +5991,20 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     ;
                     Demand_Voltage2_ARRAY[j_count] = act_volt_2;
                     j_count = j_count + 1;
-                 
-                _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 =
-                        _c509msg.targetVoltagemsb;
-                _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 =
-                        _c509msg.targetVoltagelsb;
-                _50msmsg.DATA[2] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_MSB_DATA2 =
-                        _c509msg.targetCurrentmsb;
-                _50msmsg.DATA[3] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_LSB_DATA3 =
-                        _c509msg.targetCurrentlsb;
-                _50msmsg.ID_t = _405;
-                xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                vTaskDelay(50);
+
+                    _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 =
+                            _c509msg.targetVoltagemsb;
+                    _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 =
+                            _c509msg.targetVoltagelsb;
+                    _50msmsg.DATA[2] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_MSB_DATA2 =
+                            _c509msg.targetCurrentmsb;
+                    _50msmsg.DATA[3] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_LSB_DATA3 =
+                            _c509msg.targetCurrentlsb;
+                    _50msmsg.ID_t = _405;
+                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                    vTaskDelay(50);
                 }
-                
+
                 if (xQueueReceive(_C508_QUEUE, &_c508msg, 0)) {
 
                     SOC_2_ARRAY[i_count] = _c508msg.evSOC;
@@ -6615,14 +6633,14 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
     for (;;) {
 
         if (!TILT_Get()) {
-//            SERCOM5_USART_Write(tilted, sizeof (tilted));
-//            while (!(SERCOM5_USART_TransmitComplete()))
-                ;
+            //            SERCOM5_USART_Write(tilted, sizeof (tilted));
+            //            while (!(SERCOM5_USART_TransmitComplete()))
+            ;
         }
         if (WATER_LEVEL_Get()) {
-//            SERCOM5_USART_Write(water_level, sizeof (water_level));
-//            while (!(SERCOM5_USART_TransmitComplete()))
-                ;
+            //            SERCOM5_USART_Write(water_level, sizeof (water_level));
+            //            while (!(SERCOM5_USART_TransmitComplete()))
+            ;
         }
         if (SMOKE_Get()) // Condition to check voltage level of SMOKE GPIO PIN.
         {
@@ -6730,10 +6748,10 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
                     espdata.rec_group1 = (uint8_t) ((int) (GUN1_RECT_AVG_TEMP));
                 }
                 //                vTaskDelay(50);
-//                memset(buffer, 0, sizeof (buffer));
-//                sprintf(buffer, "GUN1_TEMP : %f\r\n", GUN1_RECT_AVG_TEMP);
-//                SERCOM5_USART_Write(buffer, sizeof (buffer));
-//                while (!(SERCOM5_USART_TransmitComplete()));
+                //                memset(buffer, 0, sizeof (buffer));
+                //                sprintf(buffer, "GUN1_TEMP : %f\r\n", GUN1_RECT_AVG_TEMP);
+                //                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                //                while (!(SERCOM5_USART_TransmitComplete()));
             }
 
         }
@@ -6759,10 +6777,10 @@ void Start_SMOKE_LIMIT_TASK(void *argument) {
                     espdata.rec_group2 = (uint8_t) ((int) (GUN2_RECT_AVG_TEMP));
                 }
                 //                vTaskDelay(50);
-//                memset(buffer, 0, sizeof (buffer));
-//                sprintf(buffer, "GUN2_TEMP : %f\r\n", GUN2_RECT_AVG_TEMP);
-//                SERCOM5_USART_Write(buffer, sizeof (buffer));
-//                while (!(SERCOM5_USART_TransmitComplete()));
+                //                memset(buffer, 0, sizeof (buffer));
+                //                sprintf(buffer, "GUN2_TEMP : %f\r\n", GUN2_RECT_AVG_TEMP);
+                //                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                //                while (!(SERCOM5_USART_TransmitComplete()));
             }
 
         }

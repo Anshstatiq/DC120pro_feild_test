@@ -142,19 +142,21 @@ void SYS_Initialize ( void* data )
 
     SERCOM2_USART_Initialize();
 
+    SERCOM1_SPI_Initialize();
+
     EVSYS_Initialize();
 
-    SERCOM7_USART_Initialize();
-
     CAN1_Initialize();
+
+    SERCOM7_USART_Initialize();
 
     SERCOM6_USART_Initialize();
 
     SERCOM5_USART_Initialize();
 
-    SERCOM4_USART_Initialize();
-
     CAN0_Initialize();
+
+    SERCOM4_USART_Initialize();
 
     EIC_Initialize();
 
