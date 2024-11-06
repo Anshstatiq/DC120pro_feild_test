@@ -20,8 +20,8 @@
 #include "peripheral/wdt/plib_wdt.h"
 #include "flashdata.h"
 
-uint8_t Can0MessageRAM[CAN0_MESSAGE_RAM_CONFIG_SIZE] __attribute__((address(0x20000000)));
-uint8_t Can1MessageRAM[CAN1_MESSAGE_RAM_CONFIG_SIZE] __attribute__((address((0x20000000) + CAN0_MESSAGE_RAM_CONFIG_SIZE)));
+uint8_t Can0MessageRAM[CAN0_MESSAGE_RAM_CONFIG_SIZE] __attribute__((address(0x20000010)));
+uint8_t Can1MessageRAM[CAN1_MESSAGE_RAM_CONFIG_SIZE] __attribute__((address((0x20000010) + CAN0_MESSAGE_RAM_CONFIG_SIZE)));
 
 TaskHandle_t defaultTaskHandle;
 TaskHandle_t _50msecTask;
@@ -2744,14 +2744,16 @@ void Start_ESP_RX_TASK(void *argument) {
                     NVIC_SystemReset();
                 }
                 if (esprxdata.bootloader == 1) {
-
+                        sprintf(buffer, "BOOTLOADER bit is recieved from esp \r\n");
+                        SERCOM5_USART_Write(buffer, sizeof (buffer));
+                        while (!(SERCOM5_USART_TransmitComplete()))
+                            ;
 
                     ramStart[0] = BTL_TRIGGER_PATTERN;
                     ramStart[1] = BTL_TRIGGER_PATTERN;
                     ramStart[2] = BTL_TRIGGER_PATTERN;
                     ramStart[3] = BTL_TRIGGER_PATTERN;
-                    NVIC_SystemReset();
-
+                 NVIC_SystemReset();
                 }
                 year = esprxdata.year;
                 month = esprxdata.month;
@@ -7873,7 +7875,7 @@ void Start_DATA_POPULATE_TASK(void *argument) {
     //    uint32_t BT_DATA_ARRAY_128_255[128] = {0};
     //    uint32_t BT_DATA_ARRAY_256_383[128] = {0};
     //    uint32_t BT_DATA_ARRAY_383_512[128] = {0};
-    char buff[20] = {0};
+    char buff[50] = {0};
     uint32_t CHARGING_DATA_ARRAY_1_16[128] = {0};
     uint32_t CHARGING_DATA_ARRAY_17_32[128] = {0};
     uint32_t CHARGING_DATA_ARRAY_33_48[128] = {0};
@@ -8196,7 +8198,7 @@ void Start_DATA_POPULATE_TASK(void *argument) {
         while (NVMCTRL_IsBusy())
             ;
         memset(buff, 0, sizeof (buff));
-        sprintf(buff, "RESTART COUNT : %ld\r\n", BT_DATA_ARRAY_0_127[SYSTEM_RESTART_IDX]);
+        sprintf(buff, "RESTART COUNT after bootloader is : %ld\r\n", BT_DATA_ARRAY_0_127[SYSTEM_RESTART_IDX]);
         SERCOM5_USART_Write(buff, sizeof (buff));
         while (!(SERCOM5_USART_TransmitComplete()))
             ;
