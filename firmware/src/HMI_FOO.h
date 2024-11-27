@@ -272,10 +272,10 @@ extern QueueHandle_t HMI_SEND_QUEUE;
 #define OCPP_ID_ADD_LSB 0xDE
 #define BLE_ID_ADD_MSB 0x10
 #define BLE_ID_ADD_LSB 0xAE
-#define REC1_TEMP_ADD_MSB   0x10
-#define REC1_TEMP_ADD_LSB   0x92
-#define REC2_TEMP_ADD_MSB   0x10
-#define REC2_TEMP_ADD_LSB   0x94
+#define REC1_TEMP_ADD_MSB       0x20
+#define REC1_TEMP_ADD_LSB       0x00
+#define REC2_TEMP_ADD_MSB   0x20
+#define REC2_TEMP_ADD_LSB   0x02
 #define GUN1_STOP_BTN_ADD_MSB   0x12
 #define GUN1_STOP_BTN_ADD_LSB   0x30
 #define GUN2_STOP_BTN_ADD_MSB   0x12

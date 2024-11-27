@@ -805,7 +805,7 @@ int main(void) {
     xTaskCreate(Start_ADC_TASK, "Start_ADC_TASK", 256, NULL, 1, &ADC_TASKHandle); // 1536-512
     xTaskCreate(Start_RGB_SEND_TASK, "Start_RGB_SEND_TASK", 128, NULL, 1, &RGB_SEND_TaskHandle); // 512-256
     xTaskCreate(Start_SMOKE_LIMIT_TASK, "Start_SMOKE_LIMIT_TASK", 512, NULL, 1, &SMOKE_LIMIT_TASKHandle);
-    xTaskCreate(Start_I2C_TMP_HUM_TASK, "Start_I2C_TMP_HUM_TASK", 128, NULL, 1, &I2c_TEMP_HUM_TASKHandle);
+    xTaskCreate(Start_I2C_TMP_HUM_TASK, "Start_I2C_TMP_HUM_TASK", 512, NULL, 1, &I2c_TEMP_HUM_TASKHandle);
     xTaskCreate(Start_METER_RX_TASK, "Start_METER_RX_TASK", 512, NULL, 1, &METER_RECEIVE_TaskHandle); // 3072-512
     xTaskCreate(Start_RFID_RX_TASK, "Start_RFID_RX_TASK", 256, NULL, 1, &RFID_RX_TASKHandle); // 1024-512
     xTaskCreate(Start_ESP_RX_TASK, "Start_ESP_RX_TASK", 256, NULL, 1, &ESP_RX_TASKHandle); // 2048-512
@@ -2744,16 +2744,16 @@ void Start_ESP_RX_TASK(void *argument) {
                     NVIC_SystemReset();
                 }
                 if (esprxdata.bootloader == 1) {
-                        sprintf(buffer, "BOOTLOADER bit is recieved from esp \r\n");
-                        SERCOM5_USART_Write(buffer, sizeof (buffer));
-                        while (!(SERCOM5_USART_TransmitComplete()))
-                            ;
+                    sprintf(buffer, "BOOTLOADER bit is recieved from esp \r\n");
+                    SERCOM5_USART_Write(buffer, sizeof (buffer));
+                    while (!(SERCOM5_USART_TransmitComplete()))
+                        ;
 
                     ramStart[0] = BTL_TRIGGER_PATTERN;
                     ramStart[1] = BTL_TRIGGER_PATTERN;
                     ramStart[2] = BTL_TRIGGER_PATTERN;
                     ramStart[3] = BTL_TRIGGER_PATTERN;
-                 NVIC_SystemReset();
+                    NVIC_SystemReset();
                 }
                 year = esprxdata.year;
                 month = esprxdata.month;
@@ -4026,7 +4026,7 @@ void Start_I2C_TMP_HUM_TASK(void *argument) {
     uint8_t i2c_receive_data[6] = {0};
     float t_ticks, rh_ticks, temp, hum;
     uint8_t command;
-    //    char buffer[20] = {0};
+    char buffer[50] = {0};
     for (;;) {
 
         switch (I2C_SELECT_CHANNEL) {
@@ -4042,6 +4042,10 @@ void Start_I2C_TMP_HUM_TASK(void *argument) {
                 rh_ticks = (((float) i2c_receive_data[3] * 256) + (float) i2c_receive_data[4]);
                 temp = -45 + (175 * (t_ticks / 65535));
                 hum = -6 + (125 * (rh_ticks / 65535));
+                memset(buffer,0,sizeof(buffer));
+                sprintf(buffer, "Channel: 0, Temp: %.2f C, Humidity: %.2f %%\r\n", temp, hum);
+                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                while (!(SERCOM5_USART_TransmitComplete()));
                 Update_Rec1_temp((uint8_t) temp);
                 temp = 0;
                 hum = 0;
@@ -4060,10 +4064,16 @@ void Start_I2C_TMP_HUM_TASK(void *argument) {
                 rh_ticks = (((float) i2c_receive_data[3] * 256) + (float) i2c_receive_data[4]);
                 temp = -45 + (175 * (t_ticks / 65535));
                 hum = -6 + (125 * (rh_ticks / 65535));
+                memset(buffer,0,sizeof(buffer));
+                sprintf(buffer, "Channel: 1, Temp: %.2f C, Humidity: %.2f %%\r\n", temp, hum);
+                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                while (!(SERCOM5_USART_TransmitComplete()));
                 Update_Rec2_temp((uint8_t) temp);
                 temp = 0;
                 hum = 0;
                 I2C_SELECT_CHANNEL = I2C_CHANNEL0;
+                break;
+                
         }
         vTaskDelay(3000);
     }
