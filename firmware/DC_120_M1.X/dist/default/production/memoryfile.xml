@@ -3,15 +3,15 @@
   <executable name="dist/default/production/DC_120_M1.X.production.elf">
     <memory name="program">
       <units>bytes</units>
-      <length>1040384</length>
-      <used>168150</used>
-      <free>872234</free>
+      <length>1048576</length>
+      <used>168086</used>
+      <free>880490</free>
     </memory>
     <memory name="data">
       <units>bytes</units>
-      <length>262128</length>
+      <length>262144</length>
       <used>105061</used>
-      <free>157067</free>
+      <free>157083</free>
     </memory>
   </executable>
 </project>

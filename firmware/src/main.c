@@ -20,8 +20,8 @@
 #include "peripheral/wdt/plib_wdt.h"
 #include "flashdata.h"
 
-uint8_t Can0MessageRAM[CAN0_MESSAGE_RAM_CONFIG_SIZE] __attribute__((address(0x20000010)));
-uint8_t Can1MessageRAM[CAN1_MESSAGE_RAM_CONFIG_SIZE] __attribute__((address((0x20000010) + CAN0_MESSAGE_RAM_CONFIG_SIZE)));
+uint8_t Can0MessageRAM[CAN0_MESSAGE_RAM_CONFIG_SIZE] __attribute__((address(0x20000000)));
+uint8_t Can1MessageRAM[CAN1_MESSAGE_RAM_CONFIG_SIZE] __attribute__((address((0x20000000) + CAN0_MESSAGE_RAM_CONFIG_SIZE)));
 
 TaskHandle_t defaultTaskHandle;
 TaskHandle_t _50msecTask;
@@ -808,7 +808,7 @@ int main(void) {
     xTaskCreate(Start_I2C_TMP_HUM_TASK, "Start_I2C_TMP_HUM_TASK", 512, NULL, 1, &I2c_TEMP_HUM_TASKHandle);
     xTaskCreate(Start_METER_RX_TASK, "Start_METER_RX_TASK", 512, NULL, 1, &METER_RECEIVE_TaskHandle); // 3072-512
     xTaskCreate(Start_RFID_RX_TASK, "Start_RFID_RX_TASK", 256, NULL, 1, &RFID_RX_TASKHandle); // 1024-512
-    xTaskCreate(Start_ESP_RX_TASK, "Start_ESP_RX_TASK", 256, NULL, 1, &ESP_RX_TASKHandle); // 2048-512
+    xTaskCreate(Start_ESP_RX_TASK, "Start_ESP_RX_TASK", 512, NULL, 1, &ESP_RX_TASKHandle); // 2048-512
     xTaskCreate(StartCANrecieveTask, "StartCANrecieveTask", 512, NULL, 1, &canrecievetask); // 2048-512
     xTaskCreate(Start_SIMULATOR_TASK, "Start_SIMULATOR_TASK", 256, NULL, 1, &simulatortask);
     xTaskCreate(Start_HMI_TX_TASK, "Start_HMI_TX_TASK", 128, NULL, 2, &HMI_SEND_TASKHandle); // 512-256
@@ -819,7 +819,7 @@ int main(void) {
     xTaskCreate(Start_LED_TASK, "Start_LED_TASK", 128, NULL, 1, &LED_TASKHandle);
     xTaskCreate(Start_GUN1_PARAM_TASK, "Start_GUN1_PARAM_TASK", 128, NULL, 2, &GUN1_PARAM_TASKHandle);
     xTaskCreate(Start_GUN2_PARAM_TASK, "Start_GUN2_PARAM_TASK", 128, NULL, 2, &GUN2_PARAM_TASKHandle);
-    xTaskCreate(Start_FLASH_READ_TASK, "Start_FLASH_READ_TASK", 1536, NULL, 1, &FLASH_READ_TASKHandle);
+    xTaskCreate(Start_FLASH_READ_TASK, "Start_FLASH_READ_TASK", 2048, NULL, 1, &FLASH_READ_TASKHandle); //1536-2048
     xTaskCreate(Start_FLASH_WRITE_TASK, "Start_FLASH_WRITE_TASK", 1536, NULL, 3, &FLASH_WRITE_TASKHandle);
     xTaskCreate(Start_DATA_POPULATE_TASK, "Start_DATA_POPULATE_TASK", 2048, NULL, 4, &DATA_POPULATE_TASKHandle); //1536-2048
     xTaskCreate(Start_AC_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &AC_METER_SEND_TASKHandle);
@@ -2440,9 +2440,32 @@ void Start_1000msecTask(void *argument) {
             switch (_1000msMsg.ID_t) {
                 case _D001:
                     memcpy(_ECD001_TXDATA, _1000msMsg.DATA, 8);
+                    memset(txFiFo, 0x00, CAN0_TX_FIFO_BUFFER_SIZE);
+
                     break;
                 case _D002:
+                    txBuffer = (CAN_TX_BUFFER *) (txFiFo);
+                    txBuffer->xtd = 1;
+                    txBuffer->id = _D001;
+                    txBuffer->dlc = 8;
+//                    memcpy(txBuffer->data, _ECD001_TXDATA, 8);
+                    _ECD001_TXDATA[0] = 169;
+                    _ECD001_TXDATA[1] = 254;
+                    _ECD001_TXDATA[2] = 146;
+                    _ECD001_TXDATA[3] = 238;
+                    _ECD001_TXDATA[4] = (SA_Agent >> 8);
+                    _ECD001_TXDATA[5] = SA_Agent;
+                    CAN0_MessageTransmitFifo(1, (CAN_TX_BUFFER *) (txBuffer));
+                    vTaskDelay(1);
                     memcpy(_ECD002_TXDATA, _1000msMsg.DATA, 8);
+                    memset(txFiFo, 0x00, CAN0_TX_FIFO_BUFFER_SIZE);
+                    txBuffer = (CAN_TX_BUFFER *) (txFiFo);
+                    txBuffer->xtd = 1;
+                    txBuffer->id = _D002;
+                    txBuffer->dlc = 8;
+                    memcpy(txBuffer->data, _ECD002_TXDATA, 8);
+                    CAN0_MessageTransmitFifo(1, (CAN_TX_BUFFER *) (txBuffer));
+                    vTaskDelay(1);
                     break;
                 case _D003:
                     memcpy(_ECD003_TXDATA, _1000msMsg.DATA, 8);
@@ -2459,26 +2482,8 @@ void Start_1000msecTask(void *argument) {
                     break;
             }
         }
-        memset(txFiFo, 0x00, CAN0_TX_FIFO_BUFFER_SIZE);
-        txBuffer = (CAN_TX_BUFFER *) (txFiFo);
-        txBuffer->xtd = 1;
-        txBuffer->id = _D001;
-        txBuffer->dlc = 8;
-        memcpy(txBuffer->data, _ECD001_TXDATA, 8);
-        _ECD001_TXDATA[0] = 127;
-        _ECD001_TXDATA[3] = 1;
-        _ECD001_TXDATA[4] = (SA_Agent >> 8);
-        _ECD001_TXDATA[5] = SA_Agent;
-        CAN0_MessageTransmitFifo(1, (CAN_TX_BUFFER *) (txBuffer));
-        vTaskDelay(1);
-        memset(txFiFo, 0x00, CAN0_TX_FIFO_BUFFER_SIZE);
-        txBuffer = (CAN_TX_BUFFER *) (txFiFo);
-        txBuffer->xtd = 1;
-        txBuffer->id = _D002;
-        txBuffer->dlc = 8;
-        memcpy(txBuffer->data, _ECD002_TXDATA, 8);
-        CAN0_MessageTransmitFifo(1, (CAN_TX_BUFFER *) (txBuffer));
-        vTaskDelay(1);
+
+
         memset(txFiFo, 0x00, CAN0_TX_FIFO_BUFFER_SIZE);
         txBuffer = (CAN_TX_BUFFER *) (txFiFo);
         txBuffer->xtd = 1;
@@ -2681,7 +2686,7 @@ void Start_ESP_RX_TASK(void *argument) {
 
     memset(esprxdata.DATA_ARRAY, 0, sizeof (esprxdata.DATA_ARRAY));
     ESP_RX_Q esprxdata_t;
-    char buffer[70];
+    char buffer[100];
     static uint32_t rssi = 0;
     uint8_t OCPP_ID_t[30];
     uint8_t BLE_ID_t[30];
@@ -2724,6 +2729,8 @@ void Start_ESP_RX_TASK(void *argument) {
                     flashmsg.ID_DATA[7] = ((uint32_t) OCPP_ID_t[28] << 24 & 0xFF000000) | ((uint32_t) OCPP_ID_t[29] << 16 & 0x00FF0000) | ((uint32_t) OCPP_ID_t[28] << 8 & 0x0000FF00) | ((uint32_t) OCPP_ID_t[29] & 0x000000FF);
                     xQueueSend(FLASH_WRITE_QUEUE, &flashmsg, 100);
                     vTaskResume(FLASH_WRITE_TASKHandle);
+                    Update_OCPP_ID(OCPP_ID_t);
+
                 }
                 if (esprxdata.ID_S[0] == BLE_ID) {
                     memcpy(BLE_ID_t, &esprxdata.ID_S[1], 30);
@@ -2739,7 +2746,11 @@ void Start_ESP_RX_TASK(void *argument) {
                     flashmsg.ID_DATA[7] = ((uint32_t) BLE_ID_t[28] << 24 & 0xFF000000) | ((uint32_t) BLE_ID_t[29] << 16 & 0x00FF0000) | ((uint32_t) BLE_ID_t[28] << 8 & 0x0000FF00) | ((uint32_t) BLE_ID_t[29] & 0x000000FF);
                     xQueueSend(FLASH_WRITE_QUEUE, &flashmsg, 100);
                     vTaskResume(FLASH_WRITE_TASKHandle);
+                    Update_BLE_ID(BLE_ID_t);
+
                 }
+
+
                 if (esprxdata.restart == 1) {
                     NVIC_SystemReset();
                 }
@@ -3016,6 +3027,10 @@ void Start_ESP_RX_TASK(void *argument) {
                     flashmsg.DATA_t = esprxdata.DATA_t;
                     xQueueSend(FLASH_WRITE_QUEUE, &flashmsg, 100);
                     vTaskResume(FLASH_WRITE_TASKHandle);
+                    //                    sprintf(buffer, "Type: %d, Index: %d, Data: %ld", flashmsg.WHAT_TYPE_OF_DATA, flashmsg.DATA_IDX, flashmsg.DATA_t); // Cast to float if DATA_t is not already float
+                    //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
+                    //                    while (!(SERCOM5_USART_TransmitComplete()))
+                    //                        ;
                 }
                 if (esprxdata.BT_DATA_COMING == 2) {
                     flashreadmsg.WHO_IS_READING = ESP_READ;
@@ -3260,10 +3275,10 @@ void Start_METER_RX_TASK(void *arggument) {
                         esp_s_meter_data.AC_VOLT_L3 = ac_volt3;
 
                     } else {
-                        sprintf(buf, "CRC NOT MATCH AC1\r\n");
-                        SERCOM5_USART_Write(buf, sizeof (buf));
-                        while (!(SERCOM5_USART_TransmitComplete()))
-                            ;
+                        //                        sprintf(buf, "CRC NOT MATCH AC1\r\n");
+                        //                        SERCOM5_USART_Write(buf, sizeof (buf));
+                        //                        while (!(SERCOM5_USART_TransmitComplete()))
+                        //                            ;
                         u8dummyData = u8dummyData | SERCOM2_REGS->USART_INT.SERCOM_DATA;
                     }
                     break;
@@ -3361,10 +3376,10 @@ void Start_METER_RX_TASK(void *arggument) {
                         esp_s_meter_data.DC1_POWER = *((uint32_t *) & POWER1);
 
                     } else {
-                        sprintf(buf, "CRC NOT MATCH DC1\r\n");
-                        SERCOM5_USART_Write(buf, sizeof (buf));
-                        while (!(SERCOM5_USART_TransmitComplete()))
-                            ;
+                        //                        sprintf(buf, "CRC NOT MATCH DC1\r\n");
+                        //                        SERCOM5_USART_Write(buf, sizeof (buf));
+                        //                        while (!(SERCOM5_USART_TransmitComplete()))
+                        //                            ;
                         u8dummyData = u8dummyData | SERCOM2_REGS->USART_INT.SERCOM_DATA;
                     }
                     break;
@@ -3433,10 +3448,10 @@ void Start_METER_RX_TASK(void *arggument) {
                         esp_s_meter_data.DC2_POWER = *((uint32_t *) & POWER2);
 
                     } else {
-                        sprintf(buf, "CRC NOT MATCH DC2\r\n");
-                        SERCOM5_USART_Write(buf, sizeof (buf));
-                        while (!(SERCOM5_USART_TransmitComplete()))
-                            ;
+                        //                        sprintf(buf, "CRC NOT MATCH DC2\r\n");
+                        //                        SERCOM5_USART_Write(buf, sizeof (buf));
+                        //                        while (!(SERCOM5_USART_TransmitComplete()))
+                        //                            ;
                         u8dummyData = u8dummyData | SERCOM2_REGS->USART_INT.SERCOM_DATA;
                     }
                     break;
@@ -4042,10 +4057,10 @@ void Start_I2C_TMP_HUM_TASK(void *argument) {
                 rh_ticks = (((float) i2c_receive_data[3] * 256) + (float) i2c_receive_data[4]);
                 temp = -45 + (175 * (t_ticks / 65535));
                 hum = -6 + (125 * (rh_ticks / 65535));
-                memset(buffer,0,sizeof(buffer));
-                sprintf(buffer, "Channel: 0, Temp: %.2f C, Humidity: %.2f %%\r\n", temp, hum);
-                SERCOM5_USART_Write(buffer, sizeof (buffer));
-                while (!(SERCOM5_USART_TransmitComplete()));
+                //                memset(buffer, 0, sizeof (buffer));
+                //                sprintf(buffer, "Channel: 0, Temp: %.2f C, Humidity: %.2f %%\r\n", temp, hum);
+                //                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                //                while (!(SERCOM5_USART_TransmitComplete()));
                 Update_Rec1_temp((uint8_t) temp);
                 temp = 0;
                 hum = 0;
@@ -4064,16 +4079,16 @@ void Start_I2C_TMP_HUM_TASK(void *argument) {
                 rh_ticks = (((float) i2c_receive_data[3] * 256) + (float) i2c_receive_data[4]);
                 temp = -45 + (175 * (t_ticks / 65535));
                 hum = -6 + (125 * (rh_ticks / 65535));
-                memset(buffer,0,sizeof(buffer));
-                sprintf(buffer, "Channel: 1, Temp: %.2f C, Humidity: %.2f %%\r\n", temp, hum);
-                SERCOM5_USART_Write(buffer, sizeof (buffer));
-                while (!(SERCOM5_USART_TransmitComplete()));
-                Update_Rec2_temp((uint8_t) temp);
+                //                memset(buffer, 0, sizeof (buffer));
+                //                sprintf(buffer, "Channel: 1, Temp: %.2f C, Humidity: %.2f %%\r\n", temp, hum);
+                //                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                //                while (!(SERCOM5_USART_TransmitComplete()));
+                //                Update_Rec2_temp((uint8_t) temp);
                 temp = 0;
                 hum = 0;
                 I2C_SELECT_CHANNEL = I2C_CHANNEL0;
                 break;
-                
+
         }
         vTaskDelay(3000);
     }
@@ -4596,6 +4611,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 _1000msmsg.DATA[0] = _1_PLC_tx_1000_t._D002_EVSE_PKIENVSELECTION_DATA0_t = EVSE_PKIENVSELECTION_Public;
                 _1000msmsg.DATA[1] = _1_PLC_tx_1000_t._D002_EVSE_CERTCHAINVALID_DATA1_t = EVSE_CERTCHAINVALID_None;
                 _1000msmsg.DATA[2] = _1_PLC_tx_1000_t._D002_EVSE_RKEYOPTION_DATA2_t = EVSE_RKEYOPTION_False;
+
                 xQueueSend(_1000msQUEUE, &_1000msmsg, 100);
                 vTaskDelay(100);
                 _50msmsg.ID_t = _002;
@@ -4951,7 +4967,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 vTaskDelay(10);
 
                 /////////HMI/////////////////////
-                Change_Page_to(GUN1_PARAM_PAGE);
+
 
                 //                }
                 if (xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0)) {
@@ -4962,6 +4978,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         xTimerStart(rec2_timer, 60000);
                         xTimerStart(rec3_timer, 60000);
                         xTimerStart(rec4_timer, 60000);
+                        Change_Page_to(GUN1_PARAM_PAGE);
+                        Change_gun1_status_to(CHARGING);
                         CURRENT_PLC1_STATE = _1_PLC_STATE_CURRENT_DEMAND_1;
                         Update_GUN1_Charging_Start_date(day);
                         vTaskDelay(100);
@@ -4996,7 +5014,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 vTaskResume(FAN_TASKHandle);
                 //                leddata.GUN1 = 1;
                 //                xQueueOverwrite(LED1_QUEUE, &leddata);
-                Change_gun1_status_to(CHARGING);
+
                 Update_GUN1_Duration(GUN1_CHARGING_TIME);
                 if (initial_SOC1 == 7) {
                     Update_GUN1_Initial_SOC(FINAL_INITIAL_SOC);
@@ -5802,7 +5820,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 xQueueSend(_50msQUEUE, &_50msmsg, 100);
                 vTaskDelay(100);
                 /////////HMI/////////////////////
-                Change_Page_to(GUN2_PARAM_PAGE);
+
 
                 //                }
                 if (xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0)) {
@@ -5813,6 +5831,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         xTimerStart(rec3_timer, 60000);
                         xTimerStart(rec4_timer, 60000);
                         xTimerStart(Gun2_Charging_timer, 60000);
+                        Change_Page_to(GUN2_PARAM_PAGE);
+                        Change_gun2_status_to(CHARGING);
                         CURRENT_PLC2_STATE = _2_PLC_STATE_CURRENT_DEMAND_1;
                         Update_GUN2_Charging_Start_date(day);
                         vTaskDelay(100);
@@ -5848,7 +5868,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 vTaskResume(FAN_TASKHandle);
                 //                leddata.GUN2 = 1;
                 //                xQueueOverwrite(LED2_QUEUE, &leddata);
-                Change_gun2_status_to(CHARGING);
+
                 Update_GUN2_Duration(GUN2_CHARGING_TIME);
                 if (initial_SOC2 == 7) {
                     Update_GUN2_Initial_SOC(FINAL_INITIAL_SOC);
@@ -7514,6 +7534,7 @@ void Start_FLASH_READ_TASK(void *argument) {
     uint32_t CHARGING_DATA_ARRAY_33_48[128] = {0};
     uint32_t CHARGING_DATA_ARRAY_49_64[128] = {0};
     static int count = 0;
+    char buffer[100] = {0};
     for (;;) {
 
         if (xQueueReceive(FLASH_READ_QUEUE, &flashreadmsg, 0)) {
@@ -7525,6 +7546,10 @@ void Start_FLASH_READ_TASK(void *argument) {
                 espdata.IDX = flashreadmsg.BT_READ_IDX;
                 espdata.IDX_DATA = BT_DATA_ARRAY_0_127[flashreadmsg.BT_READ_IDX];
                 xQueueOverwrite(ESP_S_BT_QUEUE, &espdata);
+                sprintf(buffer, "Index: %d, Data: %ld", espdata.IDX, espdata.IDX_DATA); // Cast to float if DATA_t is not already float
+                SERCOM5_USART_Write(buffer, sizeof (buffer));
+                while (!(SERCOM5_USART_TransmitComplete()))
+                    ;
             }
             if (flashreadmsg.WHO_IS_READING == HMI_READ) {
                 if (flashreadmsg.COUNT_READ_INC == 0) {
@@ -7893,9 +7918,9 @@ void Start_DATA_POPULATE_TASK(void *argument) {
     //    sprintf(buff, "SYSTEM RESTARTED\r\n");
     //    SERCOM5_USART_Write(buff, sizeof (buff));
     //    while (!(SERCOM5_USART_TransmitComplete()));
-
-    //    uint8_t BLE_ID_t_t[30] = {0};
-    //    uint8_t OCPP_ID_t_t[30] = {0};
+    char buffer[100] = {0};
+    uint8_t BLE_ID_t_t[30] = {0};
+    uint8_t OCPP_ID_t_t[30] = {0};
     for (;;) {
 
         /////////////COPY BT DATA to BUFFER/////////////////////
@@ -7921,77 +7946,78 @@ void Start_DATA_POPULATE_TASK(void *argument) {
         memcpy(CHARGING_DATA_ARRAY_49_64, (void *) (FLASH_START_ADDRESS_CHARGING_SESSION_1_62 + FLASH_WRITE_LIMIT2), 464);
         while (NVMCTRL_IsBusy())
             ;
-        //        BLE_ID_t_t[0] = (BT_DATA_ARRAY[BLE_ID_IDX]&0xFF000000) >> 24;
-        //        OCPP_ID_t_t[0] = (BT_DATA_ARRAY[OCPP_ID_IDX]&0x00FF0000) >> 24;
-        //        BLE_ID_t_t[1] = (BT_DATA_ARRAY[BLE_ID_IDX]&0x00FF0000) >> 16;
-        //        OCPP_ID_t_t[1] = (BT_DATA_ARRAY[OCPP_ID_IDX]&0xFF000000) >> 16;
-        //        BLE_ID_t_t[2] = (BT_DATA_ARRAY[BLE_ID_IDX]&0x0000FF00) >> 8;
-        //        OCPP_ID_t_t[2] = (BT_DATA_ARRAY[OCPP_ID_IDX]&0x0000FF00) >> 8;
-        //        BLE_ID_t_t[3] = (BT_DATA_ARRAY[BLE_ID_IDX]&0x000000FF);
-        //        OCPP_ID_t_t[3] = (BT_DATA_ARRAY[OCPP_ID_IDX]&0x000000FF);
-        //        //WDT_Clear();
-        //        BLE_ID_t_t[4] = (BT_DATA_ARRAY[BLE_ID_IDX1]&0xFF000000) >> 24;
-        //        OCPP_ID_t_t[4] = (BT_DATA_ARRAY[OCPP_ID_IDX1]&0x00FF0000) >> 24;
-        //        BLE_ID_t_t[5] = (BT_DATA_ARRAY[BLE_ID_IDX1]&0x00FF0000) >> 16;
-        //        OCPP_ID_t_t[5] = (BT_DATA_ARRAY[OCPP_ID_IDX1]&0xFF000000) >> 16;
-        //        BLE_ID_t_t[6] = (BT_DATA_ARRAY[BLE_ID_IDX1]&0x0000FF00) >> 8;
-        //        OCPP_ID_t_t[6] = (BT_DATA_ARRAY[OCPP_ID_IDX1]&0x0000FF00) >> 8;
-        //        BLE_ID_t_t[7] = (BT_DATA_ARRAY[BLE_ID_IDX1]&0x000000FF);
-        //        OCPP_ID_t_t[7] = (BT_DATA_ARRAY[OCPP_ID_IDX1]&0x000000FF);
-        //        //WDT_Clear();
-        //        BLE_ID_t_t[8] = (BT_DATA_ARRAY[BLE_ID_IDX2]&0xFF000000) >> 24;
-        //        OCPP_ID_t_t[8] = (BT_DATA_ARRAY[OCPP_ID_IDX2]&0x00FF0000) >> 24;
-        //        BLE_ID_t_t[9] = (BT_DATA_ARRAY[BLE_ID_IDX2]&0x00FF0000) >> 16;
-        //        OCPP_ID_t_t[9] = (BT_DATA_ARRAY[OCPP_ID_IDX2]&0xFF000000) >> 16;
-        //        BLE_ID_t_t[10] = (BT_DATA_ARRAY[BLE_ID_IDX2]&0x0000FF00) >> 8;
-        //        OCPP_ID_t_t[10] = (BT_DATA_ARRAY[OCPP_ID_IDX2]&0x0000FF00) >> 8;
-        //        BLE_ID_t_t[11] = (BT_DATA_ARRAY[BLE_ID_IDX2]&0x000000FF);
-        //        OCPP_ID_t_t[11] = (BT_DATA_ARRAY[OCPP_ID_IDX2]&0x000000FF);
-        //        //WDT_Clear();
-        //        BLE_ID_t_t[12] = (BT_DATA_ARRAY[BLE_ID_IDX3]&0xFF000000) >> 24;
-        //        OCPP_ID_t_t[12] = (BT_DATA_ARRAY[OCPP_ID_IDX3]&0x00FF0000) >> 24;
-        //        BLE_ID_t_t[13] = (BT_DATA_ARRAY[BLE_ID_IDX3]&0x00FF0000) >> 16;
-        //        OCPP_ID_t_t[13] = (BT_DATA_ARRAY[OCPP_ID_IDX3]&0xFF000000) >> 16;
-        //        BLE_ID_t_t[14] = (BT_DATA_ARRAY[BLE_ID_IDX3]&0x0000FF00) >> 8;
-        //        OCPP_ID_t_t[14] = (BT_DATA_ARRAY[OCPP_ID_IDX3]&0x0000FF00) >> 8;
-        //        BLE_ID_t_t[15] = (BT_DATA_ARRAY[BLE_ID_IDX3]&0x000000FF);
-        //        OCPP_ID_t_t[15] = (BT_DATA_ARRAY[OCPP_ID_IDX3]&0x000000FF);
-        //        //WDT_Clear();
-        //        BLE_ID_t_t[16] = (BT_DATA_ARRAY[BLE_ID_IDX4]&0xFF000000) >> 24;
-        //        OCPP_ID_t_t[16] = (BT_DATA_ARRAY[OCPP_ID_IDX4]&0x00FF0000) >> 24;
-        //        BLE_ID_t_t[17] = (BT_DATA_ARRAY[BLE_ID_IDX4]&0x00FF0000) >> 16;
-        //        OCPP_ID_t_t[17] = (BT_DATA_ARRAY[OCPP_ID_IDX4]&0xFF000000) >> 16;
-        //        BLE_ID_t_t[18] = (BT_DATA_ARRAY[BLE_ID_IDX4]&0x0000FF00) >> 8;
-        //        OCPP_ID_t_t[18] = (BT_DATA_ARRAY[OCPP_ID_IDX4]&0x0000FF00) >> 8;
-        //        BLE_ID_t_t[19] = (BT_DATA_ARRAY[BLE_ID_IDX4]&0x000000FF);
-        //        OCPP_ID_t_t[19] = (BT_DATA_ARRAY[OCPP_ID_IDX4]&0x000000FF);
-        //        //WDT_Clear();
-        //        BLE_ID_t_t[20] = (BT_DATA_ARRAY[BLE_ID_IDX5]&0xFF000000) >> 24;
-        //        OCPP_ID_t_t[20] = (BT_DATA_ARRAY[OCPP_ID_IDX5]&0x00FF0000) >> 24;
-        //        BLE_ID_t_t[21] = (BT_DATA_ARRAY[BLE_ID_IDX5]&0x00FF0000) >> 16;
-        //        OCPP_ID_t_t[21] = (BT_DATA_ARRAY[OCPP_ID_IDX5]&0xFF000000) >> 16;
-        //        BLE_ID_t_t[22] = (BT_DATA_ARRAY[BLE_ID_IDX5]&0x0000FF00) >> 8;
-        //        OCPP_ID_t_t[22] = (BT_DATA_ARRAY[OCPP_ID_IDX5]&0x0000FF00) >> 8;
-        //        BLE_ID_t_t[23] = (BT_DATA_ARRAY[BLE_ID_IDX5]&0x000000FF);
-        //        OCPP_ID_t_t[23] = (BT_DATA_ARRAY[OCPP_ID_IDX5]&0x000000FF);
-        //        //WDT_Clear();
-        //        BLE_ID_t_t[24] = (BT_DATA_ARRAY[BLE_ID_IDX6]&0xFF000000) >> 24;
-        //        OCPP_ID_t_t[24] = (BT_DATA_ARRAY[OCPP_ID_IDX6]&0x00FF0000) >> 24;
-        //        BLE_ID_t_t[25] = (BT_DATA_ARRAY[BLE_ID_IDX6]&0x00FF0000) >> 16;
-        //        OCPP_ID_t_t[25] = (BT_DATA_ARRAY[OCPP_ID_IDX6]&0xFF000000) >> 16;
-        //        BLE_ID_t_t[26] = (BT_DATA_ARRAY[BLE_ID_IDX6]&0x0000FF00) >> 8;
-        //        OCPP_ID_t_t[26] = (BT_DATA_ARRAY[OCPP_ID_IDX6]&0x0000FF00) >> 8;
-        //        BLE_ID_t_t[27] = (BT_DATA_ARRAY[BLE_ID_IDX6]&0x000000FF);
-        //        OCPP_ID_t_t[27] = (BT_DATA_ARRAY[OCPP_ID_IDX6]&0x000000FF);
-        //        //WDT_Clear();
-        //        BLE_ID_t_t[28] = (BT_DATA_ARRAY[BLE_ID_IDX7]&0xFF000000) >> 24;
-        //        OCPP_ID_t_t[28] = (BT_DATA_ARRAY[OCPP_ID_IDX7]&0x00FF0000) >> 24;
-        //        BLE_ID_t_t[29] = (BT_DATA_ARRAY[BLE_ID_IDX7]&0x00FF0000) >> 16;
-        //        OCPP_ID_t_t[29] = (BT_DATA_ARRAY[OCPP_ID_IDX7]&0xFF000000) >> 16;
+        BLE_ID_t_t[0] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX]&0xFF000000) >> 24;
+        OCPP_ID_t_t[0] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX]&0xFF000000) >> 24;
+        BLE_ID_t_t[1] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX]&0x00FF0000) >> 16;
+        OCPP_ID_t_t[1] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX]&0x00FF0000) >> 16;
+        BLE_ID_t_t[2] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX]&0x0000FF00) >> 8;
+        OCPP_ID_t_t[2] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX]&0x0000FF00) >> 8;
+        BLE_ID_t_t[3] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX]&0x000000FF);
+        OCPP_ID_t_t[3] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX]&0x000000FF);
+        //WDT_Clear();
+        BLE_ID_t_t[4] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX1]&0xFF000000) >> 24;
+        OCPP_ID_t_t[4] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX1]&0xFF000000) >> 24;
+        BLE_ID_t_t[5] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX1]&0x00FF0000) >> 16;
+        OCPP_ID_t_t[5] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX1]&0x00FF0000) >> 16;
+        BLE_ID_t_t[6] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX1]&0x0000FF00) >> 8;
+        OCPP_ID_t_t[6] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX1]&0x0000FF00) >> 8;
+        BLE_ID_t_t[7] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX1]&0x000000FF);
+        OCPP_ID_t_t[7] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX1]&0x000000FF);
+        //WDT_Clear();
+        BLE_ID_t_t[8] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX2]&0xFF000000) >> 24;
+        OCPP_ID_t_t[8] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX2]&0xFF000000) >> 24;
+        BLE_ID_t_t[9] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX2]&0x00FF0000) >> 16;
+        OCPP_ID_t_t[9] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX2]&0x00FF0000) >> 16;
+        BLE_ID_t_t[10] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX2]&0x0000FF00) >> 8;
+        OCPP_ID_t_t[10] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX2]&0x0000FF00) >> 8;
+        BLE_ID_t_t[11] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX2]&0x000000FF);
+        OCPP_ID_t_t[11] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX2]&0x000000FF);
+        //WDT_Clear();
+        BLE_ID_t_t[12] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX3]&0xFF000000) >> 24;
+        OCPP_ID_t_t[12] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX3]&0xFF000000) >> 24;
+        BLE_ID_t_t[13] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX3]&0x00FF0000) >> 16;
+        OCPP_ID_t_t[13] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX3]&0x00FF0000) >> 16;
+        BLE_ID_t_t[14] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX3]&0x0000FF00) >> 8;
+        OCPP_ID_t_t[14] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX3]&0x0000FF00) >> 8;
+        BLE_ID_t_t[15] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX3]&0x000000FF);
+        OCPP_ID_t_t[15] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX3]&0x000000FF);
+        //WDT_Clear();
+        BLE_ID_t_t[16] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX4]&0xFF000000) >> 24;
+        OCPP_ID_t_t[16] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX4]&0xFF000000) >> 24;
+        BLE_ID_t_t[17] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX4]&0x00FF0000) >> 16;
+        OCPP_ID_t_t[17] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX4]&0x00FF0000) >> 16;
+        BLE_ID_t_t[18] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX4]&0x0000FF00) >> 8;
+        OCPP_ID_t_t[18] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX4]&0x0000FF00) >> 8;
+        BLE_ID_t_t[19] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX4]&0x000000FF);
+        OCPP_ID_t_t[19] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX4]&0x000000FF);
+        //WDT_Clear();
+        BLE_ID_t_t[20] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX5]&0xFF000000) >> 24;
+        OCPP_ID_t_t[20] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX5]&0xFF000000) >> 24;
+        BLE_ID_t_t[21] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX5]&0x00FF0000) >> 16;
+        OCPP_ID_t_t[21] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX5]&0x00FF0000) >> 16;
+        BLE_ID_t_t[22] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX5]&0x0000FF00) >> 8;
+        OCPP_ID_t_t[22] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX5]&0x0000FF00) >> 8;
+        BLE_ID_t_t[23] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX5]&0x000000FF);
+        OCPP_ID_t_t[23] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX5]&0x000000FF);
+        //WDT_Clear();
+        BLE_ID_t_t[24] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX6]&0xFF000000) >> 24;
+        OCPP_ID_t_t[24] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX6]&0xFF000000) >> 24;
+        BLE_ID_t_t[25] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX6]&0x00FF0000) >> 16;
+        OCPP_ID_t_t[25] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX6]&0x00FF0000) >> 16;
+        BLE_ID_t_t[26] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX6]&0x0000FF00) >> 8;
+        OCPP_ID_t_t[26] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX6]&0x0000FF00) >> 8;
+        BLE_ID_t_t[27] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX6]&0x000000FF);
+        OCPP_ID_t_t[27] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX6]&0x000000FF);
+        //WDT_Clear();
+        BLE_ID_t_t[28] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX7]&0xFF000000) >> 24;
+        OCPP_ID_t_t[28] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX7]&0xFF000000) >> 24;
+        BLE_ID_t_t[29] = (BT_DATA_ARRAY_0_127[BLE_ID_IDX7]&0x00FF0000) >> 16;
+        OCPP_ID_t_t[29] = (BT_DATA_ARRAY_0_127[OCPP_ID_IDX7]&0x00FF0000) >> 16;
         //WDT_Clear();
 
-        //        Update_BLE_ID(BLE_ID_t_t);
-        //        Update_OCPP_ID(OCPP_ID_t_t);
+
+        Update_BLE_ID(BLE_ID_t_t);
+        Update_OCPP_ID(OCPP_ID_t_t);
         if (CHARGING_DATA_ARRAY_1_16[0] == BLANK_DATA || CHARGING_DATA_ARRAY_17_32[0] == BLANK_DATA || CHARGING_DATA_ARRAY_33_48[0] == BLANK_DATA || CHARGING_DATA_ARRAY_49_64[0] == BLANK_DATA) {
             memset(CHARGING_DATA_ARRAY_1_16, 0, sizeof (CHARGING_DATA_ARRAY_1_16));
             memset(CHARGING_DATA_ARRAY_17_32, 0, sizeof (CHARGING_DATA_ARRAY_17_32));

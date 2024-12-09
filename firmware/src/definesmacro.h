@@ -98,7 +98,7 @@ extern "C" {
     char IMD2_NOT_OK[] = "IMD2 NOT OK\r\n";
     char LIMIT_SW_OK[] = "GATE CLOSED\r\n";
     char LIMIT_SW_NOT_OK[] = "GATE OPEN\r\n";
-    uint16_t SA_Agent = 19119;
+    uint16_t SA_Agent = 20000;
 
 #define RFID_WAKEUP_RX_SIZE     15
 #define RFID_PRE_RX_SIZE         6
