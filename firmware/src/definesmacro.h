@@ -336,12 +336,12 @@ extern "C" {
     } CP_LEVEL2_Q;
 
     typedef union {
-        uint8_t ESP_ARRAY[174];
+        uint8_t ESP_ARRAY[146];
         //        uint8_t ESP_ARRAY[160];
 
         struct {
             uint32_t Start_bit;
-            uint32_t IDX_DATA[8];
+            uint32_t IDX_DATA;
             uint32_t FW_Version;
             uint32_t AC_VOLT_L1;
             uint32_t AC_VOLT_L2;
