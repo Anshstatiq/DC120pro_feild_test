@@ -371,8 +371,8 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
         <pack name="SAME51_DFP" vendor="Microchip" version="3.7.242"/>
+        <pack name="CMSIS" vendor="ARM" version="5.4.0"/>
       </packs>
       <ScriptingSettings>
       </ScriptingSettings>
@@ -399,7 +399,7 @@
         <makeCustomizationPostStep>${MP_CC_DIR}/xc32-objcopy -I ihex -O binary ${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.hex ${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.bin</makeCustomizationPostStep>
         <makeCustomizationPutChecksumInUserID>false</makeCustomizationPutChecksumInUserID>
         <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
-        <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
+        <makeCustomizationNormalizeHexFile>true</makeCustomizationNormalizeHexFile>
       </makeCustomizationType>
       <C32>
         <property key="additional-warnings" value="false"/>
@@ -496,7 +496,7 @@
         <property key="symbol-stripping" value=""/>
         <property key="trace-symbols" value=""/>
         <property key="warn-section-align" value="false"/>
-        <appendMe value="-DRAM_ORIGIN=0X20000010,-DRAM_LENGTH=0x3fff0"/>
+        <appendMe value="-DRAM_ORIGIN=0x20000010,-DRAM_LENGTH=0x3fff0"/>
       </C32-LD>
       <C32CPP>
         <property key="additional-warnings" value="false"/>

@@ -327,8 +327,8 @@ extern QueueHandle_t HMI_SEND_QUEUE;
 #define AVAILABLE   0x01
 #define CONNECTED   0x02
 #define CHARGING   0x03
-#define RESERVED    0x05
-#define CHARGING_COMPLETED   0x04
+//#define RESERVED    0x05
+#define CHARGING_COMPLETED   0x05
 #define FAULT   0x06
 
 

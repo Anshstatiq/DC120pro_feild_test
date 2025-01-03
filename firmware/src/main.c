@@ -912,17 +912,17 @@ void Start_ERROR_CODE_TASK(void *argument) {
                         array_bits[SMOKE_DETECTED_IDX] = 0;
                     }
                     break;
-                case ALL_RECTI_FAIL_IDX:
-                    ERROR0_ARRAY[2] = ERROR_CODE_ARRAY[ikf];
-                    if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[ALL_RECTI_FAIL_IDX] == 0)) {
-                        array_bits[ALL_RECTI_FAIL_IDX] = 1;
-                        Error_Code0 = ERROR_CODE_ARRAY[ikf];
-                        vTaskDelay(4000);
-                    }
-                    if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[ALL_RECTI_FAIL_IDX] == 1)) {
-                        array_bits[ALL_RECTI_FAIL_IDX] = 0;
-                    }
-                    break;
+                    /* case ALL_RECTI_FAIL_IDX:
+                         ERROR0_ARRAY[2] = ERROR_CODE_ARRAY[ikf];
+                         if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[ALL_RECTI_FAIL_IDX] == 0)) {
+                             array_bits[ALL_RECTI_FAIL_IDX] = 1;
+                             Error_Code0 = ERROR_CODE_ARRAY[ikf];
+                             vTaskDelay(4000);
+                         }
+                         if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[ALL_RECTI_FAIL_IDX] == 1)) {
+                             array_bits[ALL_RECTI_FAIL_IDX] = 0;
+                         }
+                         break;*/
                 case ESD_PRESSED_IDX:
                     ERROR0_ARRAY[3] = ERROR_CODE_ARRAY[ikf];
                     if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[ESD_PRESSED_IDX] == 0)) {
@@ -1121,52 +1121,52 @@ void Start_ERROR_CODE_TASK(void *argument) {
                     }
 
                     break;
-                case RECTIFIER1_COMM_FAIL_IDX:
-                    if (ERROR_CODE_ARRAY[REC_GROUP_CONN_NO] == 1) {
-                        ERROR1_ARRAY[4] = ERROR_CODE_ARRAY[ikf];
-                        if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[RECTIFIER1_COMM_FAIL_IDX1] == 0)) {
-                            array_bits[RECTIFIER1_COMM_FAIL_IDX1] = 1;
-                            Error_Code1 = ERROR_CODE_ARRAY[ikf];
-                            vTaskDelay(4000);
-                        }
-                        if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[RECTIFIER1_COMM_FAIL_IDX1] == 1)) {
-                            array_bits[RECTIFIER1_COMM_FAIL_IDX1] = 0;
-                        }
-                    }
-                    if (ERROR_CODE_ARRAY[REC_GROUP_CONN_NO] == 2) {
-                        ERROR2_ARRAY[4] = ERROR_CODE_ARRAY[ikf];
-                        if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[RECTIFIER1_COMM_FAIL_IDX2] == 0)) {
-                            array_bits[RECTIFIER1_COMM_FAIL_IDX2] = 1;
-                            Error_Code2 = ERROR_CODE_ARRAY[ikf];
-                            vTaskDelay(4000);
-                        }
-                        if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[RECTIFIER1_COMM_FAIL_IDX2] == 1)) {
-                            array_bits[RECTIFIER1_COMM_FAIL_IDX2] = 0;
-                        }
-                    }
-                    break;
-                case RECTIFIER2_COMM_FAIL_IDX:
-                    if (ERROR_CODE_ARRAY[REC_GROUP_CONN_NO] == 1) {
-                        ERROR1_ARRAY[5] = ERROR_CODE_ARRAY[ikf];
-                        if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[RECTIFIER2_COMM_FAIL_IDX1] == 0)) {
-                            Error_Code1 = ERROR_CODE_ARRAY[ikf];
-                            vTaskDelay(4000);
-                        }
-                        if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[RECTIFIER2_COMM_FAIL_IDX1] == 1)) {
-                            array_bits[RECTIFIER2_COMM_FAIL_IDX1] = 0;
-                        }
-                    }
-                    if (ERROR_CODE_ARRAY[REC_GROUP_CONN_NO] == 2) {
-                        ERROR2_ARRAY[5] = ERROR_CODE_ARRAY[ikf];
-                        if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[RECTIFIER2_COMM_FAIL_IDX2] == 0)) {
-                            Error_Code2 = ERROR_CODE_ARRAY[ikf];
-                            vTaskDelay(4000);
-                        }
-                        if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[RECTIFIER2_COMM_FAIL_IDX2] == 1)) {
-                            array_bits[RECTIFIER2_COMM_FAIL_IDX2] = 0;
-                        }
-                    }
-                    break;
+                    /* case RECTIFIER1_COMM_FAIL_IDX:
+                         if (ERROR_CODE_ARRAY[REC_GROUP_CONN_NO] == 1) {
+                             ERROR1_ARRAY[4] = ERROR_CODE_ARRAY[ikf];
+                             if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[RECTIFIER1_COMM_FAIL_IDX1] == 0)) {
+                                 array_bits[RECTIFIER1_COMM_FAIL_IDX1] = 1;
+                                 Error_Code1 = ERROR_CODE_ARRAY[ikf];
+                                 vTaskDelay(4000);
+                             }
+                             if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[RECTIFIER1_COMM_FAIL_IDX1] == 1)) {
+                                 array_bits[RECTIFIER1_COMM_FAIL_IDX1] = 0;
+                             }
+                         }
+                         if (ERROR_CODE_ARRAY[REC_GROUP_CONN_NO] == 2) {
+                             ERROR2_ARRAY[4] = ERROR_CODE_ARRAY[ikf];
+                             if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[RECTIFIER1_COMM_FAIL_IDX2] == 0)) {
+                                 array_bits[RECTIFIER1_COMM_FAIL_IDX2] = 1;
+                                 Error_Code2 = ERROR_CODE_ARRAY[ikf];
+                                 vTaskDelay(4000);
+                             }
+                             if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[RECTIFIER1_COMM_FAIL_IDX2] == 1)) {
+                                 array_bits[RECTIFIER1_COMM_FAIL_IDX2] = 0;
+                             }
+                         }
+                         break;
+                     case RECTIFIER2_COMM_FAIL_IDX:
+                         if (ERROR_CODE_ARRAY[REC_GROUP_CONN_NO] == 1) {
+                             ERROR1_ARRAY[5] = ERROR_CODE_ARRAY[ikf];
+                             if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[RECTIFIER2_COMM_FAIL_IDX1] == 0)) {
+                                 Error_Code1 = ERROR_CODE_ARRAY[ikf];
+                                 vTaskDelay(4000);
+                             }
+                             if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[RECTIFIER2_COMM_FAIL_IDX1] == 1)) {
+                                 array_bits[RECTIFIER2_COMM_FAIL_IDX1] = 0;
+                             }
+                         }
+                         if (ERROR_CODE_ARRAY[REC_GROUP_CONN_NO] == 2) {
+                             ERROR2_ARRAY[5] = ERROR_CODE_ARRAY[ikf];
+                             if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[RECTIFIER2_COMM_FAIL_IDX2] == 0)) {
+                                 Error_Code2 = ERROR_CODE_ARRAY[ikf];
+                                 vTaskDelay(4000);
+                             }
+                             if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[RECTIFIER2_COMM_FAIL_IDX2] == 1)) {
+                                 array_bits[RECTIFIER2_COMM_FAIL_IDX2] = 0;
+                             }
+                         }
+                         break;*/
                 case DC_OVER_VOLTAGE_IDX:
                     if (ERROR_CODE_ARRAY[DC_OVER_CONN_NO] == 1) {
                         ERROR1_ARRAY[6] = ERROR_CODE_ARRAY[ikf];
@@ -2448,7 +2448,7 @@ void Start_1000msecTask(void *argument) {
                     txBuffer->xtd = 1;
                     txBuffer->id = _D001;
                     txBuffer->dlc = 8;
-//                    memcpy(txBuffer->data, _ECD001_TXDATA, 8);
+                    //                    memcpy(txBuffer->data, _ECD001_TXDATA, 8);
                     _ECD001_TXDATA[0] = 169;
                     _ECD001_TXDATA[1] = 254;
                     _ECD001_TXDATA[2] = 146;
@@ -3049,10 +3049,10 @@ void Start_ESP_RX_TASK(void *argument) {
 
 void Start_AC_METER_SEND_TASK(void *argument) {
     SERCOM2_USART_ReadCallbackRegister(ENERGY_METER_CALLBACK, 0);
-//    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
-//    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
-        uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
-        uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
+    //    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
+    //    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
+    uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
+    uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
     static uint8_t count = 0;
     WHICH_METER_Q which_meter;
     NEXT_METER_Q next_meter;
@@ -5226,7 +5226,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
                     xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
                 }
-                if ((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
+                if((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
                     CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                     CP_Level_1 = 9;
                     Stop_Code = 202;
@@ -5793,6 +5793,13 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         Update_GUN2_Session_End_Reason(0x07);
                         Change_Page_to(GUN2_FAILING_REASON_PAGE);
                     }
+                    //                    _50msmsg.DATA[4] = _2_PLC_tx_50_t._402_EVSE_ISOLATION_STATUS_DATA4_t =
+                    //                            Isolation_Status_Valid;
+                    //                    _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Cable_check) | (1 << EVSE_Isolation_Mointor));
+                    //                    _50msmsg.ID_t = _402;
+                    //                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                    //                    vTaskDelay(100);
+                    //                    CURRENT_PLC2_STATE = _2_PLC_STATE_PRE_CHARGE;
                 }
                 break;
             case _2_PLC_STATE_PRE_CHARGE:
