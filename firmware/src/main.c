@@ -1976,12 +1976,12 @@ void Start_HMI_RX_TASK(void *argument) {
                     }
                 }
                 if (data[4] == 0x12 && data[5] == 0x17) {
-                    GUN1_summary_close_flag = 1;
+//                    GUN1_summary_close_flag = 1;
                     CURRENT_PAGE = INTRO_PAGE;
                     Change_Page_to(CURRENT_PAGE);
                 }
                 if (data[4] == 0x12 && data[5] == 0x18) {
-                    GUN2_summary_close_flag = 1;
+//                    GUN2_summary_close_flag = 1;
                     CURRENT_PAGE = INTRO_PAGE;
                     Change_Page_to(CURRENT_PAGE);
                 }
@@ -5226,7 +5226,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
                     xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
                 }
-                if((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
+                if ((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
                     CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                     CP_Level_1 = 9;
                     Stop_Code = 202;
@@ -6953,7 +6953,7 @@ void Start_LED_TASK(void *argument) {
                     switch (colo_state1) {
                         case 0:
                             colo_state1 = 1;
-                            color2msg.COLOR2 = NO_COLOR;
+                            color2msg.COLOR2 = NO_COLOR2;
                             xQueueOverwrite(COLOR2_QUEUE, &color2msg);
                             break;
                         case 1:
@@ -7054,15 +7054,20 @@ void Start_LED_TASK(void *argument) {
 
 void Start_GUN1_PARAM_TASK(void *argument) {
     static uint8_t count = 0;
+     static uint8_t page_change_instance = 0;
     for (;;) {
 
         count = count + 1;
-        CURRENT_PAGE = GUN1_SUMMARY_PAGE;
+        if(page_change_instance==0){
+         CURRENT_PAGE = GUN1_SUMMARY_PAGE;
         Change_Page_to(CURRENT_PAGE);
         Change_gun1_status_to(CHARGING_COMPLETED);
-        if (GUN1_summary_close_flag == 1) {
-            count = 5;
+        page_change_instance=1;
         }
+       
+//        if (GUN1_summary_close_flag == 1) {
+//            count = 5;
+//        }
         if (count == 5) {
 
             vTaskSuspend(FAN_TASKHandle);
@@ -7080,7 +7085,8 @@ void Start_GUN1_PARAM_TASK(void *argument) {
             Update_GUN1_Battery_Percent(0);
             Update_GUN1_Session_End_Reason(0x00);
             count = 0;
-            GUN1_summary_close_flag = 0;
+            page_change_instance=0;
+//            GUN1_summary_close_flag = 0;
             vTaskResume(_1_PLC_MANAGE_TASKHandle);
             vTaskSuspend(GUN1_PARAM_TASKHandle);
         }
@@ -7090,15 +7096,20 @@ void Start_GUN1_PARAM_TASK(void *argument) {
 
 void Start_GUN2_PARAM_TASK(void *argument) {
     static uint8_t count = 0;
+    static uint8_t page_change_instance = 0;
     for (;;) {
 
         count = count + 1;
-        CURRENT_PAGE = GUN2_SUMMARY_PAGE;
-        Change_Page_to(CURRENT_PAGE);
-        Change_gun2_status_to(CHARGING_COMPLETED);
-        if (GUN2_summary_close_flag == 1) {
-            count = 5;
+        if (page_change_instance == 0) {
+            CURRENT_PAGE = GUN2_SUMMARY_PAGE;
+            Change_Page_to(CURRENT_PAGE);
+            Change_gun2_status_to(CHARGING_COMPLETED);
+            page_change_instance = 1;
         }
+
+        //        if (GUN2_summary_close_flag == 1) {
+        //            count = 5;
+        //        }
         if (count == 5) {
 
             vTaskSuspend(FAN_TASKHandle);
@@ -7116,7 +7127,8 @@ void Start_GUN2_PARAM_TASK(void *argument) {
             Update_GUN2_Battery_Percent(0);
             Update_GUN2_Session_End_Reason(0x00);
             count = 0;
-            GUN2_summary_close_flag = 0;
+            page_change_instance = 0;
+            //            GUN2_summary_close_flag = 0;
             vTaskResume(_2_PLC_MANAGE_TASKHandle);
             vTaskSuspend(GUN2_PARAM_TASKHandle);
         }
