@@ -57,6 +57,8 @@ TaskHandle_t AC_METER_SEND_TASKHandle;
 TaskHandle_t DC1_METER_SEND_TASKHandle;
 TaskHandle_t DC2_METER_SEND_TASKHandle;
 TaskHandle_t FAN_TASKHandle;
+//TaskHandle_t HMI_GUN1_STATUS_TASKHandle;
+//TaskHandle_t HMI_GUN2_STATUS_TASKHandle;
 QueueHandle_t GUN_DATAQUEUE = NULL;
 QueueHandle_t METER_QUEUE = NULL;
 QueueHandle_t ESP_QUEUE = NULL;
@@ -202,6 +204,11 @@ void Start_AC_METER_SEND_TASK(void *argument);
 void Start_DC1_METER_SEND_TASK(void *argument);
 void Start_DC2_METER_SEND_TASK(void *argument);
 void Start_FAN_TASK(void *argument);
+//void Start_HMI_GUN1_STATUS_TASK(void *argument);
+//void Start_HMI_GUN2_STATUS_TASK(void *argument);
+
+
+
 
 char bootloader_done[] = {"Application run after recieving command through bootloader done....\r\n"};
 #define BTL_TRIGGER_PATTERN (0x5048434DUL)
@@ -232,7 +239,7 @@ static uint8_t DEFAULT_GUN2_TEMP_ALARM_t = DEFAULT_GUN2_TEMP_ALARM;
 static uint8_t DEFAULT_LED_FAULT_ALARM_t = DEFAULT_LED_FAULT_ALARM;
 static uint8_t DEFAULT_RFID_FAULT_ALARM_t = DEFAULT_RFID_FAULT_ALARM;
 static uint8_t DEFAULT_AC_METER_t = DEFAULT_AC_METER_TYPE;
-static uint8_t NO_OF_RECTIFIER = 4;
+static uint8_t NO_OF_RECTIFIER = 2;
 volatile uint8_t MACHINE_STATE = IDLE_STATE;
 uint8_t em_rx_buff[170] = {0};
 uint8_t ESP_RX_DATA_t[1] = {0};
@@ -802,7 +809,7 @@ int main(void) {
     xTaskCreate(Start_2_PLC_MANAGE_TASK, "Start_2_PLC_MANAGE_TASK", 1024, NULL, 2, &_2_PLC_MANAGE_TASKHandle); // 4256-1024
     xTaskCreate(Start_ESP_SEND_TASK, "Start_ESP_SEND_TASK", 256, NULL, 1, &ESP_SEND_TASKHandle); // 2560-512
     xTaskCreate(Start_RFID_SEND_TASk, "Start_RFID_SEND_TASk", 128, NULL, 1, &RFID_SEND_TASKHandle); // 512-256
-    xTaskCreate(Start_ADC_TASK, "Start_ADC_TASK", 256, NULL, 1, &ADC_TASKHandle); // 1536-512
+    xTaskCreate(Start_ADC_TASK, "Start_ADC_TASK", 512, NULL, 1, &ADC_TASKHandle); // 1536-512
     xTaskCreate(Start_RGB_SEND_TASK, "Start_RGB_SEND_TASK", 128, NULL, 1, &RGB_SEND_TaskHandle); // 512-256
     xTaskCreate(Start_SMOKE_LIMIT_TASK, "Start_SMOKE_LIMIT_TASK", 512, NULL, 1, &SMOKE_LIMIT_TASKHandle);
     xTaskCreate(Start_I2C_TMP_HUM_TASK, "Start_I2C_TMP_HUM_TASK", 512, NULL, 1, &I2c_TEMP_HUM_TASKHandle);
@@ -826,7 +833,8 @@ int main(void) {
     xTaskCreate(Start_DC1_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &DC1_METER_SEND_TASKHandle);
     xTaskCreate(Start_DC2_METER_SEND_TASK, "Start_METER_SEND_TASK", 256, NULL, 1, &DC2_METER_SEND_TASKHandle);
     xTaskCreate(Start_FAN_TASK, "Start_FAN_TASK", 256, NULL, 1, &FAN_TASKHandle);
-
+    //    xTaskCreate(Start_HMI_GUN1_STATUS_TASK, "Start_HMI_GUN1_STATUS_TASK", 128, NULL, 1, &HMI_GUN1_STATUS_TASKHandle);
+    //    xTaskCreate(Start_HMI_GUN2_STATUS_TASK, "Start_HMI_GUN2_STATUS_TASK", 128, NULL, 1, &HMI_GUN2_STATUS_TASKHandle);
 
 
     SERCOM5_USART_ReadCallbackRegister(SIMULATOR_CALLBACK, 0);
@@ -862,6 +870,8 @@ int main(void) {
     vTaskSuspend(DC1_METER_SEND_TASKHandle);
     vTaskSuspend(DC2_METER_SEND_TASKHandle);
     vTaskSuspend(FAN_TASKHandle);
+    //    vTaskSuspend(HMI_GUN1_STATUS_TASKHandle);
+    //    vTaskSuspend(HMI_GUN2_STATUS_TASKHandle);
     vTaskStartScheduler();
     while (true) {
     }
@@ -1976,12 +1986,12 @@ void Start_HMI_RX_TASK(void *argument) {
                     }
                 }
                 if (data[4] == 0x12 && data[5] == 0x17) {
-//                    GUN1_summary_close_flag = 1;
+                    //                    GUN1_summary_close_flag = 1;
                     CURRENT_PAGE = INTRO_PAGE;
                     Change_Page_to(CURRENT_PAGE);
                 }
                 if (data[4] == 0x12 && data[5] == 0x18) {
-//                    GUN2_summary_close_flag = 1;
+                    //                    GUN2_summary_close_flag = 1;
                     CURRENT_PAGE = INTRO_PAGE;
                     Change_Page_to(CURRENT_PAGE);
                 }
@@ -2530,7 +2540,7 @@ void Start_ESP_SEND_TASK(void *argument) {
 
     static ESP_Q_DATA txdata;
     memset(txdata.ESP_ARRAY, 0, sizeof (txdata.ESP_ARRAY));
-    txdata.FW_Version = (uint32_t) FIRMWARE_VERSION;
+    txdata.FW_Version =  *((uint32_t*)&FIRMWARE_VERSION);
     //    char buffer[30];
     ESP_S_GROUND_M_V_Q esp_s_ground_m_v;
     ESP_S_TEMP_Q esp_s_temp;
@@ -3049,8 +3059,8 @@ void Start_ESP_RX_TASK(void *argument) {
 
 void Start_AC_METER_SEND_TASK(void *argument) {
     SERCOM2_USART_ReadCallbackRegister(ENERGY_METER_CALLBACK, 0);
-    //    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
-    //    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
+//        uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
+//        uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
     uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
     uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
     static uint8_t count = 0;
@@ -3784,6 +3794,10 @@ void Start_ADC_TASK(void *argument) {
         NE_VOLTAGE = (3.3 / 1024) * ADC_READ;
 
         ACT_NE_VOLT = map(NE_VOLTAGE, 1.655, 3.3, 0, 400);
+        /*memset(buffer, 0, sizeof (buffer));
+        sprintf(buffer, "NE voltage is :%.2f  \r\n", ACT_NE_VOLT);
+        SERCOM5_USART_Write(buffer, sizeof (buffer));
+        while (!(SERCOM5_USART_TransmitComplete()));*/
         if (ACT_NE_VOLT < 0) {
             ACT_NE_VOLT = 0;
         }
@@ -4190,6 +4204,15 @@ void StartCANrecieveTask(void *argument) {
                     _c102msg.cpVoltage_lsb = rxBuf->data[2];
                     _c102msg._102_SECC_HpgpLink_t = rxBuf->data[3];
                     _c102msg._102_SECC_TLSERROR_t = rxBuf->data[4];
+                    if ((CURRENT_PLC1_STATE >= _1_PLC_STATE_IDLE_2) &&(CURRENT_PLC1_STATE < _1_PLC_STATE_PRE_CHARGE)) {
+                        if ((((_c102msg.cpVoltage_msb) / 10) >= 11)) {
+                            Change_gun1_status_to(AVAILABLE);
+                        }
+                        if ((((_c102msg.cpVoltage_msb) / 10) >= 8) && (((_c102msg.cpVoltage_msb) / 10) <= 10)) {
+                            Change_gun1_status_to(CONNECTED);
+                        }
+                    }
+
                     xQueueOverwrite(_C102_QUEUE, &_c102msg);
                     vTaskDelay(100);
                     break;
@@ -4358,6 +4381,15 @@ void StartCANrecieveTask(void *argument) {
                     _c502msg.cpVoltage_lsb = rxBuf->data[2];
                     _c502msg._502_SECC_HpgpLink_t = rxBuf->data[3];
                     _c502msg._502_SECC_TLSERROR_t = rxBuf->data[4];
+                    if((CURRENT_PLC2_STATE >= _2_PLC_STATE_IDLE_2) &&(CURRENT_PLC2_STATE < _2_PLC_STATE_PRE_CHARGE))
+                    {
+                    if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
+                        Change_gun2_status_to(AVAILABLE);
+                    }
+                    if ((((_c502msg.cpVoltage_msb) / 10) >= 8) && (((_c502msg.cpVoltage_msb) / 10) <= 10)) {
+                        Change_gun2_status_to(CONNECTED);
+                    }
+                    }
                     xQueueOverwrite(_C502_QUEUE, &_c502msg);
                     vTaskDelay(100);
                     break;
@@ -4637,7 +4669,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 if (xQueueReceive(_C102_QUEUE, &_c102msg, 0)) {
                     if ((((_c102msg.cpVoltage_msb) / 10) >= 8) && (((_c102msg.cpVoltage_msb) / 10) <= 10)) {
                         ////////HMI/////////////
-                        Change_gun1_status_to(CONNECTED);
+                        //                        Change_gun1_status_to(CONNECTED);
                         ////////HMI/////////////
                         //                        vTaskResume(LED_TASKHandle);
                         AC_Contactor_Relay_Clear();
@@ -4664,7 +4696,9 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     if ((((_c102msg.cpVoltage_msb) / 10) >= 11)) {
                         if (GUN2_CONNECTED == 0) {
                             //                            vTaskSuspend(LED_TASKHandle);
-                            AC_Contactor_Relay_Set();
+//                            vTaskDelay(10000);
+                            if (GUN2_CONNECTED == 0)
+                                AC_Contactor_Relay_Set();
                             vTaskSuspend(FAN_TASKHandle);
                             FAN_ON(65535);
                             instance = 0;
@@ -4678,7 +4712,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         }
                         GUN1_CONNECTED = 0;
                         CP_Level_1 = 12;
-                        Change_gun1_status_to(AVAILABLE);
+                        //                        Change_gun1_status_to(AVAILABLE);
                     }
 
                     if (gun_count > 30) {
@@ -4978,6 +5012,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         xTimerStart(rec2_timer, 60000);
                         xTimerStart(rec3_timer, 60000);
                         xTimerStart(rec4_timer, 60000);
+                        //                        vTaskSuspend(HMI_GUN1_STATUS_TASKHandle);
                         Change_Page_to(GUN1_PARAM_PAGE);
                         Change_gun1_status_to(CHARGING);
                         CURRENT_PLC1_STATE = _1_PLC_STATE_CURRENT_DEMAND_1;
@@ -5426,6 +5461,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
         switch (CURRENT_PLC2_STATE) {
             case _2_PLC_STATE_IDLE_1:
                 vTaskResume(LED_TASKHandle);
+                //                vTaskResume(HMI_GUN2_STATUS_TASKHandle);
                 Demand_Current2 = 0;
                 Demand_Voltage2 = 0;
                 initial_SOC2 = 0;
@@ -5498,7 +5534,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 if (xQueueReceive(_C502_QUEUE, &_c502msg, 0)) {
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 8) && (((_c502msg.cpVoltage_msb) / 10) <= 10)) {
                         ////////HMI/////////////
-                        Change_gun2_status_to(CONNECTED);
+                        //                        Change_gun2_status_to(CONNECTED);
                         //                        vTaskResume(LED_TASKHandle);
                         ////////HMI/////////////
                         AC_Contactor_Relay_Clear();
@@ -5526,6 +5562,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
                         if (GUN1_CONNECTED == 0) {
                             //                            vTaskSuspend(LED_TASKHandle);
+//                            vTaskDelay(10000);
+                            if (GUN1_CONNECTED == 0)
                             AC_Contactor_Relay_Set();
                             vTaskSuspend(FAN_TASKHandle);
                             FAN_ON(65535);
@@ -5538,7 +5576,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         }
                         GUN2_CONNECTED = 0;
                         CP_Level_2 = 12;
-                        Change_gun2_status_to(AVAILABLE);
+                        //                        Change_gun2_status_to(AVAILABLE);
                     }
 
                     if (gun_count > 30) {
@@ -5838,6 +5876,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         xTimerStart(rec3_timer, 60000);
                         xTimerStart(rec4_timer, 60000);
                         xTimerStart(Gun2_Charging_timer, 60000);
+                        //                        vTaskSuspend(HMI_GUN2_STATUS_TASKHandle);
                         Change_Page_to(GUN2_PARAM_PAGE);
                         Change_gun2_status_to(CHARGING);
                         CURRENT_PLC2_STATE = _2_PLC_STATE_CURRENT_DEMAND_1;
@@ -6235,22 +6274,28 @@ void Start_RECTIFIER_TASK(void *argument) {
     memset(relaymsg.RELAY_DATA, 0, sizeof (relaymsg.RELAY_DATA));
     static uint8_t merger_flag = 0;
     char buffer[50] = {0};
-
+    uint8_t REC_STATUS = RECTIFIER_OFF;
+    uint8_t PLC_ID = RECTIFIER_OFF;
+    uint8_t MERGER_STATUS = RECTIFIER_OFF;
     for (;;) {
 
         if (xQueueReceive(RECTIFIER_QUEUE, &msg, 0)) {
-            switch (msg.PLC_ID[0]) {
+            REC_STATUS = msg.RECTI_ON_OFF[0];
+            PLC_ID = msg.PLC_ID[0];
+            current_t = msg.CURRENT_VALUE[0];
+            voltage_t = msg.VOLTAGE_VALUE[0];
+            switch (PLC_ID) {
                 case 0x01:
                     merger_flag = 0;
 
-                    current_t = msg.CURRENT_VALUE[0];
+
                     //                    sprintf(buffer, "current1 : %f\r\n", current_t);
                     //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
                     //                    while (!(SERCOM5_USART_TransmitComplete()));
                     if (current_t < 1) {
                         current_t = 2;
                     }
-                    voltage_t = msg.VOLTAGE_VALUE[0];
+
                     if (voltage_t > 500) {
                         setRectifierVoltMode(RECTIFIER1_GROUP1, HIGH_V_MODE);
                         vTaskDelay(50);
@@ -6279,7 +6324,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                     rectifierPowerOn(RECTIFIER2_GROUP1);
                     vTaskDelay(50);
 
-                    if ((msg.RECTI_ON_OFF) == RECTIFIER_OFF) {
+                    if ((REC_STATUS) == RECTIFIER_OFF) {
                         DC1_Contactor_Set();
                         rectifierPowerOff(RECTIFIER2_GROUP1);
                         vTaskDelay(2);
@@ -6290,11 +6335,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                 case 0x02:
                     merger_flag = 0;
 
-                    current_t = msg.CURRENT_VALUE[0];
                     //                    sprintf(buffer, "current2 : %f\r\n", current_t);
                     //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
                     //                    while (!(SERCOM5_USART_TransmitComplete()));
-                    voltage_t = msg.VOLTAGE_VALUE[0];
                     if (voltage_t > 500) {
                         setRectifierVoltMode2(RECTIFIER1_GROUP2, HIGH_V_MODE);
                         vTaskDelay(50);
@@ -6326,7 +6369,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                     rectifierPowerOn_2(RECTIFIER2_GROUP2);
                     vTaskDelay(50);
 
-                    if ((msg.RECTI_ON_OFF) == RECTIFIER_OFF) {
+                    if ((REC_STATUS) == RECTIFIER_OFF) {
                         DC2_Contactor_Set();
                         rectifierPowerOff_2(RECTIFIER2_GROUP2);
                         vTaskDelay(50);
@@ -6335,10 +6378,10 @@ void Start_RECTIFIER_TASK(void *argument) {
                     }
                     break;
                 case 0x03:
-                    if (!MERGER_Contactor_Get()) {
+                    if (MERGER_STATUS == 0) {
                         xTimerStart(merger_timer, 10000);
+                        MERGER_STATUS = 1;
                     }
-                    current_t = msg.CURRENT_VALUE[0];
                     if (current_t < 1) {
                         current_t = 2;
                     }
@@ -6348,7 +6391,6 @@ void Start_RECTIFIER_TASK(void *argument) {
                     if ((current_t * 4) >= 250) {
                         current_t = 62;
                     }
-                    voltage_t = msg.VOLTAGE_VALUE[0];
                     if (voltage_t > 500) {
                         setRectifierVoltMode2(RECTIFIER1_GROUP2, HIGH_V_MODE);
                         vTaskDelay(50);
@@ -6394,8 +6436,11 @@ void Start_RECTIFIER_TASK(void *argument) {
                     vTaskDelay(50);
                     rectifierPowerOn_2(RECTIFIER2_GROUP2);
                     vTaskDelay(50);
-
-                    if ((msg.RECTI_ON_OFF) == RECTIFIER_OFF) {
+                    sprintf(buffer, "rectifier_off_status : %d\r\n", REC_STATUS);
+                    SERCOM5_USART_Write(buffer, sizeof (buffer));
+                    while (!SERCOM5_USART_TransmitComplete());
+                    if ((REC_STATUS) == 0) {
+                        MERGER_STATUS = 0;
                         DC2_Contactor_Set();
                         DC1_Contactor_Set();
                         MERGER_Contactor_Set();
@@ -6856,7 +6901,7 @@ void Start_MAINS_TASK(void *argument) {
                 NVIC_SystemReset();
             }
         }
-        WDT_Clear();
+        //        WDT_Clear();
         vTaskDelay(2);
     }
 }
@@ -7054,20 +7099,20 @@ void Start_LED_TASK(void *argument) {
 
 void Start_GUN1_PARAM_TASK(void *argument) {
     static uint8_t count = 0;
-     static uint8_t page_change_instance = 0;
+    static uint8_t page_change_instance = 0;
     for (;;) {
 
         count = count + 1;
-        if(page_change_instance==0){
-         CURRENT_PAGE = GUN1_SUMMARY_PAGE;
-        Change_Page_to(CURRENT_PAGE);
-        Change_gun1_status_to(CHARGING_COMPLETED);
-        page_change_instance=1;
+        if (page_change_instance == 0) {
+            CURRENT_PAGE = GUN1_SUMMARY_PAGE;
+            Change_Page_to(CURRENT_PAGE);
+            Change_gun1_status_to(CHARGING_COMPLETED);
+            page_change_instance = 1;
         }
-       
-//        if (GUN1_summary_close_flag == 1) {
-//            count = 5;
-//        }
+
+        //        if (GUN1_summary_close_flag == 1) {
+        //            count = 5;
+        //        }
         if (count == 5) {
 
             vTaskSuspend(FAN_TASKHandle);
@@ -7085,8 +7130,12 @@ void Start_GUN1_PARAM_TASK(void *argument) {
             Update_GUN1_Battery_Percent(0);
             Update_GUN1_Session_End_Reason(0x00);
             count = 0;
-            page_change_instance=0;
-//            GUN1_summary_close_flag = 0;
+            page_change_instance = 0;
+            //            GUN1_summary_close_flag = 0;
+
+            //            vTaskDelay(60000);
+
+//            vTaskDelay(5000);
             vTaskResume(_1_PLC_MANAGE_TASKHandle);
             vTaskSuspend(GUN1_PARAM_TASKHandle);
         }
@@ -7128,6 +7177,9 @@ void Start_GUN2_PARAM_TASK(void *argument) {
             Update_GUN2_Session_End_Reason(0x00);
             count = 0;
             page_change_instance = 0;
+
+//            vTaskDelay(5000);
+
             //            GUN2_summary_close_flag = 0;
             vTaskResume(_2_PLC_MANAGE_TASKHandle);
             vTaskSuspend(GUN2_PARAM_TASKHandle);
@@ -7541,6 +7593,36 @@ void Start_FAN_TASK(void *argument) {
     }
 }
 
+/*void Start_HMI_GUN1_STATUS_TASK(void *argument) {
+    _C102_Q _c102msg = {0};
+    for (;;) {
+        if (xQueueReceive(_C102_QUEUE, &_c102msg, 0)) {
+        if ((((_c102msg.cpVoltage_msb) / 10) >= 11)) {
+            Change_gun1_status_to(AVAILABLE);
+        }
+        if ((((_c102msg.cpVoltage_msb) / 10) >= 8) && (((_c102msg.cpVoltage_msb) / 10) <= 10)) {
+            Change_gun1_status_to(CONNECTED);
+        }
+        vTaskDelay(1000);
+    }
+    }
+}
+
+void Start_HMI_GUN2_STATUS_TASK(void *argument) {
+    _C502_Q _c502msg = {0};
+    for (;;) {
+        if (xQueueReceive(_C502_QUEUE, &_c102msg, 0)) {
+        if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
+            Change_gun2_status_to(AVAILABLE);
+        }
+        if ((((_c502msg.cpVoltage_msb) / 10) >= 8) && (((_c502msg.cpVoltage_msb) / 10) <= 10)) {
+            Change_gun2_status_to(CONNECTED);
+        }
+        vTaskDelay(1000);
+    }
+    }
+}
+ */
 void Start_FLASH_READ_TASK(void *argument) {
     FLASH_READ_Q flashreadmsg;
     ESP_S_BT_Q espdata;

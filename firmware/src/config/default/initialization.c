@@ -131,9 +131,9 @@ void SYS_Initialize ( void* data )
 
     EVSYS_Initialize();
 
-    CAN1_Initialize();
-
     SERCOM7_USART_Initialize();
+
+    CAN1_Initialize();
 
     SERCOM6_USART_Initialize();
 
