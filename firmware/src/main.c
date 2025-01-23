@@ -4604,7 +4604,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 xQueueReceive(_C101_QUEUE, &_c101msg, 0);
                 xQueueReceive(_C102_QUEUE, &_c102msg, 0);
                 xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0);
-                if ((_c101msg._101_SECC_PnCREADY_t == seccPnCReady_NotReady) && (_c102msg._102_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
+                if ((_c101msg._101_SECC_PnCREADY_t == seccPnCReady_Ready) && (_c102msg._102_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
                     if ((_c102msg.cpVoltage_msb) / 10 >= 11) {
                         instance = 0;
                         instance1 = 0;
@@ -5469,7 +5469,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 xQueueReceive(_C501_QUEUE, &_c501msg, 0);
                 xQueueReceive(_C502_QUEUE, &_c502msg, 0);
                 xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
-                if ((_c501msg._501_SECC_PnCREADY_t == seccPnCReady_NotReady) && (_c502msg._502_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
+                if ((_c501msg._501_SECC_PnCREADY_t == seccPnCReady_Ready) && (_c502msg._502_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
                     if ((_c502msg.cpVoltage_msb) / 10 >= 11) {
                         instance = 0;
                         instance1 = 0;
@@ -6331,6 +6331,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                         rectifierPowerOff(RECTIFIER1_GROUP1);
                         vTaskDelay(2);
                     }
+                    MERGER_STATUS=0;
                     break;
                 case 0x02:
                     merger_flag = 0;
@@ -6376,6 +6377,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                         rectifierPowerOff_2(RECTIFIER1_GROUP2);
                         vTaskDelay(50);
                     }
+                    MERGER_STATUS=0;
                     break;
                 case 0x03:
                     if (MERGER_STATUS == 0) {
