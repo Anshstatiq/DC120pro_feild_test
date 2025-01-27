@@ -2459,12 +2459,13 @@ void Start_1000msecTask(void *argument) {
                     txBuffer->id = _D001;
                     txBuffer->dlc = 8;
                     //                    memcpy(txBuffer->data, _ECD001_TXDATA, 8);
-                    _ECD001_TXDATA[0] = 169;
-                    _ECD001_TXDATA[1] = 254;
-                    _ECD001_TXDATA[2] = 146;
-                    _ECD001_TXDATA[3] = 238;
-                    _ECD001_TXDATA[4] = (SA_Agent >> 8);
-                    _ECD001_TXDATA[5] = SA_Agent;
+                    _ECD001_TXDATA[0] = 192;
+                    _ECD001_TXDATA[1] = 168;
+                    _ECD001_TXDATA[2] = 00;
+                    _ECD001_TXDATA[3] = 54;
+                    _ECD001_TXDATA[4] = (SA_Agent);
+                    _ECD001_TXDATA[5] = SA_Agent>>8;
+                    memcpy(txBuffer->data, _ECD001_TXDATA, 8);
                     CAN0_MessageTransmitFifo(1, (CAN_TX_BUFFER *) (txBuffer));
                     vTaskDelay(1);
                     memcpy(_ECD002_TXDATA, _1000msMsg.DATA, 8);
@@ -4604,7 +4605,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 xQueueReceive(_C101_QUEUE, &_c101msg, 0);
                 xQueueReceive(_C102_QUEUE, &_c102msg, 0);
                 xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0);
-                if ((_c101msg._101_SECC_PnCREADY_t == seccPnCReady_Ready) && (_c102msg._102_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
+                if ((_c101msg._101_SECC_PnCREADY_t == seccPnCReady_NotReady) && (_c102msg._102_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
                     if ((_c102msg.cpVoltage_msb) / 10 >= 11) {
                         instance = 0;
                         instance1 = 0;
@@ -5083,7 +5084,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                             if (GUN2_CONNECTED == 1 && CURRENT_PLC2_STATE >= _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
                                 MERGER_Contactor_Set();
                                 rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE1;
-                                act_current_to_give = (POWER_VALUE / 2) / act_volt_1;
+                                act_current_to_give = (POWER_VALUE ) / act_volt_1;
                                 if (act_current_to_give <= current_to_give) {
                                     rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
                                 } else if (act_current_to_give > current_to_give) {
@@ -5125,7 +5126,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                             if (GUN2_CONNECTED == 1 && CURRENT_PLC2_STATE >= _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
                                 MERGER_Contactor_Set();
                                 rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE1;
-                                act_current_to_give = (POWER_VALUE / 2) / act_volt_1;
+                                act_current_to_give = (POWER_VALUE ) / act_volt_1;
                                 if (act_current_to_give <= current_to_give) {
                                     rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
                                 } else if (act_current_to_give > current_to_give) {
@@ -5469,7 +5470,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 xQueueReceive(_C501_QUEUE, &_c501msg, 0);
                 xQueueReceive(_C502_QUEUE, &_c502msg, 0);
                 xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
-                if ((_c501msg._501_SECC_PnCREADY_t == seccPnCReady_Ready) && (_c502msg._502_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
+                if ((_c501msg._501_SECC_PnCREADY_t == seccPnCReady_NotReady) && (_c502msg._502_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
                     if ((_c502msg.cpVoltage_msb) / 10 >= 11) {
                         instance = 0;
                         instance1 = 0;
@@ -5953,7 +5954,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                                 MERGER_Contactor_Set();
 
                                 rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE / 2) / act_volt_2;
+                                act_current_to_give = (POWER_VALUE ) / act_volt_2;
                                 if (act_current_to_give <= current_to_give) {
                                     rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
                                 } else if (act_current_to_give > current_to_give) {
@@ -5996,7 +5997,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                                 MERGER_Contactor_Set();
 
                                 rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE / 2) / act_volt_2;
+                                act_current_to_give = (POWER_VALUE ) / act_volt_2;
                                 if (act_current_to_give <= current_to_give) {
                                     rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
                                 } else if (act_current_to_give > current_to_give) {
