@@ -2464,7 +2464,7 @@ void Start_1000msecTask(void *argument) {
                     _ECD001_TXDATA[2] = 00;
                     _ECD001_TXDATA[3] = 54;
                     _ECD001_TXDATA[4] = (SA_Agent);
-                    _ECD001_TXDATA[5] = SA_Agent>>8;
+                    _ECD001_TXDATA[5] = SA_Agent >> 8;
                     memcpy(txBuffer->data, _ECD001_TXDATA, 8);
                     CAN0_MessageTransmitFifo(1, (CAN_TX_BUFFER *) (txBuffer));
                     vTaskDelay(1);
@@ -2541,7 +2541,7 @@ void Start_ESP_SEND_TASK(void *argument) {
 
     static ESP_Q_DATA txdata;
     memset(txdata.ESP_ARRAY, 0, sizeof (txdata.ESP_ARRAY));
-    txdata.FW_Version =  *((uint32_t*)&FIRMWARE_VERSION);
+    txdata.FW_Version = *((uint32_t*) & FIRMWARE_VERSION);
     //    char buffer[30];
     ESP_S_GROUND_M_V_Q esp_s_ground_m_v;
     ESP_S_TEMP_Q esp_s_temp;
@@ -3060,8 +3060,8 @@ void Start_ESP_RX_TASK(void *argument) {
 
 void Start_AC_METER_SEND_TASK(void *argument) {
     SERCOM2_USART_ReadCallbackRegister(ENERGY_METER_CALLBACK, 0);
-//        uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
-//        uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
+    //        uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
+    //        uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
     uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
     uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
     static uint8_t count = 0;
@@ -4382,14 +4382,13 @@ void StartCANrecieveTask(void *argument) {
                     _c502msg.cpVoltage_lsb = rxBuf->data[2];
                     _c502msg._502_SECC_HpgpLink_t = rxBuf->data[3];
                     _c502msg._502_SECC_TLSERROR_t = rxBuf->data[4];
-                    if((CURRENT_PLC2_STATE >= _2_PLC_STATE_IDLE_2) &&(CURRENT_PLC2_STATE < _2_PLC_STATE_PRE_CHARGE))
-                    {
-                    if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
-                        Change_gun2_status_to(AVAILABLE);
-                    }
-                    if ((((_c502msg.cpVoltage_msb) / 10) >= 8) && (((_c502msg.cpVoltage_msb) / 10) <= 10)) {
-                        Change_gun2_status_to(CONNECTED);
-                    }
+                    if ((CURRENT_PLC2_STATE >= _2_PLC_STATE_IDLE_2) &&(CURRENT_PLC2_STATE < _2_PLC_STATE_PRE_CHARGE)) {
+                        if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
+                            Change_gun2_status_to(AVAILABLE);
+                        }
+                        if ((((_c502msg.cpVoltage_msb) / 10) >= 8) && (((_c502msg.cpVoltage_msb) / 10) <= 10)) {
+                            Change_gun2_status_to(CONNECTED);
+                        }
                     }
                     xQueueOverwrite(_C502_QUEUE, &_c502msg);
                     vTaskDelay(100);
@@ -4559,6 +4558,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
     static float MAX_VOLT_LIMIT = 0;
     static float voltage_to_give = 0;
     static float current_to_give = 0;
+    static int chg_stop_count = 0;
     static float act_current_to_give = 0;
     memset(relaymsg.RELAY_DATA, 0, sizeof (relaymsg.RELAY_DATA));
     static int count = 0;
@@ -4697,7 +4697,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     if ((((_c102msg.cpVoltage_msb) / 10) >= 11)) {
                         if (GUN2_CONNECTED == 0) {
                             //                            vTaskSuspend(LED_TASKHandle);
-//                            vTaskDelay(10000);
+                            //                            vTaskDelay(10000);
                             if (GUN2_CONNECTED == 0)
                                 AC_Contactor_Relay_Set();
                             vTaskSuspend(FAN_TASKHandle);
@@ -5064,7 +5064,23 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     //                        current_to_give = 250;
                     //                    }
                     power = (current_to_give * voltage_to_give);
+                    if (current_to_give == 0.0) {
+                        chg_stop_count++;
+                        //                        sprintf(buffffffffff, " soc is : %d and current : %f\r\n", SOC_1, current_to_give);
+                        //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
+                        //                        while (!SERCOM5_USART_TransmitComplete());
+                        if (chg_stop_count > 100) {
+                            CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+                            CP_Level_1 = 9;
+                            Stop_Code = 201;
+                            Stop_connector_no = 1;
+                            Update_GUN1_Session_End_Reason(0x09);
+                            memset(START_STOP_AR1, 0, 3);
+                            STOPING_UNIT = IMPORT_ENERGY2;
+                            chg_stop_count = 0;
+                        }
 
+                    }
                     if (SINGLE_GUN1_POWER == 0) {
                         POWER_VALUE = POWER_VALUE_X;
                         if (power < POWER_VALUE) {
@@ -5084,7 +5100,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                             if (GUN2_CONNECTED == 1 && CURRENT_PLC2_STATE >= _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
                                 MERGER_Contactor_Set();
                                 rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE1;
-                                act_current_to_give = (POWER_VALUE ) / act_volt_1;
+                                act_current_to_give = (POWER_VALUE) / act_volt_1;
                                 if (act_current_to_give <= current_to_give) {
                                     rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
                                 } else if (act_current_to_give > current_to_give) {
@@ -5126,7 +5142,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                             if (GUN2_CONNECTED == 1 && CURRENT_PLC2_STATE >= _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
                                 MERGER_Contactor_Set();
                                 rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE1;
-                                act_current_to_give = (POWER_VALUE ) / act_volt_1;
+                                act_current_to_give = (POWER_VALUE) / act_volt_1;
                                 if (act_current_to_give <= current_to_give) {
                                     rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
                                 } else if (act_current_to_give > current_to_give) {
@@ -5269,6 +5285,16 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     Stop_connector_no = 1;
                     Update_GUN1_Session_End_Reason(0x0A);
                     STOPING_UNIT = IMPORT_ENERGY1;
+                }
+                if (xQueueReceive(_C102_QUEUE, &_c102msg, 0)) {
+                    if ((((_c102msg.cpVoltage_msb) / 10) >= 7) && (((_c102msg.cpVoltage_msb) / 10) <= 12)) {
+                        CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+                        CP_Level_1 = 9;
+                        Stop_Code = 201;
+                        Stop_connector_no = 1;
+                        Update_GUN1_Session_End_Reason(0x09);
+                        STOPING_UNIT = IMPORT_ENERGY1;
+                    }
                 }
                 if (_c108msg.Charging_Complete_t == CHARGING_COMPLETE) {
                     CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
@@ -5421,6 +5447,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
     static float MAX_CURR_LIMIT_PLC1 = 0;
     static float voltage_to_give = 0;
     static float current_to_give = 0;
+    static int chg_stop_count = 0;
     memset(relaymsg.RELAY_DATA, 0, sizeof (relaymsg.RELAY_DATA));
     static int count = 0;
     static int gun_count = 0;
@@ -5563,9 +5590,9 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
                         if (GUN1_CONNECTED == 0) {
                             //                            vTaskSuspend(LED_TASKHandle);
-//                            vTaskDelay(10000);
+                            //                            vTaskDelay(10000);
                             if (GUN1_CONNECTED == 0)
-                            AC_Contactor_Relay_Set();
+                                AC_Contactor_Relay_Set();
                             vTaskSuspend(FAN_TASKHandle);
                             FAN_ON(65535);
                             instance = 0;
@@ -5933,7 +5960,20 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
                     while (!SERCOM5_USART_TransmitComplete());
                     power = (current_to_give * voltage_to_give);
+                    if (current_to_give == 0) {
+                        chg_stop_count++;
+                        if (chg_stop_count > 300) {
+                            CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+                            CP_Level_2 = 9;
+                            Stop_Code = 201;
+                            Stop_connector_no = 2;
+                            Update_GUN2_Session_End_Reason(0x09);
+                            memset(START_STOP_AR1, 0, 3);
+                            STOPING_UNIT = IMPORT_ENERGY2;
+                            chg_stop_count = 0;
+                        }
 
+                    }
                     if (SINGLE_GUN2_POWER == 0) {
                         POWER_VALUE = POWER_VALUE_X;
                         if ((power) < POWER_VALUE) {
@@ -5954,7 +5994,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                                 MERGER_Contactor_Set();
 
                                 rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE ) / act_volt_2;
+                                act_current_to_give = (POWER_VALUE) / act_volt_2;
+                                
                                 if (act_current_to_give <= current_to_give) {
                                     rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
                                 } else if (act_current_to_give > current_to_give) {
@@ -5997,7 +6038,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                                 MERGER_Contactor_Set();
 
                                 rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE ) / act_volt_2;
+                                act_current_to_give = (POWER_VALUE) / act_volt_2;
                                 if (act_current_to_give <= current_to_give) {
                                     rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
                                 } else if (act_current_to_give > current_to_give) {
@@ -6140,6 +6181,16 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     Stop_connector_no = 2;
                     Update_GUN2_Session_End_Reason(0x0A);
                     STOPING_UNIT = IMPORT_ENERGY2;
+                }
+                if (xQueueReceive(_C502_QUEUE, &_c502msg, 0)) {
+                    if ((((_c502msg.cpVoltage_msb) / 10) >= 7) && (((_c502msg.cpVoltage_msb) / 10) <= 12)) {
+                        CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+                        CP_Level_2 = 9;
+                        Stop_Code = 201;
+                        Stop_connector_no = 2;
+                        Update_GUN2_Session_End_Reason(0x09);
+                        STOPING_UNIT = IMPORT_ENERGY2;
+                    }
                 }
                 if (_c508msg.Charging_Complete_t == CHARGING_COMPLETE) {
                     CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
@@ -6332,7 +6383,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                         rectifierPowerOff(RECTIFIER1_GROUP1);
                         vTaskDelay(2);
                     }
-                    MERGER_STATUS=0;
+                    MERGER_STATUS = 0;
                     break;
                 case 0x02:
                     merger_flag = 0;
@@ -6378,7 +6429,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                         rectifierPowerOff_2(RECTIFIER1_GROUP2);
                         vTaskDelay(50);
                     }
-                    MERGER_STATUS=0;
+                    MERGER_STATUS = 0;
                     break;
                 case 0x03:
                     if (MERGER_STATUS == 0) {
@@ -7138,7 +7189,7 @@ void Start_GUN1_PARAM_TASK(void *argument) {
 
             //            vTaskDelay(60000);
 
-//            vTaskDelay(5000);
+            //            vTaskDelay(5000);
             vTaskResume(_1_PLC_MANAGE_TASKHandle);
             vTaskSuspend(GUN1_PARAM_TASKHandle);
         }
@@ -7181,7 +7232,7 @@ void Start_GUN2_PARAM_TASK(void *argument) {
             count = 0;
             page_change_instance = 0;
 
-//            vTaskDelay(5000);
+            //            vTaskDelay(5000);
 
             //            GUN2_summary_close_flag = 0;
             vTaskResume(_2_PLC_MANAGE_TASKHandle);

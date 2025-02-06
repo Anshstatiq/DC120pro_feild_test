@@ -111,15 +111,15 @@ build/default/production/_ext/1171490990/initialization.o: \
  ../src/config/default/device_cache.h ../src/config/default/device.h \
  ../src/config/default/toolchain_specifics.h \
  ../src/packs/CMSIS/CMSIS/Core/Include/cmsis_compiler.h \
- ../src/config/default/peripheral/nvmctrl/plib_nvmctrl.h \
  ../src/config/default/peripheral/sercom/usart/plib_sercom2_usart.h \
  ../src/config/default/peripheral/sercom/usart/plib_sercom_usart_common.h \
+ ../src/config/default/peripheral/nvmctrl/plib_nvmctrl.h \
  ../src/config/default/peripheral/sercom/spi_master/plib_sercom1_spi_master.h \
  ../src/config/default/peripheral/sercom/spi_master/plib_sercom_spi_master_common.h \
  ../src/config/default/peripheral/evsys/plib_evsys.h \
- ../src/config/default/peripheral/sercom/usart/plib_sercom7_usart.h \
  ../src/config/default/peripheral/can/plib_can1.h \
  ../src/config/default/peripheral/can/plib_can_common.h \
+ ../src/config/default/peripheral/sercom/usart/plib_sercom7_usart.h \
  ../src/config/default/peripheral/sercom/usart/plib_sercom6_usart.h \
  ../src/config/default/peripheral/port/plib_port.h \
  ../src/config/default/peripheral/clock/plib_clock.h \
@@ -360,11 +360,11 @@ build/default/production/_ext/1171490990/initialization.o: \
 
 ../src/packs/CMSIS/CMSIS/Core/Include/cmsis_compiler.h:
 
-../src/config/default/peripheral/nvmctrl/plib_nvmctrl.h:
-
 ../src/config/default/peripheral/sercom/usart/plib_sercom2_usart.h:
 
 ../src/config/default/peripheral/sercom/usart/plib_sercom_usart_common.h:
+
+../src/config/default/peripheral/nvmctrl/plib_nvmctrl.h:
 
 ../src/config/default/peripheral/sercom/spi_master/plib_sercom1_spi_master.h:
 
@@ -372,11 +372,11 @@ build/default/production/_ext/1171490990/initialization.o: \
 
 ../src/config/default/peripheral/evsys/plib_evsys.h:
 
-../src/config/default/peripheral/sercom/usart/plib_sercom7_usart.h:
-
 ../src/config/default/peripheral/can/plib_can1.h:
 
 ../src/config/default/peripheral/can/plib_can_common.h:
+
+../src/config/default/peripheral/sercom/usart/plib_sercom7_usart.h:
 
 ../src/config/default/peripheral/sercom/usart/plib_sercom6_usart.h:
 
