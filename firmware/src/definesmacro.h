@@ -36,7 +36,7 @@ extern "C" {
 
 #define MAX_POWER_LIMIT 7
 #define EVSE_MAX_CURRENT_LIMIT	990 
-#define POWER_FAC       1
+
 
 #define IDLE_STATE      0
 #define PLUGIN_STATE    1 
@@ -98,7 +98,7 @@ extern "C" {
     char IMD2_NOT_OK[] = "IMD2 NOT OK\r\n";
     char LIMIT_SW_OK[] = "GATE CLOSED\r\n";
     char LIMIT_SW_NOT_OK[] = "GATE OPEN\r\n";
-    uint16_t SA_Agent = 19119;
+    uint16_t SA_Agent = 20000;
 
 #define RFID_WAKEUP_RX_SIZE     15
 #define RFID_PRE_RX_SIZE         6
@@ -336,12 +336,12 @@ extern "C" {
     } CP_LEVEL2_Q;
 
     typedef union {
-        uint8_t ESP_ARRAY[146];
+        uint8_t ESP_ARRAY[202];
         //        uint8_t ESP_ARRAY[160];
 
         struct {
             uint32_t Start_bit;
-            uint32_t IDX_DATA;
+            uint32_t IDX_DATA[15];
             uint32_t FW_Version;
             uint32_t AC_VOLT_L1;
             uint32_t AC_VOLT_L2;
@@ -483,7 +483,7 @@ extern "C" {
 
     typedef struct {
         uint8_t IDX;
-        uint32_t IDX_DATA;
+        uint32_t IDX_DATA[15];
     } ESP_S_BT_Q;
 
     typedef struct {
