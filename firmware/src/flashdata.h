@@ -38,6 +38,19 @@
 #define ADC1_IDX    0
 #define ADC2_IDX    1
 #define FLASH_START_ADDRESS_ADC_READINGS    0x88000
+#define RISABH      1
+#define SELEC       2
+
+#define UUGREEN     1
+#define TONE        2
+
+#define IST         1
+#define UTC         2
+
+
+#define AUTOCHARGE_DATA  1
+#define AUTOCHARGE_AUTH  2
+#define FREE_VEND        3
 
 //4,8,c
 #define FLASH_START_ADDRESS_BT  0x80000
@@ -124,19 +137,21 @@
 #define SMR_Config       3
 #define EM_Config        4
 #define Alarm_Config     5
-
+#define Manual_Config    6
 #define Parameter_start_add  1
-#define Core_start_add       16
-#define SMR_start_add        20
-#define EM_start_add         25
-#define Alarm_start_add      27
-#define Manual_start_add     36
+#define Core_start_add       18
+#define SMR_start_add        23
+#define EM_start_add         28
+#define Alarm_start_add      30
+#define Manual_start_add     39
 //#define rif_start_add      43
-#define Total_Parameter_Config  15
+#define Total_Parameter_Config  17
 #define Total_Core_Config       4
 #define Total_SMR_Config        5
 #define Total_EM_Config         2
 #define Total_Alarm_Config      9
+#define Total_Manual_Config     10
+
 
 #define SYSTEM_RESTART_IDX  93
 #define DLB_POWER_VALUES_IDX 0  
@@ -286,7 +301,7 @@
 #define OCPP_ID_IDX7 92
 
 
-#define DEFAULT_PRICE  1700
+#define DEFAULT_PRICE  17
 #define DEFAULT_GUN1_ENABLE 1
 #define DEFAULT_GUN2_ENABLE 1
 #define DEFAULT_GUN1_DISABLE 0
@@ -294,6 +309,7 @@
 #define DEFAULT_BODY_TEMP_UPPER_LIMIT   80
 #define DEFAULT_BODY_TEMP_CLEAR_LIMIT   70
 #define DEFAULT_NE_VOLT_LIMIT   20
+#define DEFAULT_LOCAL_SEL_MODE   ENABLE
 #define DEFAULT_AC_OVER_VOLT_LIMIT  260
 #define DEFAULT_AC_UNDER_VOLT_LIMIT 180
 #define DEFAULT_GUN1_TEMP_LIMIT 65
@@ -312,7 +328,15 @@
 #define DEFAULT_GUN2_TEMP_ALARM ENABLE
 #define DEFAULT_LED_FAULT_ALARM ENABLE
 #define DEFAULT_RFID_FAULT_ALARM    ENABLE
-#define DEFAULT_AC_METER_TYPE   'R'
+#define DEFAULT_AC_METER_TYPE   RISABH
+#define DEFAULT_DC_METER_TYPE   RISABH
+#define DEFAULT_POWER_MERGE_MODE   ENABLE
+#define DEFAULT_SMR_TYPE       UUGREEN
+#define DEFAULT_TIME_ZONE       IST
+#define DEFAULT_SMR_MAX_POWER         30000
+#define DEFAULT_SMR_MAX_VOLT          1000
+#define DEFAULT_SMR_MAX_CURR          100
+#define DEFAULT_AUTH_MODE      AUTOCHARGE
 
 
 

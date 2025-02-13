@@ -34,7 +34,9 @@ extern "C" {
 #define CHARGER_MAX_VOLT_LIMIT    ((EVSE_MAX_VOLTAGE_DATA1<<8)+EVSE_MAX_VOLTAGE_DATA0)/10    
 #define CHARGER_MIN_VOLT_LIMIT  200
 
-#define MAX_POWER_LIMIT 7
+#define MAX_POWER_LIMIT 60
+#define GUN1_MAX_CURR_LIMIT 0
+#define GUN2_MAX_CURR_LIMIT 0
 #define EVSE_MAX_CURRENT_LIMIT	990 
 
 
@@ -98,7 +100,7 @@ extern "C" {
     char IMD2_NOT_OK[] = "IMD2 NOT OK\r\n";
     char LIMIT_SW_OK[] = "GATE CLOSED\r\n";
     char LIMIT_SW_NOT_OK[] = "GATE OPEN\r\n";
-    uint16_t SA_Agent = 20000;
+    uint16_t SA_Agent = 19119;
 
 #define RFID_WAKEUP_RX_SIZE     15
 #define RFID_PRE_RX_SIZE         6

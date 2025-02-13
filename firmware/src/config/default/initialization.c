@@ -139,9 +139,9 @@ void SYS_Initialize ( void* data )
 
     SERCOM5_USART_Initialize();
 
-    CAN0_Initialize();
-
     SERCOM4_USART_Initialize();
+
+    CAN0_Initialize();
 
     EIC_Initialize();
 
