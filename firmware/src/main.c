@@ -1429,6 +1429,7 @@ void Start_EMERGENCY_TASK(void *argument) {
     _1_PLC_tx_50 _1_PLC_tx_50_t;
     RECTIFIER_Q rectimsg;
     _2_PLC_tx_50 _2_PLC_tx_50_t;
+    char buffer[100]={0};
     for (;;) {
 
         if (CURRENT_PLC1_STATE == _1_PLC_STATE_CURRENT_DEMAND_1 || CURRENT_PLC2_STATE == _2_PLC_STATE_CURRENT_DEMAND_1) {
@@ -1451,6 +1452,9 @@ void Start_EMERGENCY_TASK(void *argument) {
             xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
             vTaskDelay(3000);
             CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+            sprintf(buffer, "Going from START_STOP_AR[0] == 1\r\n");
+            SERCOM5_USART_Write(buffer, strlen(buffer));
+            while (!(SERCOM5_USART_TransmitComplete()));
             //            CP_Level_1 = 9;
             memset(START_STOP_AR, 0, 3);
         }
@@ -1471,7 +1475,9 @@ void Start_EMERGENCY_TASK(void *argument) {
             memset(START_STOP_AR1, 0, 3);
         }
         if (START_STOP_AR[0] == 3) {
-
+            sprintf(buffer, "Going from START_STOP_AR[0] == 3\r\n");
+            SERCOM5_USART_Write(buffer, strlen(buffer));
+            while (!(SERCOM5_USART_TransmitComplete()));
             AC_Contactor_Relay_Set();
             Update_GUN1_Session_End_Reason(0x04);
             Update_GUN2_Session_End_Reason(0x04);
@@ -1513,7 +1519,9 @@ void Start_EMERGENCY_TASK(void *argument) {
             memset(START_STOP_AR, 0, 3);
         }
         if (START_STOP_AR[0] == 4) {
-
+            sprintf(buffer, "Going from START_STOP_AR[0] == 4\r\n");
+            SERCOM5_USART_Write(buffer, strlen(buffer));
+            while (!(SERCOM5_USART_TransmitComplete()));
             AC_Contactor_Relay_Set();
             GUN2_CONNECTED = 0;
             _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
@@ -2606,10 +2614,10 @@ void Start_ESP_SEND_TASK(void *argument) {
             txdata.IDX = esp_s_bt_data.IDX;
             memcpy(txdata.IDX_DATA, esp_s_bt_data.IDX_DATA, 60);
             for (int i = 0; i < 15; i++) {
-                // Format and send each data point
-                sprintf(buffer, "Index: %d, Data: %d\n", i, txdata.IDX_DATA[i]);
-                SERCOM5_USART_Write(buffer, strlen(buffer));
-                while (!(SERCOM5_USART_TransmitComplete())); // Wait until transmission is complete
+//                // Format and send each data point
+//                sprintf(buffer, "Index: %d, Data: %d\n", i, txdata.IDX_DATA[i]);
+//                SERCOM5_USART_Write(buffer, strlen(buffer));
+//                while (!(SERCOM5_USART_TransmitComplete())); // Wait until transmission is complete
             }
             //            txdata.IDX_DATA = esp_s_bt_data.IDX_DATA;
         }
@@ -2817,10 +2825,10 @@ void Start_ESP_RX_TASK(void *argument) {
                     NVIC_SystemReset();
                 }
                 if (esprxdata.bootloader == 1) {
-//                    sprintf(buffer, "BOOTLOADER bit is recieved from esp \r\n");
-//                    SERCOM5_USART_Write(buffer, sizeof (buffer));
-//                    while (!(SERCOM5_USART_TransmitComplete()))
-//                        ;
+                    //                    sprintf(buffer, "BOOTLOADER bit is recieved from esp \r\n");
+                    //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
+                    //                    while (!(SERCOM5_USART_TransmitComplete()))
+                    //                        ;
 
                     ramStart[0] = BTL_TRIGGER_PATTERN;
                     ramStart[1] = BTL_TRIGGER_PATTERN;
@@ -3114,10 +3122,10 @@ void Start_ESP_RX_TASK(void *argument) {
 
 void Start_AC_METER_SEND_TASK(void *argument) {
     SERCOM2_USART_ReadCallbackRegister(ENERGY_METER_CALLBACK, 0);
-//    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
-//    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
-        uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
-        uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
+    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
+    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
+    //        uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
+    //        uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
     static uint8_t count = 0;
     WHICH_METER_Q which_meter;
     NEXT_METER_Q next_meter;
@@ -4656,8 +4664,11 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
     static uint8_t slac_count = 0;
     char buffffffffff[100] = {0};
     static uint16_t otherstopcode = 0;
+    UBaseType_t watermark =0;
     for (;;) {
-
+//        watermark = uxTaskGetStackHighWaterMark(NULL);
+//        sprintf(buffffffffff, "PLC_MANAGE_Task Stack High Water Mark: %u words\n", watermark);
+//        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
         switch (CURRENT_PLC1_STATE) {
 
             case _1_PLC_STATE_IDLE_1:
@@ -4810,7 +4821,6 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 vTaskDelay(100);
 
                 CURRENT_PLC1_STATE = _1_PLC_STATE_WAITING_FOR_PLUG_IN;
-
                 break;
             case _1_PLC_STATE_WAITING_FOR_PLUG_IN:
                 xQueueReceive(_C102_QUEUE, &_c102msg, 0);
@@ -5139,25 +5149,25 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     //                    if (current_to_give > 250) {
                     //                        current_to_give = 250;
                     //                    }
-                    
-                    power = (current_to_give * voltage_to_give);
-                    if (current_to_give == 0.0) {
-                        chg_stop_count++;
-                        //                        sprintf(buffffffffff, " soc is : %d and current : %f\r\n", SOC_1, current_to_give);
-                        //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
-                        //                        while (!SERCOM5_USART_TransmitComplete());
-                                                if (chg_stop_count > 400) {
-                                                    CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
-                                                    CP_Level_1 = 9;
-                                                    Stop_Code = 201;
-                                                    Stop_connector_no = 1;
-                                                    Update_GUN1_Session_End_Reason(0x09);
-                                                    memset(START_STOP_AR1, 0, 3);
-                                                    STOPING_UNIT = IMPORT_ENERGY1;
-                                                    chg_stop_count = 0;
-                                                }
 
-                    }
+                    power = (current_to_give * voltage_to_give);
+//                    if (current_to_give == 0.0) {
+//                        chg_stop_count++;
+//                        //                        sprintf(buffffffffff, " soc is : %d and current : %f\r\n", SOC_1, current_to_give);
+//                        //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
+//                        //                        while (!SERCOM5_USART_TransmitComplete());
+//                        if (chg_stop_count > 400) {
+//                            CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+//                            CP_Level_1 = 9;
+//                            Stop_Code = 201;
+//                            Stop_connector_no = 1;
+//                            Update_GUN1_Session_End_Reason(0x09);
+//                            memset(START_STOP_AR1, 0, 3);
+//                            STOPING_UNIT = IMPORT_ENERGY1;
+//                            chg_stop_count = 0;
+//                        }
+//
+//                    }
                     if (SINGLE_GUN1_POWER == 0) {
                         POWER_VALUE = POWER_VALUE_X;
                         if (power < POWER_VALUE) {
@@ -5358,9 +5368,9 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 if (xQueueReceive(_C101_QUEUE, &_c101msg, 1000)) {
                     if (_c101msg._101_SECC_seccERROR_CODES_t != 0) {
                         otherstopcode = (int) _c101msg._101_SECC_seccERROR_CODES_t + 700;
-//                        sprintf(buffffffffff, "SECC_ERROR_CODE %d \r\n", otherstopcode);
-//                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
-//                        while (!SERCOM5_USART_TransmitComplete());
+                        //                        sprintf(buffffffffff, "SECC_ERROR_CODE %d \r\n", otherstopcode);
+                        //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
+                        //                        while (!SERCOM5_USART_TransmitComplete());
                         //                        Stop_Code=0;
                         //                        Stop_connector_no = 1;
                         //                        Update_GUN1_Session_End_Reason(0x0A);
@@ -5368,14 +5378,14 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     }
 
                 }
-                if ((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
-                    CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
-                    CP_Level_1 = 9;
-                    Stop_Code = 202;
-                    Stop_connector_no = 1;
-                    Update_GUN1_Session_End_Reason(0x0A);
-                    STOPING_UNIT = IMPORT_ENERGY1;
-                }
+//                if ((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
+//                    CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+//                    CP_Level_1 = 9;
+//                    Stop_Code = 202;
+//                    Stop_connector_no = 1;
+//                    Update_GUN1_Session_End_Reason(0x0A);
+//                    STOPING_UNIT = IMPORT_ENERGY1;
+//                }
                 if (_c108msg.Charging_Complete_t == CHARGING_COMPLETE) {
                     CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                     CP_Level_1 = 9;
@@ -5404,6 +5414,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     Stop_Code = otherstopcode;
                     otherstopcode = 0;
                 }
+                
+  
                 break;
             case _1_PLC_STATE_TERMINATED:
                 if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 0) {
@@ -5573,7 +5585,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
     ESP_S_MAC_ID_CONN_NO_Q mac_id_conn_no_data;
     ESP_S_MAC_ID_Q mac_id_data;
     GUN2_CHARGING_TIME_Q value;
-    static uint16_t otherstopcode=0;
+    static uint16_t otherstopcode = 0;
     static uint8_t slac_count = 0;
     char buffffffffff[30] = {0};
     for (;;) {
@@ -6276,9 +6288,9 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 if (xQueueReceive(_C501_QUEUE, &_c501msg, 2000)) {
                     if (_c501msg._501_SECC_seccERROR_CODES_t != 0) {
                         otherstopcode = (int) _c501msg._501_SECC_seccERROR_CODES_t + 700;
-//                        sprintf(buffffffffff, "SECC_ERROR_CODE %d \r\n", otherstopcode);
-//                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
-//                        while (!SERCOM5_USART_TransmitComplete());
+                        //                        sprintf(buffffffffff, "SECC_ERROR_CODE %d \r\n", otherstopcode);
+                        //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
+                        //                        while (!SERCOM5_USART_TransmitComplete());
 
                     }
 
@@ -6438,11 +6450,17 @@ void Start_RECTIFIER_TASK(void *argument) {
     RELAY_Q relaymsg;
     memset(relaymsg.RELAY_DATA, 0, sizeof (relaymsg.RELAY_DATA));
     static uint8_t merger_flag = 0;
-    char buffer[50] = {0};
+    char buffer[80] = {0};
     uint8_t REC_STATUS = RECTIFIER_OFF;
     uint8_t PLC_ID = RECTIFIER_OFF;
     uint8_t MERGER_STATUS = RECTIFIER_OFF;
+    UBaseType_t watermark = 0; //u;
+
     for (;;) {
+//        watermark = uxTaskGetStackHighWaterMark(NULL);
+//        sprintf(buffer, "RECTIFIER_Task Stack High Water Mark: %u words\n", watermark);
+//        SERCOM5_USART_Write(buffer, sizeof (buffer));
+//        while (!(SERCOM5_USART_TransmitComplete()));
 
         if (xQueueReceive(RECTIFIER_QUEUE, &msg, 0)) {
             REC_STATUS = msg.RECTI_ON_OFF[0];
@@ -6454,9 +6472,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                     merger_flag = 0;
 
 
-                    //                    sprintf(buffer, "current1 : %f\r\n", current_t);
-                    //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
-                    //                    while (!(SERCOM5_USART_TransmitComplete()));
+
                     if (current_t < 1) {
                         current_t = 2;
                     }
@@ -6474,8 +6490,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                         vTaskDelay(50);
                     }
                     if ((current_t * 2) >= GUN1_CURR_VAL) {
-                        current_t = GUN1_CURR_VAL;
+                        current_t = GUN1_CURR_VAL / 2;
                     }
+
                     setRectifierVoltage(RECTIFIER1_GROUP1, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
                     setRectifierCurrent(RECTIFIER1_GROUP1, (uint32_t) (current_t * 1000));
@@ -6496,7 +6513,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                         rectifierPowerOff(RECTIFIER1_GROUP1);
                         vTaskDelay(2);
                     }
-                    MERGER_STATUS=0;
+                    MERGER_STATUS = 0;
                     break;
                 case 0x02:
                     merger_flag = 0;
@@ -6520,7 +6537,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                         current_t = 1;
                     }
                     if ((current_t * 2) >= GUN2_CURR_VAL) {
-                        current_t = GUN2_CURR_VAL;
+                        current_t = GUN2_CURR_VAL / 2;
                     }
                     setRectifierVoltage_2(RECTIFIER1_GROUP2, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
@@ -6542,7 +6559,7 @@ void Start_RECTIFIER_TASK(void *argument) {
                         rectifierPowerOff_2(RECTIFIER1_GROUP2);
                         vTaskDelay(50);
                     }
-                    MERGER_STATUS=0;
+                    MERGER_STATUS = 0;
                     break;
                 case 0x03:
                     if (MERGER_STATUS == 0) {
@@ -6556,8 +6573,17 @@ void Start_RECTIFIER_TASK(void *argument) {
                     //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
                     //                    while (!(SERCOM5_USART_TransmitComplete()));
                     if ((current_t * 4) >= (GUN1_CURR_VAL || GUN2_CURR_VAL)) {
-                        current_t = 62;
+                        if (GUN1_CONNECTED) {
+                            current_t = GUN1_CURR_VAL / 4;
+                        } else if (GUN2_CONNECTED) {
+                            current_t = GUN2_CURR_VAL / 4;
+                        } else {
+                            current_t = 10;
+                        }
                     }
+//                    sprintf(buffer, "current : %f and the GUN1_CURR_VAL : %f \r\n", current_t, GUN1_CURR_VAL);
+//                    SERCOM5_USART_Write(buffer, sizeof (buffer));
+//                    while (!(SERCOM5_USART_TransmitComplete()));
                     if (voltage_t > 500) {
                         setRectifierVoltMode2(RECTIFIER1_GROUP2, HIGH_V_MODE);
                         vTaskDelay(50);
@@ -7597,7 +7623,7 @@ void Start_FLASH_WRITE_TASK(void *argument) {
                         NVMCTRL_PageWrite((uint32_t *) BT_DATA_ARRAY_0_127, (uint32_t) FLASH_START_ADDRESS_BT);
                         while (NVMCTRL_IsBusy())
                             ;
-                        GUN1_CURR_VAL = BT_DATA_ARRAY_0_127[GUN1_DC_CURRENT_MAX_CAP_IDX] * 1000;
+                        GUN1_CURR_VAL = BT_DATA_ARRAY_0_127[GUN1_DC_CURRENT_MAX_CAP_IDX];
                         break;
 
                     case GUN2_DC_CURRENT_MAX_CAP_IDX:
@@ -7609,7 +7635,7 @@ void Start_FLASH_WRITE_TASK(void *argument) {
                         NVMCTRL_PageWrite((uint32_t *) BT_DATA_ARRAY_0_127, (uint32_t) FLASH_START_ADDRESS_BT);
                         while (NVMCTRL_IsBusy())
                             ;
-                        GUN2_CURR_VAL = BT_DATA_ARRAY_0_127[GUN2_DC_CURRENT_MAX_CAP_IDX] * 1000;
+                        GUN2_CURR_VAL = BT_DATA_ARRAY_0_127[GUN2_DC_CURRENT_MAX_CAP_IDX];
                         break;
 
                     case POWER_MERGE_IDX:
