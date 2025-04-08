@@ -78,7 +78,7 @@ void __attribute__((optimize("-O1"), long_call, noreturn, used))Dummy_Handler(vo
 }
 
 /* MISRAC 2012 deviation block start */
-/* MISRA C-2012 Rule 8.6 deviated 98 times.  Deviation record ID -  H3_MISRAC_2012_R_8_6_DR_1 */
+/* MISRA C-2012 Rule 8.6 deviated 96 times.  Deviation record ID -  H3_MISRAC_2012_R_8_6_DR_1 */
 /* Device vectors list dummy definition*/
 extern void vPortSVCHandler            ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void xPortPendSVHandler         ( void ) __attribute__((weak, alias("Dummy_Handler")));
@@ -150,11 +150,9 @@ extern void TCC4_OTHER_Handler         ( void ) __attribute__((weak, alias("Dumm
 extern void TCC4_MC0_Handler           ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void TCC4_MC1_Handler           ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void TC0_Handler                ( void ) __attribute__((weak, alias("Dummy_Handler")));
-extern void TC1_Handler                ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void TC2_Handler                ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void TC3_Handler                ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void TC4_Handler                ( void ) __attribute__((weak, alias("Dummy_Handler")));
-extern void TC5_Handler                ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void TC6_Handler                ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void TC7_Handler                ( void ) __attribute__((weak, alias("Dummy_Handler")));
 extern void PDEC_OTHER_Handler         ( void ) __attribute__((weak, alias("Dummy_Handler")));
@@ -306,11 +304,11 @@ const H3DeviceVectors exception_table=
     .pfnTCC4_MC0_Handler           = TCC4_MC0_Handler,
     .pfnTCC4_MC1_Handler           = TCC4_MC1_Handler,
     .pfnTC0_Handler                = TC0_Handler,
-    .pfnTC1_Handler                = TC1_Handler,
+    .pfnTC1_Handler                = TC1_TimerInterruptHandler,
     .pfnTC2_Handler                = TC2_Handler,
     .pfnTC3_Handler                = TC3_Handler,
     .pfnTC4_Handler                = TC4_Handler,
-    .pfnTC5_Handler                = TC5_Handler,
+    .pfnTC5_Handler                = TC5_TimerInterruptHandler,
     .pfnTC6_Handler                = TC6_Handler,
     .pfnTC7_Handler                = TC7_Handler,
     .pfnPDEC_OTHER_Handler         = PDEC_OTHER_Handler,

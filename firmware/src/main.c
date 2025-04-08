@@ -165,7 +165,7 @@ TimerHandle_t emergency_timer = NULL;
 uint8_t RFID_DATA[RFID_BUFFER_SIZE] = {0};
 volatile uint8_t CURRENT_RFID_RX_SIZE = RFID_WAKEUP_RX_SIZE;
 
-float FIRMWARE_VERSION = 3.0;
+float FIRMWARE_VERSION = 3.1;
 float OCPP_VERSION = 1.6;
 float PLC1_VERSION = 2.0;
 float PLC2_VERSION = 2.0;
@@ -251,7 +251,7 @@ static uint8_t DEFAULT_AUTH_MODE_t = AUTOCHARGE_DATA;
 static uint8_t DEFAULT_AC_METER_BLE = 'R';
 static uint8_t DEFAULT_DC_METER_BLE = 'R';
 static uint8_t DEFAULT_DC_METER_t = DEFAULT_DC_METER_TYPE;
-static uint8_t NO_OF_RECTIFIER = 4;
+static uint8_t NO_OF_RECTIFIER = 2;
 volatile uint8_t MACHINE_STATE = IDLE_STATE;
 uint8_t em_rx_buff[170] = {0};
 uint8_t ESP_RX_DATA_t[1] = {0};
@@ -269,8 +269,8 @@ volatile uint8_t CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
 volatile float POWER_VALUE = 0;
 static uint8_t reset_all_task_flag = 0;
 volatile float POWER_VALUE_X = (MAX_POWER_LIMIT * 1000);
-volatile float GUN1_CURR_VAL = 0;
-volatile float GUN2_CURR_VAL = 0;
+volatile float GUN1_CURR_VAL = 200;
+volatile float GUN2_CURR_VAL = 200;
 volatile float POWER_VALUE_X1 = 0;
 volatile float POWER_VALUE_X2 = 0;
 volatile uint8_t SINGLE_GUN1_POWER = 0;
@@ -1088,35 +1088,35 @@ void Start_ERROR_CODE_TASK(void *argument) {
                         array_bits[SYSTEM_TEMP_HIGH_IDX] = 0;
                     }
                     break;
-                case GUN_TEMP_HIGH_IDX:
-                    if (DEFAULT_GUN1_TEMP_ALARM_t == 1) {
-                        if (ERROR_CODE_ARRAY[GUN_TEMP_CONN_NO] == 1) {
-                            ERROR1_ARRAY[1] = ERROR_CODE_ARRAY[ikf];
-                            if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[GUN_TEMP_HIGH_IDX1] == 0)) {
-                                array_bits[GUN_TEMP_HIGH_IDX1] = 1;
-                                Error_Code1 = ERROR_CODE_ARRAY[ikf];
-                                vTaskDelay(4000);
-                            }
-                            if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[GUN_TEMP_HIGH_IDX1] == 1)) {
-                                array_bits[GUN_TEMP_HIGH_IDX1] = 0;
-                            }
-                        }
-                    }
-                    if (DEFAULT_GUN2_TEMP_ALARM_t == 1) {
-                        if (ERROR_CODE_ARRAY[GUN_TEMP_CONN_NO] == 2) {
-                            ERROR2_ARRAY[1] = ERROR_CODE_ARRAY[ikf];
-                            if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[GUN_TEMP_HIGH_IDX2] == 0)) {
-                                array_bits[GUN_TEMP_HIGH_IDX2] = 1;
-                                Error_Code2 = ERROR_CODE_ARRAY[ikf];
-                                vTaskDelay(4000);
-                            }
-                            if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[GUN_TEMP_HIGH_IDX2] == 1)) {
-                                array_bits[GUN_TEMP_HIGH_IDX2] = 0;
+                    /*case GUN_TEMP_HIGH_IDX:
+                        if (DEFAULT_GUN1_TEMP_ALARM_t == 1) {
+                            if (ERROR_CODE_ARRAY[GUN_TEMP_CONN_NO] == 1) {
+                                ERROR1_ARRAY[1] = ERROR_CODE_ARRAY[ikf];
+                                if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[GUN_TEMP_HIGH_IDX1] == 0)) {
+                                    array_bits[GUN_TEMP_HIGH_IDX1] = 1;
+                                    Error_Code1 = ERROR_CODE_ARRAY[ikf];
+                                    vTaskDelay(4000);
+                                }
+                                if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[GUN_TEMP_HIGH_IDX1] == 1)) {
+                                    array_bits[GUN_TEMP_HIGH_IDX1] = 0;
+                                }
                             }
                         }
-                    }
+                        if (DEFAULT_GUN2_TEMP_ALARM_t == 1) {
+                            if (ERROR_CODE_ARRAY[GUN_TEMP_CONN_NO] == 2) {
+                                ERROR2_ARRAY[1] = ERROR_CODE_ARRAY[ikf];
+                                if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[GUN_TEMP_HIGH_IDX2] == 0)) {
+                                    array_bits[GUN_TEMP_HIGH_IDX2] = 1;
+                                    Error_Code2 = ERROR_CODE_ARRAY[ikf];
+                                    vTaskDelay(4000);
+                                }
+                                if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[GUN_TEMP_HIGH_IDX2] == 1)) {
+                                    array_bits[GUN_TEMP_HIGH_IDX2] = 0;
+                                }
+                            }
+                        }
 
-                    break;
+                        break;*/
                 case ISOLATION_FAIL_IDX:
                     if (DEFAULT_IMD1_ALARM_t == 1) {
                         if (ERROR_CODE_ARRAY[IMD_FAIL_CONN_NO] == 1) {
@@ -1429,7 +1429,7 @@ void Start_EMERGENCY_TASK(void *argument) {
     _1_PLC_tx_50 _1_PLC_tx_50_t;
     RECTIFIER_Q rectimsg;
     _2_PLC_tx_50 _2_PLC_tx_50_t;
-    char buffer[100]={0};
+    char buffer[100] = {0};
     for (;;) {
 
         if (CURRENT_PLC1_STATE == _1_PLC_STATE_CURRENT_DEMAND_1 || CURRENT_PLC2_STATE == _2_PLC_STATE_CURRENT_DEMAND_1) {
@@ -2614,10 +2614,10 @@ void Start_ESP_SEND_TASK(void *argument) {
             txdata.IDX = esp_s_bt_data.IDX;
             memcpy(txdata.IDX_DATA, esp_s_bt_data.IDX_DATA, 60);
             for (int i = 0; i < 15; i++) {
-//                // Format and send each data point
-//                sprintf(buffer, "Index: %d, Data: %d\n", i, txdata.IDX_DATA[i]);
-//                SERCOM5_USART_Write(buffer, strlen(buffer));
-//                while (!(SERCOM5_USART_TransmitComplete())); // Wait until transmission is complete
+                //                // Format and send each data point
+                //                sprintf(buffer, "Index: %d, Data: %d\n", i, txdata.IDX_DATA[i]);
+                //                SERCOM5_USART_Write(buffer, strlen(buffer));
+                //                while (!(SERCOM5_USART_TransmitComplete())); // Wait until transmission is complete
             }
             //            txdata.IDX_DATA = esp_s_bt_data.IDX_DATA;
         }
@@ -3122,10 +3122,10 @@ void Start_ESP_RX_TASK(void *argument) {
 
 void Start_AC_METER_SEND_TASK(void *argument) {
     SERCOM2_USART_ReadCallbackRegister(ENERGY_METER_CALLBACK, 0);
-    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
-    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
-    //        uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
-    //        uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
+//    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
+//    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
+            uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
+            uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
     static uint8_t count = 0;
     WHICH_METER_Q which_meter;
     NEXT_METER_Q next_meter;
@@ -3245,33 +3245,33 @@ void Start_METER_RX_TASK(void *arggument) {
                             ac_meter_comm = 0;
                             MACHINE_STATE = IDLE_STATE;
                         }
-                        if (DEFAULT_AC_METER_BLE == 'S') {
-                            ac_volt1 = (METER_DATA[5] << 24 | METER_DATA[6] << 16 | METER_DATA[7] << 8 | METER_DATA[8]);
-                            AC_VOLTAGE1_t = *((float *) &ac_volt1);
-                            ac_volt2 = (METER_DATA[9] << 24 | METER_DATA[10] << 16 | METER_DATA[11] << 8 | METER_DATA[12]);
-                            AC_VOLTAGE2 = *((float *) &ac_volt2);
-                            ac_volt3 = (METER_DATA[13] << 24 | METER_DATA[14] << 16 | METER_DATA[15] << 8 | METER_DATA[16]);
-                            AC_VOLTAGE3 = *((float *) &ac_volt3);
-                            ac_curr1 = (METER_DATA[37] << 24 | METER_DATA[38] << 16 | METER_DATA[39] << 8 | METER_DATA[40]);
-                            AC_CURRENT1 = *((float *) &ac_curr1);
-                            ac_curr2 = (METER_DATA[41] << 24 | METER_DATA[42] << 16 | METER_DATA[43] << 8 | METER_DATA[44]);
-                            AC_CURRENT2 = *((float *) &ac_curr2);
-                            ac_curr3 = (METER_DATA[45] << 24 | METER_DATA[46] << 16 | METER_DATA[27] << 8 | METER_DATA[48]);
-                            AC_CURRENT3 = *((float *) &ac_curr3);
-                        } else {
-                            ac_volt1 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
-                            AC_VOLTAGE1_t = *((float *) &ac_volt1);
-                            ac_volt2 = (METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10]);
-                            AC_VOLTAGE2 = *((float *) &ac_volt2);
-                            ac_volt3 = (METER_DATA[11] << 24 | METER_DATA[12] << 16 | METER_DATA[13] << 8 | METER_DATA[14]);
-                            AC_VOLTAGE3 = *((float *) &ac_volt3);
-                            ac_curr1 = (METER_DATA[15] << 24 | METER_DATA[16] << 16 | METER_DATA[17] << 8 | METER_DATA[18]);
-                            AC_CURRENT1 = *((float *) &ac_curr1);
-                            ac_curr2 = (METER_DATA[19] << 24 | METER_DATA[20] << 16 | METER_DATA[21] << 8 | METER_DATA[22]);
-                            AC_CURRENT2 = *((float *) &ac_curr2);
-                            ac_curr3 = (METER_DATA[23] << 24 | METER_DATA[24] << 16 | METER_DATA[25] << 8 | METER_DATA[26]);
-                            AC_CURRENT3 = *((float *) &ac_curr3);
-                        }
+                        //                        if (DEFAULT_AC_METER_BLE == 'S') {
+                        //                            ac_volt1 = (METER_DATA[5] << 24 | METER_DATA[6] << 16 | METER_DATA[7] << 8 | METER_DATA[8]);
+                        //                            AC_VOLTAGE1_t = *((float *) &ac_volt1);
+                        //                            ac_volt2 = (METER_DATA[9] << 24 | METER_DATA[10] << 16 | METER_DATA[11] << 8 | METER_DATA[12]);
+                        //                            AC_VOLTAGE2 = *((float *) &ac_volt2);
+                        //                            ac_volt3 = (METER_DATA[13] << 24 | METER_DATA[14] << 16 | METER_DATA[15] << 8 | METER_DATA[16]);
+                        //                            AC_VOLTAGE3 = *((float *) &ac_volt3);
+                        //                            ac_curr1 = (METER_DATA[37] << 24 | METER_DATA[38] << 16 | METER_DATA[39] << 8 | METER_DATA[40]);
+                        //                            AC_CURRENT1 = *((float *) &ac_curr1);
+                        //                            ac_curr2 = (METER_DATA[41] << 24 | METER_DATA[42] << 16 | METER_DATA[43] << 8 | METER_DATA[44]);
+                        //                            AC_CURRENT2 = *((float *) &ac_curr2);
+                        //                            ac_curr3 = (METER_DATA[45] << 24 | METER_DATA[46] << 16 | METER_DATA[27] << 8 | METER_DATA[48]);
+                        //                            AC_CURRENT3 = *((float *) &ac_curr3);
+                        //                        } else {
+                        ac_volt1 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
+                        AC_VOLTAGE1_t = *((float *) &ac_volt1);
+                        ac_volt2 = (METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10]);
+                        AC_VOLTAGE2 = *((float *) &ac_volt2);
+                        ac_volt3 = (METER_DATA[11] << 24 | METER_DATA[12] << 16 | METER_DATA[13] << 8 | METER_DATA[14]);
+                        AC_VOLTAGE3 = *((float *) &ac_volt3);
+                        ac_curr1 = (METER_DATA[15] << 24 | METER_DATA[16] << 16 | METER_DATA[17] << 8 | METER_DATA[18]);
+                        AC_CURRENT1 = *((float *) &ac_curr1);
+                        ac_curr2 = (METER_DATA[19] << 24 | METER_DATA[20] << 16 | METER_DATA[21] << 8 | METER_DATA[22]);
+                        AC_CURRENT2 = *((float *) &ac_curr2);
+                        ac_curr3 = (METER_DATA[23] << 24 | METER_DATA[24] << 16 | METER_DATA[25] << 8 | METER_DATA[26]);
+                        AC_CURRENT3 = *((float *) &ac_curr3);
+                        //                        }
 
                         Update_AC_CURRENT1((int) AC_CURRENT1);
                         vTaskDelay(10);
@@ -3358,17 +3358,17 @@ void Start_METER_RX_TASK(void *arggument) {
                 case AC_METER_2_IDT:
                     xTimerStop(ac_timer, 10);
                     if (CRC16_modbus(meterdata.Meter_data, 83, 1)) {
-                        if (DEFAULT_AC_METER_BLE == 'S') {
-                            ac_freq = (METER_DATA[37] << 24 | METER_DATA[38] << 16 | METER_DATA[39] << 8 | METER_DATA[40]);
-                            AC_FREQUENCY = *((float *) &ac_freq);
-                            ac_energy_t = (METER_DATA[41] << 24 | METER_DATA[42] << 16 | METER_DATA[43] << 8 | METER_DATA[44]);
-                            ac_imp_power_t = (METER_DATA[9] << 24 | METER_DATA[10] << 16 | METER_DATA[11] << 8 | METER_DATA[12]);
-                        } else {
-                            ac_freq = (METER_DATA[63] << 24 | METER_DATA[64] << 16 | METER_DATA[65] << 8 | METER_DATA[66]);
-                            AC_FREQUENCY = *((float *) &ac_freq);
-                            ac_energy_t = (METER_DATA[67] << 24 | METER_DATA[68] << 16 | METER_DATA[69] << 8 | METER_DATA[70]);
-                            ac_imp_power_t = (METER_DATA[27] << 24 | METER_DATA[28] << 16 | METER_DATA[29] << 8 | METER_DATA[30]);
-                        }
+                        //                        if (DEFAULT_AC_METER_BLE == 'S') {
+                        //                            ac_freq = (METER_DATA[37] << 24 | METER_DATA[38] << 16 | METER_DATA[39] << 8 | METER_DATA[40]);
+                        //                            AC_FREQUENCY = *((float *) &ac_freq);
+                        //                            ac_energy_t = (METER_DATA[41] << 24 | METER_DATA[42] << 16 | METER_DATA[43] << 8 | METER_DATA[44]);
+                        //                            ac_imp_power_t = (METER_DATA[9] << 24 | METER_DATA[10] << 16 | METER_DATA[11] << 8 | METER_DATA[12]);
+                        //                        } else {
+                        ac_freq = (METER_DATA[63] << 24 | METER_DATA[64] << 16 | METER_DATA[65] << 8 | METER_DATA[66]);
+                        AC_FREQUENCY = *((float *) &ac_freq);
+                        ac_energy_t = (METER_DATA[67] << 24 | METER_DATA[68] << 16 | METER_DATA[69] << 8 | METER_DATA[70]);
+                        ac_imp_power_t = (METER_DATA[27] << 24 | METER_DATA[28] << 16 | METER_DATA[29] << 8 | METER_DATA[30]);
+                        //                        }
                         esp_s_meter_data.AC_FREQUENCY = ac_freq;
                         esp_s_meter_data.AC_POWER = ac_imp_power_t;
                         esp_s_meter_data.AC_ENERGY = ac_energy_t;
@@ -3389,14 +3389,14 @@ void Start_METER_RX_TASK(void *arggument) {
                             dc1_meter_comm = 0;
                             MACHINE_STATE = IDLE_STATE;
                         }
-                        if (DEFAULT_DC_METER_BLE == 'R') {
-                            volt1 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
-                            VOLTAGE1 = *((float *) &volt1);
-                            curr1 = METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10];
-                            CURRENT1 = *((float *) &curr1);
-                            imp_energy1 = METER_DATA[15] << 24 | METER_DATA[16] << 16 | METER_DATA[17] << 8 | METER_DATA[18];
-                            IMPORT_ENERGY1 = *((float *) &imp_energy1);
-                        }
+                        //                        if (DEFAULT_DC_METER_BLE == 'R') {
+                        volt1 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
+                        VOLTAGE1 = *((float *) &volt1);
+                        curr1 = METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10];
+                        CURRENT1 = *((float *) &curr1);
+                        imp_energy1 = METER_DATA[15] << 24 | METER_DATA[16] << 16 | METER_DATA[17] << 8 | METER_DATA[18];
+                        IMPORT_ENERGY1 = *((float *) &imp_energy1);
+                        //                        }
 
 
                         memset(buf, 0, sizeof (buf));
@@ -3466,14 +3466,14 @@ void Start_METER_RX_TASK(void *arggument) {
                             dc2_meter_comm = 0;
                             MACHINE_STATE = IDLE_STATE;
                         }
-                        if (DEFAULT_DC_METER_BLE == 'R') {
-                            volt2 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
-                            VOLTAGE2 = *((float *) &volt2);
-                            curr2 = METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10];
-                            CURRENT2 = *((float *) &curr2);
-                            imp_energy2 = METER_DATA[15] << 24 | METER_DATA[16] << 16 | METER_DATA[17] << 8 | METER_DATA[18];
-                            IMPORT_ENERGY2 = *((float *) &imp_energy2);
-                        }
+                        //                        if (DEFAULT_DC_METER_BLE == 'R') {
+                        volt2 = (METER_DATA[3] << 24 | METER_DATA[4] << 16 | METER_DATA[5] << 8 | METER_DATA[6]);
+                        VOLTAGE2 = *((float *) &volt2);
+                        curr2 = METER_DATA[7] << 24 | METER_DATA[8] << 16 | METER_DATA[9] << 8 | METER_DATA[10];
+                        CURRENT2 = *((float *) &curr2);
+                        imp_energy2 = METER_DATA[15] << 24 | METER_DATA[16] << 16 | METER_DATA[17] << 8 | METER_DATA[18];
+                        IMPORT_ENERGY2 = *((float *) &imp_energy2);
+                        //                        }
                         POWER2 = (VOLTAGE2 * CURRENT2) / 1000;
                         Update_GUN2_Voltage((int) VOLTAGE2);
                         vTaskDelay(100);
@@ -4621,6 +4621,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
     _1_PLC_tx_200 _1_PLC_tx_200_t = {0};
     RECTIFIER_Q rectimsg = {0};
     FLASH_WRITE_Q flashmsg;
+    static uint8_t count_9v = 0;
     ESP_Q_DATA espmsg;
     memset(espmsg.ESP_ARRAY, 0, sizeof (espmsg.ESP_ARRAY));
     LED1_Q leddata;
@@ -4664,11 +4665,11 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
     static uint8_t slac_count = 0;
     char buffffffffff[100] = {0};
     static uint16_t otherstopcode = 0;
-    UBaseType_t watermark =0;
+    UBaseType_t watermark = 0;
     for (;;) {
-//        watermark = uxTaskGetStackHighWaterMark(NULL);
-//        sprintf(buffffffffff, "PLC_MANAGE_Task Stack High Water Mark: %u words\n", watermark);
-//        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
+        //        watermark = uxTaskGetStackHighWaterMark(NULL);
+        //        sprintf(buffffffffff, "PLC_MANAGE_Task Stack High Water Mark: %u words\n", watermark);
+        //        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
         switch (CURRENT_PLC1_STATE) {
 
             case _1_PLC_STATE_IDLE_1:
@@ -4844,10 +4845,10 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 page_change_inst = 0;
                 xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0);
                 if (_c10bmsg._10B_SECC_STATUS3_t >= seccStatus_ServiceDiscovery) {
-                    if (instance == 1) {
+                    if (instance == 0) {
                         CURRENT_PLC1_STATE = _1_PLC_STATE_AUTHORIZATION_EIM;
                     }
-                    if (instance == 0) {
+                    if (instance == 1) {
 
                         if (xQueueReceive(_C105_QUEUE, &_c105msg, 0)) {
                             mac_id_data.MAC_ID_IS[0] = _c105msg.evccMAC_Data0;
@@ -5146,28 +5147,28 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                             ((uint16_t) (((((_c109msg.targetCurrentlsb) << 8) + _c109msg.targetCurrentmsb)) / 10));
                     voltage_to_give =
                             ((uint16_t) (((((_c109msg.targetVoltagelsb) << 8) + _c109msg.targetVoltagemsb)) / 10));
-                    //                    if (current_to_give > 250) {
-                    //                        current_to_give = 250;
-                    //                    }
+                                        if (current_to_give > GUN1_CURR_VAL) {
+                                            current_to_give = GUN1_CURR_VAL;
+                                        }
 
                     power = (current_to_give * voltage_to_give);
-//                    if (current_to_give == 0.0) {
-//                        chg_stop_count++;
-//                        //                        sprintf(buffffffffff, " soc is : %d and current : %f\r\n", SOC_1, current_to_give);
-//                        //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
-//                        //                        while (!SERCOM5_USART_TransmitComplete());
-//                        if (chg_stop_count > 400) {
-//                            CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
-//                            CP_Level_1 = 9;
-//                            Stop_Code = 201;
-//                            Stop_connector_no = 1;
-//                            Update_GUN1_Session_End_Reason(0x09);
-//                            memset(START_STOP_AR1, 0, 3);
-//                            STOPING_UNIT = IMPORT_ENERGY1;
-//                            chg_stop_count = 0;
-//                        }
-//
-//                    }
+                    //                    if (current_to_give == 0.0) {
+                    //                        chg_stop_count++;
+                    //                        //                        sprintf(buffffffffff, " soc is : %d and current : %f\r\n", SOC_1, current_to_give);
+                    //                        //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
+                    //                        //                        while (!SERCOM5_USART_TransmitComplete());
+                    //                        if (chg_stop_count > 400) {
+                    //                            CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+                    //                            CP_Level_1 = 9;
+                    //                            Stop_Code = 201;
+                    //                            Stop_connector_no = 1;
+                    //                            Update_GUN1_Session_End_Reason(0x09);
+                    //                            memset(START_STOP_AR1, 0, 3);
+                    //                            STOPING_UNIT = IMPORT_ENERGY1;
+                    //                            chg_stop_count = 0;
+                    //                        }
+                    //
+                    //                    }
                     if (SINGLE_GUN1_POWER == 0) {
                         POWER_VALUE = POWER_VALUE_X;
                         if (power < POWER_VALUE) {
@@ -5378,14 +5379,17 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     }
 
                 }
-//                if ((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
-//                    CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
-//                    CP_Level_1 = 9;
-//                    Stop_Code = 202;
-//                    Stop_connector_no = 1;
-//                    Update_GUN1_Session_End_Reason(0x0A);
-//                    STOPING_UNIT = IMPORT_ENERGY1;
-//                }
+                if (xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0)) {
+                    if ((_c10bmsg._10B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR)) {
+                        CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+                        CP_Level_1 = 9;
+                        Stop_Code = 202;
+                        Stop_connector_no = 1;
+                        Update_GUN1_Session_End_Reason(0x0A);
+                        STOPING_UNIT = IMPORT_ENERGY1;
+                    }
+                }
+
                 if (_c108msg.Charging_Complete_t == CHARGING_COMPLETE) {
                     CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                     CP_Level_1 = 9;
@@ -5396,12 +5400,16 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 }
                 if (xQueueReceive(_C102_QUEUE, &_c102msg, 0)) {
                     if ((((_c102msg.cpVoltage_msb) / 10) >= 7) && (((_c102msg.cpVoltage_msb) / 10) <= 12)) {
-                        CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
-                        CP_Level_1 = 9;
-                        //                                                Stop_Code = 201;
-                        Stop_connector_no = 1;
-                        Update_GUN1_Session_End_Reason(0x0A);
-                        STOPING_UNIT = IMPORT_ENERGY1;
+                        count_9v++;
+                        if (count_9v > 5) {
+                            CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
+                            CP_Level_1 = 9;
+                            //                                                Stop_Code = 201;
+                            Stop_connector_no = 1;
+                            Update_GUN1_Session_End_Reason(0x0A);
+                            STOPING_UNIT = IMPORT_ENERGY1;
+                        }
+
                     }
                 }
                 if (START_STOP_AR[0] == 1 && START_STOP_AR[2] == 1) {
@@ -5414,8 +5422,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                     Stop_Code = otherstopcode;
                     otherstopcode = 0;
                 }
-                
-  
+
+
                 break;
             case _1_PLC_STATE_TERMINATED:
                 if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 0) {
@@ -5506,7 +5514,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 count = 1;
                 GUN1_CHARGING_TIME = 0;
                 GUN1_200_clear = GUN1_500_clear = GUN1_50_clear = GUN1_1000_clear = 1;
-
+                count_9v = 0;
                 break;
         }
         esp_s_gun1_p.CP_Level_1 = CP_Level_1;
@@ -5547,6 +5555,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
     FLASH_WRITE_Q flashmsg;
     //    LED2_Q leddata;
     ESP_Q_DATA espmsg;
+    static uint8_t count_9v = 0;
     memset(espmsg.ESP_ARRAY, 0, sizeof (espmsg.ESP_ARRAY));
     RELAY_Q relaymsg;
     static float MAX_VOLT_LIMIT = 0;
@@ -5767,10 +5776,10 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 page_change_inst = 0;
                 xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
                 if (_c50bmsg._50B_SECC_STATUS3_t >= seccStatus_ServiceDiscovery) {
-                    if (instance == 1) {
+                    if (instance == 0) {
                         CURRENT_PLC2_STATE = _2_PLC_STATE_AUTHORIZATION_EIM;
                     }
-                    if (instance == 0) {
+                    if (instance == 1) {
 
                         if (xQueueReceive(_C505_QUEUE, &_c505msg, 0)) {
                             mac_id_data.MAC_ID_IS[0] = _c505msg.evccMAC_Data0;
@@ -6064,9 +6073,9 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
 
                     voltage_to_give =
                             ((uint16_t) (((((_c509msg.targetVoltagelsb) << 8) + _c509msg.targetVoltagemsb)) / 10));
-                    //                    if (current_to_give > 2500) {
-                    //                        current_to_give = 250;
-                    //                    }
+                                        if (current_to_give > GUN2_CURR_VAL) {
+                                            current_to_give = GUN2_CURR_VAL;
+                                        }
                     sprintf(buffffffffff, "current : %f\r\n", current_to_give);
                     SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
                     while (!SERCOM5_USART_TransmitComplete());
@@ -6295,14 +6304,17 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                     }
 
                 }
-                if ((_c50bmsg._50B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR)) {
-                    CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
-                    CP_Level_2 = 9;
-                    Stop_Code = 202;
-                    Stop_connector_no = 2;
-                    Update_GUN2_Session_End_Reason(0x0A);
-                    STOPING_UNIT = IMPORT_ENERGY2;
+                if (xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0)) {
+                    if ((_c50bmsg._50B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR)) {
+                        CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+                        CP_Level_2 = 9;
+                        Stop_Code = 202;
+                        Stop_connector_no = 2;
+                        Update_GUN2_Session_End_Reason(0x0A);
+                        STOPING_UNIT = IMPORT_ENERGY2;
+                    }
                 }
+
                 if (_c508msg.Charging_Complete_t == CHARGING_COMPLETE) {
                     CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
                     CP_Level_2 = 9;
@@ -6313,12 +6325,16 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 }
                 if (xQueueReceive(_C502_QUEUE, &_c502msg, 0)) {
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 7) && (((_c502msg.cpVoltage_msb) / 10) <= 12)) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
-                        CP_Level_2 = 9;
-                        //                        Stop_Code = 201;
-                        Stop_connector_no = 2;
-                        Update_GUN2_Session_End_Reason(0x09);
-                        STOPING_UNIT = IMPORT_ENERGY2;
+                        count_9v++;
+                        if (count_9v > 5) {
+                            CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+                            CP_Level_2 = 9;
+                            //                        Stop_Code = 201;
+                            Stop_connector_no = 2;
+                            Update_GUN2_Session_End_Reason(0x09);
+                            STOPING_UNIT = IMPORT_ENERGY2;
+                        }
+
                     }
                 }
                 if (START_STOP_AR1[0] == 2 && START_STOP_AR1[2] == 1) {
@@ -6420,6 +6436,7 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 vTaskResume(FLASH_WRITE_TASKHandle);
                 count = 1;
                 GUN2_CHARGING_TIME = 0;
+                count_9v = 0;
                 GUN2_200_clear = GUN2_500_clear = GUN2_50_clear = GUN2_1000_clear = 1;
                 break;
         }
@@ -6457,10 +6474,10 @@ void Start_RECTIFIER_TASK(void *argument) {
     UBaseType_t watermark = 0; //u;
 
     for (;;) {
-//        watermark = uxTaskGetStackHighWaterMark(NULL);
-//        sprintf(buffer, "RECTIFIER_Task Stack High Water Mark: %u words\n", watermark);
-//        SERCOM5_USART_Write(buffer, sizeof (buffer));
-//        while (!(SERCOM5_USART_TransmitComplete()));
+        //        watermark = uxTaskGetStackHighWaterMark(NULL);
+        //        sprintf(buffer, "RECTIFIER_Task Stack High Water Mark: %u words\n", watermark);
+        //        SERCOM5_USART_Write(buffer, sizeof (buffer));
+        //        while (!(SERCOM5_USART_TransmitComplete()));
 
         if (xQueueReceive(RECTIFIER_QUEUE, &msg, 0)) {
             REC_STATUS = msg.RECTI_ON_OFF[0];
@@ -6489,9 +6506,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                         setRectifierVoltMode(RECTIFIER2_GROUP1, LOW_V_MODE);
                         vTaskDelay(50);
                     }
-                    if ((current_t * 2) >= GUN1_CURR_VAL) {
-                        current_t = GUN1_CURR_VAL / 2;
-                    }
+//                    if ((current_t * 2) >= GUN1_CURR_VAL) {
+//                        current_t = GUN1_CURR_VAL / 2;
+//                    }
 
                     setRectifierVoltage(RECTIFIER1_GROUP1, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
@@ -6536,9 +6553,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                     if (current_t < 1) {
                         current_t = 1;
                     }
-                    if ((current_t * 2) >= GUN2_CURR_VAL) {
-                        current_t = GUN2_CURR_VAL / 2;
-                    }
+//                    if ((current_t * 2) >= GUN2_CURR_VAL) {
+//                        current_t = GUN2_CURR_VAL / 2;
+//                    }
                     setRectifierVoltage_2(RECTIFIER1_GROUP2, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
                     setRectifierCurrent_2(RECTIFIER1_GROUP2, (uint32_t) (current_t * 1000));
@@ -6572,18 +6589,18 @@ void Start_RECTIFIER_TASK(void *argument) {
                     //                    sprintf(buffer, "merger_current : %f\r\n", current_t);
                     //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
                     //                    while (!(SERCOM5_USART_TransmitComplete()));
-                    if ((current_t * 4) >= (GUN1_CURR_VAL || GUN2_CURR_VAL)) {
-                        if (GUN1_CONNECTED) {
-                            current_t = GUN1_CURR_VAL / 4;
-                        } else if (GUN2_CONNECTED) {
-                            current_t = GUN2_CURR_VAL / 4;
-                        } else {
-                            current_t = 10;
-                        }
-                    }
-//                    sprintf(buffer, "current : %f and the GUN1_CURR_VAL : %f \r\n", current_t, GUN1_CURR_VAL);
-//                    SERCOM5_USART_Write(buffer, sizeof (buffer));
-//                    while (!(SERCOM5_USART_TransmitComplete()));
+//                    if ((current_t * 4) >= (GUN1_CURR_VAL || GUN2_CURR_VAL)) {
+//                        if (GUN1_CONNECTED) {
+//                            current_t = GUN1_CURR_VAL / 4;
+//                        } else if (GUN2_CONNECTED) {
+//                            current_t = GUN2_CURR_VAL / 4;
+//                        } else {
+//                            current_t = 10;
+//                        }
+//                    }
+                    //                    sprintf(buffer, "current : %f and the GUN1_CURR_VAL : %f \r\n", current_t, GUN1_CURR_VAL);
+                    //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
+                    //                    while (!(SERCOM5_USART_TransmitComplete()));
                     if (voltage_t > 500) {
                         setRectifierVoltMode2(RECTIFIER1_GROUP2, HIGH_V_MODE);
                         vTaskDelay(50);
@@ -8013,9 +8030,6 @@ void Start_FLASH_READ_TASK(void *argument) {
     FLASH_READ_Q flashreadmsg;
     ESP_S_BT_Q espdata;
     uint32_t BT_DATA_ARRAY_0_127[128] = {0};
-    //    uint32_t BT_DATA_ARRAY_128_255[128] = {0};
-    //    uint32_t BT_DATA_ARRAY_256_383[128] = {0};
-    //    uint32_t BT_DATA_ARRAY_383_512[128] = {0};
     uint32_t CHARGING_DATA_ARRAY_1_16[128] = {0};
     uint32_t CHARGING_DATA_ARRAY_17_32[128] = {0};
     uint32_t CHARGING_DATA_ARRAY_33_48[128] = {0};
@@ -8036,42 +8050,60 @@ void Start_FLASH_READ_TASK(void *argument) {
                     case Parameter_Config:
                         espdata.IDX = flashreadmsg.BT_READ_IDX;
                         memset(espdata.IDX_DATA, 0, sizeof (espdata.IDX_DATA));
-                        memcpy(espdata.IDX_DATA, &BT_DATA_ARRAY_0_127[Parameter_start_add], 60);
+                        espdata.IDX_DATA[0] = BT_DATA_ARRAY_0_127[TIME_ZONE_IDX];
+                        espdata.IDX_DATA[1] = BT_DATA_ARRAY_0_127[PRICE_VALUE_IDX];
+                        espdata.IDX_DATA[2] = BT_DATA_ARRAY_0_127[GUN1_CONFIG_IDX];
+                        espdata.IDX_DATA[3] = BT_DATA_ARRAY_0_127[GUN2_CONFIG_IDX];
+                        espdata.IDX_DATA[4] = BT_DATA_ARRAY_0_127[SYSTEM_TEMP_LIMIT_IDX];
+                        espdata.IDX_DATA[5] = BT_DATA_ARRAY_0_127[SYSTEM_TEMP_CLEAR_IDX];
+                        espdata.IDX_DATA[6] = BT_DATA_ARRAY_0_127[AC_OVER_VOLT_LIMIT_IDX];
+                        espdata.IDX_DATA[7] = BT_DATA_ARRAY_0_127[AC_UNDER_VOLT_LIMIT_IDX];
+                        espdata.IDX_DATA[8] = BT_DATA_ARRAY_0_127[NE_VOLT_LIMIT_IDX];
+                        espdata.IDX_DATA[14] = BT_DATA_ARRAY_0_127[LOCAL_SEL_MODE_IDX];
+                        espdata.IDX_DATA[9] = BT_DATA_ARRAY_0_127[GUN1_TEMPERATURE_LIMIT_IDX];
+                        espdata.IDX_DATA[10] = BT_DATA_ARRAY_0_127[GUN2_TEMPERATURE_LIMIT_IDX];
+                        espdata.IDX_DATA[11] = BT_DATA_ARRAY_0_127[GUN1_TEMPERATURE_POINT_CLEAR_IDX];
+                        espdata.IDX_DATA[12] = 0;
+                        espdata.IDX_DATA[13] = 0;
                         xQueueOverwrite(ESP_S_BT_QUEUE, &espdata);
                         break;
                     case Core_Config:
                         espdata.IDX = flashreadmsg.BT_READ_IDX;
                         memset(espdata.IDX_DATA, 0, sizeof (espdata.IDX_DATA));
-                        memcpy(espdata.IDX_DATA, &BT_DATA_ARRAY_0_127[Core_start_add], 20);
+                        espdata.IDX_DATA[0] = BT_DATA_ARRAY_0_127[AUTHENTIC_TYPE_IDX];
+                        espdata.IDX_DATA[1] = BT_DATA_ARRAY_0_127[MAX_POWER_CAPACITY_IDX];
+                        espdata.IDX_DATA[4] = 1;
+                        espdata.IDX_DATA[2] = BT_DATA_ARRAY_0_127[GUN1_DC_CURRENT_MAX_CAP_IDX];
+                        espdata.IDX_DATA[3] = BT_DATA_ARRAY_0_127[GUN2_DC_CURRENT_MAX_CAP_IDX];
                         xQueueOverwrite(ESP_S_BT_QUEUE, &espdata);
                         break;
                     case SMR_Config:
                         espdata.IDX = flashreadmsg.BT_READ_IDX;
                         memset(espdata.IDX_DATA, 0, sizeof (espdata.IDX_DATA));
-                        memcpy(espdata.IDX_DATA, &BT_DATA_ARRAY_0_127[SMR_start_add], 20);
+                        espdata.IDX_DATA[1] = 1;
                         xQueueOverwrite(ESP_S_BT_QUEUE, &espdata);
                         break;
                     case EM_Config:
                         espdata.IDX = flashreadmsg.BT_READ_IDX;
                         memset(espdata.IDX_DATA, 0, sizeof (espdata.IDX_DATA));
-                        memcpy(espdata.IDX_DATA, &BT_DATA_ARRAY_0_127[EM_start_add], 8);
+                        espdata.IDX_DATA[0] = BT_DATA_ARRAY_0_127[ACEM_TYPE_IDX];
                         xQueueOverwrite(ESP_S_BT_QUEUE, &espdata);
                         break;
                     case Alarm_Config:
                         espdata.IDX = flashreadmsg.BT_READ_IDX;
                         memset(espdata.IDX_DATA, 0, sizeof (espdata.IDX_DATA));
-                        //                        for (uint8_t i =0;i<9;i++){
-                        //                            espdata.IDX_DATA[i] = BT_DATA_ARRAY_0_127[Alarm_start_add+i];
-                        ////                        memcpy(espdata.IDX_DATA, &BT_DATA_ARRAY_0_127[Alarm_start_add], Total_Alarm_Config);
-                        //                        }
-                        memcpy(espdata.IDX_DATA, (uint32_t*) & BT_DATA_ARRAY_0_127[Alarm_start_add], 36);
+
+                        espdata.IDX_DATA[0] = BT_DATA_ARRAY_0_127[IMD1_ALARM_IDX];
+                        espdata.IDX_DATA[1] = BT_DATA_ARRAY_0_127[IMD2_ALARM_IDX];
+                        espdata.IDX_DATA[2] = BT_DATA_ARRAY_0_127[DOOR_ALARM_IDX];
+                        espdata.IDX_DATA[3] = BT_DATA_ARRAY_0_127[SPD_ALARM_IDX];
+                        espdata.IDX_DATA[4] = BT_DATA_ARRAY_0_127[SMOKE_ALARM_IDX];
+                        espdata.IDX_DATA[5] = BT_DATA_ARRAY_0_127[GUN1_TEMP_ALARM_IDX];
+                        espdata.IDX_DATA[6] = BT_DATA_ARRAY_0_127[GUN2_TEMP_ALARM_IDX];
+                        espdata.IDX_DATA[5] = BT_DATA_ARRAY_0_127[LED_FAULT_ALARM_IDX];
+                        espdata.IDX_DATA[6] = BT_DATA_ARRAY_0_127[RFID_FAULT_ALARM_IDX];
                         xQueueOverwrite(ESP_S_BT_QUEUE, &espdata);
-                        //                        for (int i = 1; i <= 9; i++) {`
-                        //                            // Format and send each data point
-                        //                            sprintf(buffer, "Index: %d, Data: %d\n", i, BT_DATA_ARRAY_0_127[offset + i]);
-                        //                            SERCOM5_USART_Write(buffer, strlen(buffer));
-                        //                            while (!(SERCOM5_USART_TransmitComplete())); // Wait until transmission is complete
-                        //                        }
+
                         break;
                     case Manual_Config:
                         espdata.IDX = flashreadmsg.BT_READ_IDX;

@@ -49,8 +49,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "peripheral/sercom/i2c_master/plib_sercom3_i2c_master.h"
-#include "peripheral/nvmctrl/plib_nvmctrl.h"
 #include "peripheral/sercom/usart/plib_sercom2_usart.h"
+#include "peripheral/nvmctrl/plib_nvmctrl.h"
 #include "peripheral/sercom/spi_master/plib_sercom1_spi_master.h"
 #include "peripheral/evsys/plib_evsys.h"
 #include "peripheral/can/plib_can1.h"
@@ -62,12 +62,16 @@
 #include "peripheral/wdt/plib_wdt.h"
 #include "peripheral/cmcc/plib_cmcc.h"
 #include "peripheral/sercom/usart/plib_sercom5_usart.h"
-#include "peripheral/sercom/usart/plib_sercom4_usart.h"
 #include "peripheral/can/plib_can0.h"
+#include "peripheral/sercom/usart/plib_sercom4_usart.h"
 #include "peripheral/eic/plib_eic.h"
+#include "peripheral/tc/plib_tc1.h"
+#include "peripheral/tc/plib_tc5.h"
 #include "peripheral/tc/plib_tc7.h"
+#include "peripheral/tcc/plib_tcc0.h"
 #include "peripheral/adc/plib_adc0.h"
 #include "peripheral/adc/plib_adc1.h"
+#include "peripheral/tcc/plib_tcc4.h"
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility

@@ -83,6 +83,8 @@ void SERCOM6_USART_InterruptHandler (void);
 void SERCOM7_USART_InterruptHandler (void);
 void CAN0_InterruptHandler (void);
 void CAN1_InterruptHandler (void);
+void TC1_TimerInterruptHandler (void);
+void TC5_TimerInterruptHandler (void);
 
 
 

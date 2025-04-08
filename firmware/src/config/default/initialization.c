@@ -139,16 +139,24 @@ void SYS_Initialize ( void* data )
 
     SERCOM5_USART_Initialize();
 
-    SERCOM4_USART_Initialize();
-
     CAN0_Initialize();
+
+    SERCOM4_USART_Initialize();
 
     EIC_Initialize();
 
+    TC1_TimerInitialize();
+
+    TC5_TimerInitialize();
+
     TC7_CompareInitialize();
+
+    TCC0_PWMInitialize();
 
     ADC0_Initialize();
     ADC1_Initialize();
+    TCC4_PWMInitialize();
+
 
 
     /* MISRAC 2012 deviation block start */

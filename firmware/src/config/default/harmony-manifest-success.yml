@@ -4,12 +4,12 @@
 
 
 project: DC120pro
-creation_date: 2025-02-18T12:20:04.283+05:30[Asia/Calcutta]    # ISO 8601 format: https://www.w3.org/TR/NOTE-datetime
-operating_system: Windows 10
+creation_date: 2025-04-04T14:07:04.353+05:30[Asia/Calcutta]    # ISO 8601 format: https://www.w3.org/TR/NOTE-datetime
+operating_system: Windows 11
 mcc_mode: IDE            # [IDE|Standalone|Headless]
-mcc_version: v5.5.0
+mcc_version: v5.5.2
 mcc_core_version: v5.7.0
-mplabx_version: v6.20        # if MPLAB X plugin only
+mplabx_version: v6.25        # if MPLAB X plugin only
 harmony_version: v1.3.2
 compiler: XC32 4.30
 
