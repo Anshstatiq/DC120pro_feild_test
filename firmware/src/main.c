@@ -165,7 +165,7 @@ TimerHandle_t emergency_timer = NULL;
 uint8_t RFID_DATA[RFID_BUFFER_SIZE] = {0};
 volatile uint8_t CURRENT_RFID_RX_SIZE = RFID_WAKEUP_RX_SIZE;
 
-float FIRMWARE_VERSION = 3.1;
+float FIRMWARE_VERSION = 3.3;
 float OCPP_VERSION = 1.6;
 float PLC1_VERSION = 2.0;
 float PLC2_VERSION = 2.0;
@@ -1077,17 +1077,17 @@ void Start_ERROR_CODE_TASK(void *argument) {
                     }
 
                     break;
-                case SYSTEM_TEMP_HIGH_IDX:
-                    ERROR0_ARRAY[11] = ERROR_CODE_ARRAY[ikf];
-                    if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[SYSTEM_TEMP_HIGH_IDX] == 0)) {
-                        array_bits[SYSTEM_TEMP_HIGH_IDX] = 1;
-                        Error_Code0 = ERROR_CODE_ARRAY[ikf];
-                        vTaskDelay(4000);
-                    }
-                    if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[SYSTEM_TEMP_HIGH_IDX] == 1)) {
-                        array_bits[SYSTEM_TEMP_HIGH_IDX] = 0;
-                    }
-                    break;
+                    /*case SYSTEM_TEMP_HIGH_IDX:
+                        ERROR0_ARRAY[11] = ERROR_CODE_ARRAY[ikf];
+                        if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[SYSTEM_TEMP_HIGH_IDX] == 0)) {
+                            array_bits[SYSTEM_TEMP_HIGH_IDX] = 1;
+                            Error_Code0 = ERROR_CODE_ARRAY[ikf];
+                            vTaskDelay(4000);
+                        }
+                        if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[SYSTEM_TEMP_HIGH_IDX] == 1)) {
+                            array_bits[SYSTEM_TEMP_HIGH_IDX] = 0;
+                        }
+                        break;*/
                     /*case GUN_TEMP_HIGH_IDX:
                         if (DEFAULT_GUN1_TEMP_ALARM_t == 1) {
                             if (ERROR_CODE_ARRAY[GUN_TEMP_CONN_NO] == 1) {
@@ -1339,20 +1339,20 @@ void Start_ERROR_CODE_TASK(void *argument) {
                         array_bits[ALL_DC_METER_FAIL_IDX] = 0;
                     }
                     break;
-                case DOOR_OPEN_IDX:
-                    if (DEFAULT_DOOR_ALARM_t == 1) {
-                        ERROR0_ARRAY[14] = ERROR_CODE_ARRAY[ikf];
-                        if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[DOOR_OPEN_IDX] == 0)) {
-                            array_bits[DOOR_OPEN_IDX] = 1;
-                            Error_Code0 = ERROR_CODE_ARRAY[ikf];
-                            vTaskDelay(4000);
-                        }
-                        if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[DOOR_OPEN_IDX] == 1)) {
-                            array_bits[DOOR_OPEN_IDX] = 0;
-                        }
+                    /*case DOOR_OPEN_IDX:
+                        if (DEFAULT_DOOR_ALARM_t == 1) {
+                            ERROR0_ARRAY[14] = ERROR_CODE_ARRAY[ikf];
+                            if ((ERROR_CODE_ARRAY[ikf] != 0) && (array_bits[DOOR_OPEN_IDX] == 0)) {
+                                array_bits[DOOR_OPEN_IDX] = 1;
+                                Error_Code0 = ERROR_CODE_ARRAY[ikf];
+                                vTaskDelay(4000);
+                            }
+                            if ((ERROR_CODE_ARRAY[ikf] == 0) && (array_bits[DOOR_OPEN_IDX] == 1)) {
+                                array_bits[DOOR_OPEN_IDX] = 0;
+                            }
 
-                    }
-                    break;
+                        }
+                        break;*/
             }
             esp_s_error_data.Error_Code0 = Error_Code0;
             esp_s_error_data.Error_Code1 = Error_Code1;
@@ -1653,6 +1653,8 @@ void StartDefaultTask(void *argument) {
                         CURRENT_PAGE = INTRO_PAGE;
                         Change_Page_to(CURRENT_PAGE);
                     }
+                    CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_1;
+                    vTaskResume(_1_PLC_MANAGE_TASKHandle);
                     vTaskDelay(100);
                 } else {
                     START_STOP_AR[0] = 4;
@@ -1665,6 +1667,7 @@ void StartDefaultTask(void *argument) {
                     Change_Page_to(CURRENT_PAGE);
                     page_change[0] = 1;
                     vTaskSuspend(RECTIFIER_TASKHandle);
+                    vTaskSuspend(_1_PLC_MANAGE_TASKHandle);
                     vTaskResume(EMERGENCY_TASKHandle);
                 }
 
@@ -1711,6 +1714,7 @@ void StartDefaultTask(void *argument) {
                     START_STOP_AR1[2] = 1;
                     ERROR_CODE_ARRAY[ISOLATION_FAIL_IDX] = 119;
                     ERROR_CODE_ARRAY[IMD_FAIL_CONN_NO] = 1;
+
                     Update_Isolation_Fail2_Status(0x01);
                     vTaskDelay(100);
                     vTaskResume(EMERGENCY_TASKHandle);
@@ -3122,10 +3126,10 @@ void Start_ESP_RX_TASK(void *argument) {
 
 void Start_AC_METER_SEND_TASK(void *argument) {
     SERCOM2_USART_ReadCallbackRegister(ENERGY_METER_CALLBACK, 0);
-//    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
-//    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
-            uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
-            uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
+    //    uint8_t ENERGY_METER_READ1[8] = {0x01, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x14};
+    //    uint8_t ENERGY_METER_READ2[8] = {0x01, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x1C};
+    uint8_t ENERGY_METER_READ1[8] = {0x04, 0x04, 0x00, 0x00, 0x00, 0x28, 0xF0, 0x41};
+    uint8_t ENERGY_METER_READ2[8] = {0x04, 0x04, 0x00, 0x28, 0x00, 0x28, 0x70, 0x49};
     static uint8_t count = 0;
     WHICH_METER_Q which_meter;
     NEXT_METER_Q next_meter;
@@ -4684,8 +4688,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0);
                 if ((_c101msg._101_SECC_PnCREADY_t == seccPnCReady_NotReady) && (_c102msg._102_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
                     if ((_c102msg.cpVoltage_msb) / 10 >= 11) {
-                        instance = 0;
-                        instance1 = 0;
+                        //                        instance = 0;
+                        //                        instance1 = 0;
                         _50msmsg.ID_t = _002;
                         _50msmsg.DATA[6] = _1_PLC_tx_50_t._002_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Trigger_State));
                         xQueueSend(_50msQUEUE, &_50msmsg, 100);
@@ -4755,20 +4759,20 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                         //                        xQueueOverwrite(LED1_QUEUE, &leddata);
                         CP_Level_1 = 9;
                         GUN1_CONNECTED = 1;
-                        if (instance == 1) {
-                            mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_0;
-                            xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
-                            vTaskResume(ESP_SEND_TASKHandle);
-                        }
+                        //                        if (instance == 1) {
+                        //                            mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_0;
+                        //                            xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
+                        //                            vTaskResume(ESP_SEND_TASKHandle);
+                        //                        }
                         if (START_STOP_AR[0] == 1 && START_STOP_AR[1] == 1) {
                             CURRENT_PLC1_STATE = _1_PLC_STATE_INITIALIZED_2;
                             rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
                             xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
-                            instance1 = 1;
+//                            instance1 = 1;
                         }
-                        if (instance == 0) {
-                            CURRENT_PLC1_STATE = _1_PLC_STATE_INITIALIZED_2;
-                        }
+                        //                        if (instance == 0) {
+                        //                            CURRENT_PLC1_STATE = _1_PLC_STATE_INITIALIZED_2;
+                        //                        }
                         gun_count++;
                     }
                     if ((((_c102msg.cpVoltage_msb) / 10) >= 11)) {
@@ -4779,8 +4783,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                                 AC_Contactor_Relay_Set();
                             vTaskSuspend(FAN_TASKHandle);
                             FAN_ON(65535);
-                            instance = 0;
-                            instance1 = 0;
+                            //                            instance = 0;
+                            //                            instance1 = 0;
                             if (page_change_inst == 0) {
                                 page_change_inst = 1;
                                 Change_Page_to(CURRENT_PAGE);
@@ -4845,45 +4849,45 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 page_change_inst = 0;
                 xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0);
                 if (_c10bmsg._10B_SECC_STATUS3_t >= seccStatus_ServiceDiscovery) {
-                    if (instance == 0) {
-                        CURRENT_PLC1_STATE = _1_PLC_STATE_AUTHORIZATION_EIM;
-                    }
-                    if (instance == 1) {
-
-                        if (xQueueReceive(_C105_QUEUE, &_c105msg, 0)) {
-                            mac_id_data.MAC_ID_IS[0] = _c105msg.evccMAC_Data0;
-                            mac_id_data.MAC_ID_IS[1] = _c105msg.evccMAC_Data1;
-                            mac_id_data.MAC_ID_IS[2] = _c105msg.evccMAC_Data2;
-                            mac_id_data.MAC_ID_IS[3] = _c105msg.evccMAC_Data3;
-                            mac_id_data.MAC_ID_IS[4] = _c105msg.evccMAC_Data4;
-                            mac_id_data.MAC_ID_IS[5] = _c105msg.evccMAC_Data5;
-                            //                            sprintf(buffer, "MAC ID %d %d %d %d %d %d", MAC_ID[0], MAC_ID[1], MAC_ID[2], MAC_ID[3], MAC_ID[4], MAC_ID[5]);
-                            //                            SERCOM5_USART_Write(buffer, sizeof (buffer));
-                            //                            while (!SERCOM5_USART_TransmitComplete());
-                            xQueueOverwrite(ESP_S_MAC_ID_QUEUE, &mac_id_data);
-                            if (mac_id_data.MAC_ID_IS[0] > 0) {
-                                instance = 1;
-                                CURRENT_PLC1_STATE = _1_PLC_STATE_AUTHORIZATION_EIM;
-                                mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_1;
-                                vTaskResume(ESP_SEND_TASKHandle);
-
-                                xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
-                            }
-                        }
-                    }
+                    //                    if (instance == 0) {
+                    CURRENT_PLC1_STATE = _1_PLC_STATE_AUTHORIZATION_EIM;
+                    //                    }
+                    //                    if (instance == 1) {
+                    //
+                    //                        if (xQueueReceive(_C105_QUEUE, &_c105msg, 0)) {
+                    //                            mac_id_data.MAC_ID_IS[0] = _c105msg.evccMAC_Data0;
+                    //                            mac_id_data.MAC_ID_IS[1] = _c105msg.evccMAC_Data1;
+                    //                            mac_id_data.MAC_ID_IS[2] = _c105msg.evccMAC_Data2;
+                    //                            mac_id_data.MAC_ID_IS[3] = _c105msg.evccMAC_Data3;
+                    //                            mac_id_data.MAC_ID_IS[4] = _c105msg.evccMAC_Data4;
+                    //                            mac_id_data.MAC_ID_IS[5] = _c105msg.evccMAC_Data5;
+                    //                            //                            sprintf(buffer, "MAC ID %d %d %d %d %d %d", MAC_ID[0], MAC_ID[1], MAC_ID[2], MAC_ID[3], MAC_ID[4], MAC_ID[5]);
+                    //                            //                            SERCOM5_USART_Write(buffer, sizeof (buffer));
+                    //                            //                            while (!SERCOM5_USART_TransmitComplete());
+                    //                            xQueueOverwrite(ESP_S_MAC_ID_QUEUE, &mac_id_data);
+                    //                            if (mac_id_data.MAC_ID_IS[0] > 0) {
+                    //                                instance = 1;
+                    //                                CURRENT_PLC1_STATE = _1_PLC_STATE_AUTHORIZATION_EIM;
+                    //                                mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_1;
+                    //                                vTaskResume(ESP_SEND_TASKHandle);
+                    //
+                    //                                xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
+                    //                            }
+                    //                        }
+                    //                    }
                 }
                 if (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE || _c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR || _c10bmsg._10B_SECC_STATUS3_t == seccStatus_IDLE) {
-                    if (instance == 1) {
-                        CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_1;
-                        instance = 1;
-                        //                        Stop_Code = 307;
-                        //                        Stop_connector_no = 1;
-                        //                        Change_Page_to(GUN1_FAILING_REASON_PAGE);
-                    }
-                    if (instance == 0) {
-                        CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_1;
-                        instance = 1;
-                    }
+                    //                    if (instance == 1) {
+                    CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_1;
+                    //                        instance = 1;
+                    //                        Stop_Code = 307;
+                    //                        Stop_connector_no = 1;
+                    //                        Change_Page_to(GUN1_FAILING_REASON_PAGE);
+                    //                    }
+                    //                    if (instance == 0) {
+                    //                        CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_1;
+                    //                        instance = 1;
+                    //                    }
                 }
                 if (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_Waiting_SLAC) {
                     slac_count++;
@@ -4898,32 +4902,32 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 break;
             case _1_PLC_STATE_AUTHORIZATION_EIM:
                 slac_count = 0;
-                if (instance1 == 0) {
-                    if (START_STOP_AR[0] == 1 && START_STOP_AR[1] == 1) {
-                        rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
-                        xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
-                        _50msmsg.ID_t = _002;
-                        _50msmsg.DATA[6] = _1_PLC_tx_50_t._002_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Auth_EIM));
-                        xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                        vTaskDelay(100);
-                        xQueueReceive(_C10B_QUEUE, &_c10bmsg, 1000);
-                        CURRENT_PLC1_STATE = _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY;
-                        ////////////HMI//////////////////
-                        Change_Page_to(GUN1_AUTHENTICATION_SUCCESS_PAGE);
-                        ////////////HMI//////////////////
-                    }
-                }
-                if (instance1 == 1) {
-                    _50msmsg.ID_t = _002;
-                    _50msmsg.DATA[6] = _1_PLC_tx_50_t._002_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Auth_EIM));
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(100);
-                    xQueueReceive(_C10B_QUEUE, &_c10bmsg, 1000);
-                    CURRENT_PLC1_STATE = _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY;
-                    ////////////HMI//////////////////
-                    Change_Page_to(GUN1_AUTHENTICATION_SUCCESS_PAGE);
-                    ////////////HMI//////////////////
-                }
+                //                if (instance1 == 0) {
+                //                    if (START_STOP_AR[0] == 1 && START_STOP_AR[1] == 1) {
+                //                        rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
+                //                        xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
+                _50msmsg.ID_t = _002;
+                _50msmsg.DATA[6] = _1_PLC_tx_50_t._002_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Auth_EIM));
+                xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                vTaskDelay(100);
+                xQueueReceive(_C10B_QUEUE, &_c10bmsg, 1000);
+                CURRENT_PLC1_STATE = _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY;
+                ////////////HMI//////////////////
+                Change_Page_to(GUN1_AUTHENTICATION_SUCCESS_PAGE);
+                ////////////HMI//////////////////
+                //                    }
+                //                }
+                //                if (instance1 == 1) {
+                //                    _50msmsg.ID_t = _002;
+                //                    _50msmsg.DATA[6] = _1_PLC_tx_50_t._002_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Auth_EIM));
+                //                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                //                    vTaskDelay(100);
+                //                    xQueueReceive(_C10B_QUEUE, &_c10bmsg, 1000);
+                //                    CURRENT_PLC1_STATE = _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY;
+                //                    ////////////HMI//////////////////
+                //                    Change_Page_to(GUN1_AUTHENTICATION_SUCCESS_PAGE);
+                //                    ////////////HMI//////////////////
+                //                }
                 xQueueReceive(_C10B_QUEUE, &_c10bmsg, 0);
                 if (_c10bmsg._10B_SECC_STATUS3_t == seccStatus_TERMINATE || _c10bmsg._10B_SECC_STATUS3_t == seccStatus_ERROR || _c10bmsg._10B_SECC_STATUS3_t == seccStatus_IDLE) {
                     CURRENT_PLC1_STATE = _1_PLC_STATE_IDLE_1;
@@ -4943,7 +4947,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 rectimsg.PLC_ID[0] = 0x01;
                 xQueueSend(RECTIFIER_QUEUE, &rectimsg, 100);
                 vTaskResume(RECTIFIER_TASKHandle);
-                instance1 = 1;
+                //                instance1 = 1;
                 if (xQueueReceive(_C107_QUEUE, &_c107msg, 0)) {
                     MAX_VOLT_LIMIT = (((_c107msg.evMaximumVoltageLimitlsb) << 8) + (_c107msg.evMaximumVoltageLimitmsb)) / 10;
                     MAX_CURR_LIMIT_PLC = (((_c107msg.evMaximumCurrentLimitlsb) << 8) + (_c107msg.evMaximumCurrentLimitmsb)) / 10;
@@ -5147,9 +5151,9 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                             ((uint16_t) (((((_c109msg.targetCurrentlsb) << 8) + _c109msg.targetCurrentmsb)) / 10));
                     voltage_to_give =
                             ((uint16_t) (((((_c109msg.targetVoltagelsb) << 8) + _c109msg.targetVoltagemsb)) / 10));
-                                        if (current_to_give > GUN1_CURR_VAL) {
-                                            current_to_give = GUN1_CURR_VAL;
-                                        }
+                    if (current_to_give > GUN1_CURR_VAL) {
+                        current_to_give = GUN1_CURR_VAL;
+                    }
 
                     power = (current_to_give * voltage_to_give);
                     //                    if (current_to_give == 0.0) {
@@ -5401,7 +5405,7 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 if (xQueueReceive(_C102_QUEUE, &_c102msg, 0)) {
                     if ((((_c102msg.cpVoltage_msb) / 10) >= 7) && (((_c102msg.cpVoltage_msb) / 10) <= 12)) {
                         count_9v++;
-                        if (count_9v > 5) {
+                        if (count_9v > 10) {
                             CURRENT_PLC1_STATE = _1_PLC_STATE_TERMINATED;
                             CP_Level_1 = 9;
                             //                                                Stop_Code = 201;
@@ -5515,6 +5519,8 @@ void Start_1_PLC_MANAGE_TASK(void *argument) {
                 GUN1_CHARGING_TIME = 0;
                 GUN1_200_clear = GUN1_500_clear = GUN1_50_clear = GUN1_1000_clear = 1;
                 count_9v = 0;
+                memset(START_STOP_AR, 0, sizeof (START_STOP_AR));
+
                 break;
         }
         esp_s_gun1_p.CP_Level_1 = CP_Level_1;
@@ -5616,8 +5622,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
                 if ((_c501msg._501_SECC_PnCREADY_t == seccPnCReady_NotReady) && (_c502msg._502_SECC_CP_t == seccCpOscillator_Duty_Cycle_OFF)) {
                     if ((_c502msg.cpVoltage_msb) / 10 >= 11) {
-                        instance = 0;
-                        instance1 = 0;
+                        //                        instance = 0;
+                        //                        instance1 = 0;
                         _50msmsg.ID_t = _402;
                         _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Trigger_State));
                         xQueueSend(_50msQUEUE, &_50msmsg, 100);
@@ -5687,11 +5693,11 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                         //                        xQueueOverwrite(LED2_QUEUE, &leddata);
                         CP_Level_2 = 9;
                         GUN2_CONNECTED = 1;
-                        if (instance == 1) {
-                            mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_0;
-                            xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
-                            vTaskResume(ESP_SEND_TASKHandle);
-                        }
+                        //                        if (instance == 1) {
+                        //                            mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_0;
+                        //                            xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
+                        //                            vTaskResume(ESP_SEND_TASKHandle);
+                        //                        }
                         if ((START_STOP_AR1[0] == 2 && START_STOP_AR1[1] == 1)) {
                             CURRENT_PLC2_STATE = _2_PLC_STATE_INITIALIZED_2;
                             rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
@@ -5699,9 +5705,9 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                             instance1 = 1;
 
                         }
-                        if (instance == 0) {
-                            CURRENT_PLC2_STATE = _2_PLC_STATE_INITIALIZED_2;
-                        }
+                        //                        if (instance == 0) {
+                        //                            CURRENT_PLC2_STATE = _2_PLC_STATE_INITIALIZED_2;
+                        //                        }
                         gun_count++;
                     }
                     if ((((_c502msg.cpVoltage_msb) / 10) >= 11)) {
@@ -5712,8 +5718,8 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                                 AC_Contactor_Relay_Set();
                             vTaskSuspend(FAN_TASKHandle);
                             FAN_ON(65535);
-                            instance = 0;
-                            instance1 = 0;
+                            //                            instance = 0;
+                            //                            instance1 = 0;
                             if (page_change_inst == 0) {
                                 page_change_inst = 1;
                                 Change_Page_to(CURRENT_PAGE);
@@ -5776,44 +5782,44 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 page_change_inst = 0;
                 xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
                 if (_c50bmsg._50B_SECC_STATUS3_t >= seccStatus_ServiceDiscovery) {
-                    if (instance == 0) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_AUTHORIZATION_EIM;
-                    }
-                    if (instance == 1) {
-
-                        if (xQueueReceive(_C505_QUEUE, &_c505msg, 0)) {
-                            mac_id_data.MAC_ID_IS[0] = _c505msg.evccMAC_Data0;
-                            mac_id_data.MAC_ID_IS[1] = _c505msg.evccMAC_Data1;
-                            mac_id_data.MAC_ID_IS[2] = _c505msg.evccMAC_Data2;
-                            mac_id_data.MAC_ID_IS[3] = _c505msg.evccMAC_Data3;
-                            mac_id_data.MAC_ID_IS[4] = _c505msg.evccMAC_Data4;
-                            mac_id_data.MAC_ID_IS[5] = _c505msg.evccMAC_Data5;
-                            //                            sprintf(buffer, "MAC ID %d %d %d %d %d %d", MAC_ID[0], MAC_ID[1], MAC_ID[2], MAC_ID[3], MAC_ID[4], MAC_ID[5]);
-                            //                            SERCOM5_USART_Write(buffer, sizeof (buffer));
-                            //                            while (!SERCOM5_USART_TransmitComplete());
-                            xQueueOverwrite(ESP_S_MAC_ID_QUEUE, &mac_id_data);
-                            if (mac_id_data.MAC_ID_IS[0] > 0) {
-                                instance = 1;
-                                CURRENT_PLC2_STATE = _2_PLC_STATE_AUTHORIZATION_EIM;
-                                mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_2;
-                                xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
-                                vTaskResume(ESP_SEND_TASKHandle);
-                            }
-                        }
-                    }
+                    //                    if (instance == 0) {
+                    CURRENT_PLC2_STATE = _2_PLC_STATE_AUTHORIZATION_EIM;
+                    //                    }
+                    //                    if (instance == 1) {
+                    //
+                    //                        if (xQueueReceive(_C505_QUEUE, &_c505msg, 0)) {
+                    //                            mac_id_data.MAC_ID_IS[0] = _c505msg.evccMAC_Data0;
+                    //                            mac_id_data.MAC_ID_IS[1] = _c505msg.evccMAC_Data1;
+                    //                            mac_id_data.MAC_ID_IS[2] = _c505msg.evccMAC_Data2;
+                    //                            mac_id_data.MAC_ID_IS[3] = _c505msg.evccMAC_Data3;
+                    //                            mac_id_data.MAC_ID_IS[4] = _c505msg.evccMAC_Data4;
+                    //                            mac_id_data.MAC_ID_IS[5] = _c505msg.evccMAC_Data5;
+                    //                            //                            sprintf(buffer, "MAC ID %d %d %d %d %d %d", MAC_ID[0], MAC_ID[1], MAC_ID[2], MAC_ID[3], MAC_ID[4], MAC_ID[5]);
+                    //                            //                            SERCOM5_USART_Write(buffer, sizeof (buffer));
+                    //                            //                            while (!SERCOM5_USART_TransmitComplete());
+                    //                            xQueueOverwrite(ESP_S_MAC_ID_QUEUE, &mac_id_data);
+                    //                            if (mac_id_data.MAC_ID_IS[0] > 0) {
+                    //                                instance = 1;
+                    //                                CURRENT_PLC2_STATE = _2_PLC_STATE_AUTHORIZATION_EIM;
+                    //                                mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_2;
+                    //                                xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
+                    //                                vTaskResume(ESP_SEND_TASKHandle);
+                    //                            }
+                    //                        }
+                    //                    }
                 }
                 if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
-                    if (instance == 1) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
-                        instance = 1;
-                        //                        Stop_Code = 307;
-                        //                        Stop_connector_no = 2;
-                        //                        Change_Page_to(GUN2_FAILING_REASON_PAGE);
-                    }
-                    if (instance == 0) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
-                        instance = 1;
-                    }
+                    //                    if (instance == 1) {
+                    CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
+//                    instance = 1;
+                    //                        Stop_Code = 307;
+                    //                        Stop_connector_no = 2;
+                    //                        Change_Page_to(GUN2_FAILING_REASON_PAGE);
+                    //                    }
+                    //                    if (instance == 0) {
+                    //                        CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
+                    //                        instance = 1;
+                    //                    }
                 }
                 if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_Waiting_SLAC) {
                     slac_count++;
@@ -5828,636 +5834,637 @@ void Start_2_PLC_MANAGE_TASK(void *argument) {
                 break;
             case _2_PLC_STATE_AUTHORIZATION_EIM:
                 slac_count = 0;
-                if (instance1 == 0) {
-                    if (START_STOP_AR1[0] == 2 && START_STOP_AR1[1] == 1) {
-                        rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
-                        xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
-                        _50msmsg.ID_t = _402;
-                        _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Auth_EIM));
-                        xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                        vTaskDelay(100);
-                        xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY;
-                        Change_Page_to(GUN2_AUTHENTICATION_SUCCESS_PAGE);
-                        ////////////HMI//////////////////
-                    }
-                }
-                if (instance1 == 1) {
-                    _50msmsg.ID_t = _402;
-                    _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Auth_EIM));
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(100);
-                    xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
-                    CURRENT_PLC2_STATE = _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY;
-                    ////////////HMI//////////////////
-                    Change_Page_to(GUN2_AUTHENTICATION_SUCCESS_PAGE);
-                    ////////////HMI//////////////////
-                }
-                xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
-                if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
-                    CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
-                    instance = 1;
-                    Stop_Code = 308;
-                    Stop_connector_no = 2;
-                    Update_GUN2_Session_End_Reason(0x06);
-                    Change_Page_to(GUN2_FAILING_REASON_PAGE);
-                }
-                break;
-            case _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY:
-                instance1 = 1;
-                MERGER_Contactor_Set();
-                rectimsg.CURRENT_VALUE[0] = 0;
-                rectimsg.VOLTAGE_VALUE[0] = 200;
-                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                rectimsg.PLC_ID[0] = 0x02;
-                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                vTaskResume(RECTIFIER_TASKHandle);
-                if (xQueueReceive(_C507_QUEUE, &_c507msg, 0)) {
-                    MAX_VOLT_LIMIT = (((_c507msg.evMaximumVoltageLimitlsb) << 8) + (_c507msg.evMaximumVoltageLimitmsb)) / 10;
-                    MAX_CURR_LIMIT_PLC1 = (((_c507msg.evMaximumCurrentLimitlsb) << 8) + (_c507msg.evMaximumCurrentLimitmsb)) / 10;
-                    MAX_CURR_LIMIT2 = ((MAX_POWER_LIMIT * 1000) / (int) MAX_VOLT_LIMIT) * 10;
-                    if (MAX_CURR_LIMIT2 > (MAX_CURR_LIMIT_PLC1 * 10)) {
-                        MAX_CURR_LIMIT2 = (MAX_CURR_LIMIT_PLC1 * 10);
-                    }
-                    _50msmsg.ID_t = _402;
-                    _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (0 << EVSE_Processing_CPD));
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(100);
-                    _200msmsg.ID_t = _403;
-                    _200msmsg.DATA[0] = _2_PLC_tx_200_t._403_EVSE_MAX_CURRENT_LIMIT_MSB_DATA0 =
-                            (uint16_t) MAX_CURR_LIMIT2 & 0x00FF;
-                    _200msmsg.DATA[1] = _2_PLC_tx_200_t._403_EVSE_MAX_CURRENT_LIMIT_LSB_DATA1 =
-                            ((uint16_t) MAX_CURR_LIMIT2 >> 8) & 0x00FF;
-                    _200msmsg.DATA[2] = _2_PLC_tx_200_t._403_EVSE_MAX_POWER_LIMIT_MSB_DATA2 =
-                            ((MAX_POWER_LIMIT * 1000) / 10) - ((((MAX_POWER_LIMIT * 1000) / 10) >> 8) << 8);
-                    _200msmsg.DATA[3] = _2_PLC_tx_200_t._403_EVSE_MAX_POWER_LIMIT_LSB_DATA3 =
-                            ((MAX_POWER_LIMIT * 1000) / 10) >> 8;
-                    _200msmsg.DATA[4] = _2_PLC_tx_200_t._403_EVSE_MAX_VOLTAGE_LIMIT_MSB_DATA4 =
-                            EVSE_MAX_VOLTAGE_DATA0;
-                    _200msmsg.DATA[5] = _2_PLC_tx_200_t._403_EVSE_MAX_VOLTAGE_LIMIT_LSB_DATA5 =
-                            EVSE_MAX_VOLTAGE_DATA1;
-                    _200msmsg.DATA[6] = _2_PLC_tx_200_t._403_EVSE_PEAK_CURRENT_RIPPLE_MSB_DATA6 =
-                            EVSE_PEAK_CURRENT_RIPPLE_DATA0;
-                    _200msmsg.DATA[7] = _2_PLC_tx_200_t._403_EVSE_PEAK_CURRENT_RIPPLE_LSB_DATA7 =
-                            EVSE_PEAK_CURRENT_RIPPLE_DATA1;
-                    xQueueSend(_200msQUEUE, &_200msmsg, 100);
-                    vTaskDelay(300);
-
-                    _200msmsg.DATA[0] = _2_PLC_tx_200_t._404_EVSE_MIN_CURRENT_LIMIT_MSB_DATA0 =
-                            EVSE_MIN_CURRENT_DATA0;
-                    _200msmsg.DATA[1] = _2_PLC_tx_200_t._404_EVSE_MIN_CURRENT_LIMIT_LSB_DATA1 =
-                            EVSE_MIN_CURRENT_DATA1;
-
-                    _200msmsg.DATA[2] = _2_PLC_tx_200_t._404_EVSE_MIN_VOLTAGE_LIMIT_MSB_DATA2 =
-                            EVSE_MIN_VOLTAGE_DATA0;
-                    _200msmsg.DATA[3] = _2_PLC_tx_200_t._404_EVSE_MIN_VOLTAGE_LIMIT_LSB_DATA3 =
-                            EVSE_MIN_VOLTAGE_DATA1;
-
-                    _200msmsg.DATA[4] =
-                            _2_PLC_tx_200_t._404_EVSE_CURRENT_REGULATION_TOLERANCE_MSB_DATA4 =
-                            EVSE_PEAK_CURRENT_TOLERANCE_DATA0;
-                    _200msmsg.DATA[5] =
-                            _2_PLC_tx_200_t._404_EVSE_CURRENT_REGULATION_TOLERANCE_LSB_DATA5 =
-                            EVSE_PEAK_CURRENT_TOLERANCE_DATA1;
-
-                    _200msmsg.DATA[6] = _2_PLC_tx_200_t._404_EVSE_ENERGY_TO_DELIVERED_MSB_DATA6 =
-                            EVSE_ENERGY_TO_DELIVERED_DATA0;
-                    _200msmsg.DATA[7] = _2_PLC_tx_200_t._404_EVSE_ENERGY_TO_DELIVERED_LSB_DATA7 =
-                            EVSE_ENERGY_TO_DELIVERED_DATA1;
-
-                    _200msmsg.ID_t = _004;
-                    xQueueSend(_200msQUEUE, &_200msmsg, 100);
-                    vTaskDelay(300);
-
-                    _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_CPD));
-                    _50msmsg.ID_t = _402;
-                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(100);
-                    ////////////HMI//////////////////
-                    Change_Page_to(GUN2_PREPARING_TO_CHARGE_PAGE);
-                    ////////////HMI//////////////////
-                    xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
-                    if ((_c50bmsg._50B_SECC_STATUS3_t > seccStatus_ChargeParameterDiscovery) && (_c50bmsg._50B_SECC_STATUS3_t < seccStatus_PreCharge)) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_CABLE_CHECK;
-                        DC2_Contactor_Clear();
-                    }
-                    if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
-                        Stop_Code = 309;
-                        Stop_connector_no = 2;
-                        Update_GUN2_Session_End_Reason(0x08);
-                        Change_Page_to(GUN2_FAILING_REASON_PAGE);
-                    }
-                }
-                memset(mac_id_data.MAC_ID_IS, 0, sizeof (mac_id_data.MAC_ID_IS));
-                xQueueOverwrite(ESP_S_MAC_ID_QUEUE, &mac_id_data);
-                mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_0;
-                xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
-                memset(START_STOP_AR1, 0, sizeof (START_STOP_AR1));
-                break;
-            case _2_PLC_STATE_CABLE_CHECK:
-
-
-                xQueueReceive(_C502_QUEUE, &_c502msg, 0);
-                if ((_c502msg.cpVoltage_msb) / 10 >= 5) {
-                    if (DEFAULT_IMD2_ALARM_t == 1) {
-                        if (!IMD2_RESPONSE_Get()) {
-
-                            _50msmsg.DATA[4] = _2_PLC_tx_50_t._402_EVSE_ISOLATION_STATUS_DATA4_t =
-                                    Isolation_Status_Valid;
-                            _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Cable_check) | (1 << EVSE_Isolation_Mointor));
-                            _50msmsg.ID_t = _402;
-                            xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                            vTaskDelay(100);
-                            CURRENT_PLC2_STATE = _2_PLC_STATE_PRE_CHARGE;
-                        } else {
-                            CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
-                            Stop_Code = 309;
-                            Stop_connector_no = 2;
-                            Update_GUN2_Session_End_Reason(0x07);
-                            Change_Page_to(GUN2_FAILING_REASON_PAGE);
-                        }
-                    } else {
-                        _50msmsg.DATA[4] = _2_PLC_tx_50_t._402_EVSE_ISOLATION_STATUS_DATA4_t =
-                                Isolation_Status_Valid;
-                        _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Cable_check) | (1 << EVSE_Isolation_Mointor));
-                        _50msmsg.ID_t = _402;
-                        xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                        vTaskDelay(100);
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_PRE_CHARGE;
-                    }
-                }
-                break;
-            case _2_PLC_STATE_PRE_CHARGE:
-
-                //                                if (xQueueReceive(_C509_QUEUE, &_c509msg, 0)) {
-                xQueueReceive(_C509_QUEUE, &_c509msg, 0);
-                voltage_to_give = ((((_c509msg.targetVoltagelsb) << 8) + _c509msg.targetVoltagemsb)) / 10;
-                current_to_give = (((_c509msg.targetCurrentlsb) << 8) + _c509msg.targetCurrentmsb) / 10;
-                rectimsg.CURRENT_VALUE[0] = 2;
-                rectimsg.VOLTAGE_VALUE[0] = voltage_to_give;
-                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                rectimsg.PLC_ID[0] = 0x02;
-                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                vTaskResume(RECTIFIER_TASKHandle);
-                //                vTaskDelay(2000);
-                _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 =
-                        _c509msg.targetVoltagemsb;
-                _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 =
-                        _c509msg.targetVoltagelsb;
-                //                _50msmsg.DATA[2] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_MSB_DATA2 =
-                //                        _c509msg.targetCurrentmsb;
-                //                _50msmsg.DATA[3] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_LSB_DATA3 =
-                //                        _c509msg.targetCurrentlsb;
-                _50msmsg.ID_t = _405;
+                //                if (instance1 == 0) {
+                //                    if (START_STOP_AR1[0] == 2 && START_STOP_AR1[1] == 1) {
+                //                        rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
+                //                        xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
+                _50msmsg.ID_t = _402;
+                _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Auth_EIM));
                 xQueueSend(_50msQUEUE, &_50msmsg, 100);
                 vTaskDelay(100);
-                /////////HMI/////////////////////
+                xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
+                CURRENT_PLC2_STATE = _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY;
+                Change_Page_to(GUN2_AUTHENTICATION_SUCCESS_PAGE);
+                ////////////HMI//////////////////
+//        }
+        //                }
+        //                if (instance1 == 1) {
+        //                    _50msmsg.ID_t = _402;
+        //                    _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Auth_EIM));
+        //                    xQueueSend(_50msQUEUE, &_50msmsg, 100);
+        //                    vTaskDelay(100);
+        //                    xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
+        //                    CURRENT_PLC2_STATE = _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY;
+        //                    ////////////HMI//////////////////
+        //                    Change_Page_to(GUN2_AUTHENTICATION_SUCCESS_PAGE);
+        //                    ////////////HMI//////////////////
+        //                }
+        xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
+        if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
+            CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
+            instance = 1;
+            Stop_Code = 308;
+            Stop_connector_no = 2;
+            Update_GUN2_Session_End_Reason(0x06);
+            Change_Page_to(GUN2_FAILING_REASON_PAGE);
+        }
+        break;
+        case _2_PLC_STATE_CHARGE_PARAMETER_DISCOVERY:
+        //                instance1 = 1;
+        MERGER_Contactor_Set();
+        rectimsg.CURRENT_VALUE[0] = 0;
+        rectimsg.VOLTAGE_VALUE[0] = 200;
+        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+        rectimsg.PLC_ID[0] = 0x02;
+        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+        vTaskResume(RECTIFIER_TASKHandle);
+        if (xQueueReceive(_C507_QUEUE, &_c507msg, 0)) {
+            MAX_VOLT_LIMIT = (((_c507msg.evMaximumVoltageLimitlsb) << 8) + (_c507msg.evMaximumVoltageLimitmsb)) / 10;
+            MAX_CURR_LIMIT_PLC1 = (((_c507msg.evMaximumCurrentLimitlsb) << 8) + (_c507msg.evMaximumCurrentLimitmsb)) / 10;
+            MAX_CURR_LIMIT2 = ((MAX_POWER_LIMIT * 1000) / (int) MAX_VOLT_LIMIT) * 10;
+            if (MAX_CURR_LIMIT2 > (MAX_CURR_LIMIT_PLC1 * 10)) {
+                MAX_CURR_LIMIT2 = (MAX_CURR_LIMIT_PLC1 * 10);
+            }
+            _50msmsg.ID_t = _402;
+            _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (0 << EVSE_Processing_CPD));
+            xQueueSend(_50msQUEUE, &_50msmsg, 100);
+            vTaskDelay(100);
+            _200msmsg.ID_t = _403;
+            _200msmsg.DATA[0] = _2_PLC_tx_200_t._403_EVSE_MAX_CURRENT_LIMIT_MSB_DATA0 =
+                    (uint16_t) MAX_CURR_LIMIT2 & 0x00FF;
+            _200msmsg.DATA[1] = _2_PLC_tx_200_t._403_EVSE_MAX_CURRENT_LIMIT_LSB_DATA1 =
+                    ((uint16_t) MAX_CURR_LIMIT2 >> 8) & 0x00FF;
+            _200msmsg.DATA[2] = _2_PLC_tx_200_t._403_EVSE_MAX_POWER_LIMIT_MSB_DATA2 =
+                    ((MAX_POWER_LIMIT * 1000) / 10) - ((((MAX_POWER_LIMIT * 1000) / 10) >> 8) << 8);
+            _200msmsg.DATA[3] = _2_PLC_tx_200_t._403_EVSE_MAX_POWER_LIMIT_LSB_DATA3 =
+                    ((MAX_POWER_LIMIT * 1000) / 10) >> 8;
+            _200msmsg.DATA[4] = _2_PLC_tx_200_t._403_EVSE_MAX_VOLTAGE_LIMIT_MSB_DATA4 =
+                    EVSE_MAX_VOLTAGE_DATA0;
+            _200msmsg.DATA[5] = _2_PLC_tx_200_t._403_EVSE_MAX_VOLTAGE_LIMIT_LSB_DATA5 =
+                    EVSE_MAX_VOLTAGE_DATA1;
+            _200msmsg.DATA[6] = _2_PLC_tx_200_t._403_EVSE_PEAK_CURRENT_RIPPLE_MSB_DATA6 =
+                    EVSE_PEAK_CURRENT_RIPPLE_DATA0;
+            _200msmsg.DATA[7] = _2_PLC_tx_200_t._403_EVSE_PEAK_CURRENT_RIPPLE_LSB_DATA7 =
+                    EVSE_PEAK_CURRENT_RIPPLE_DATA1;
+            xQueueSend(_200msQUEUE, &_200msmsg, 100);
+            vTaskDelay(300);
+
+            _200msmsg.DATA[0] = _2_PLC_tx_200_t._404_EVSE_MIN_CURRENT_LIMIT_MSB_DATA0 =
+                    EVSE_MIN_CURRENT_DATA0;
+            _200msmsg.DATA[1] = _2_PLC_tx_200_t._404_EVSE_MIN_CURRENT_LIMIT_LSB_DATA1 =
+                    EVSE_MIN_CURRENT_DATA1;
+
+            _200msmsg.DATA[2] = _2_PLC_tx_200_t._404_EVSE_MIN_VOLTAGE_LIMIT_MSB_DATA2 =
+                    EVSE_MIN_VOLTAGE_DATA0;
+            _200msmsg.DATA[3] = _2_PLC_tx_200_t._404_EVSE_MIN_VOLTAGE_LIMIT_LSB_DATA3 =
+                    EVSE_MIN_VOLTAGE_DATA1;
+
+            _200msmsg.DATA[4] =
+                    _2_PLC_tx_200_t._404_EVSE_CURRENT_REGULATION_TOLERANCE_MSB_DATA4 =
+                    EVSE_PEAK_CURRENT_TOLERANCE_DATA0;
+            _200msmsg.DATA[5] =
+                    _2_PLC_tx_200_t._404_EVSE_CURRENT_REGULATION_TOLERANCE_LSB_DATA5 =
+                    EVSE_PEAK_CURRENT_TOLERANCE_DATA1;
+
+            _200msmsg.DATA[6] = _2_PLC_tx_200_t._404_EVSE_ENERGY_TO_DELIVERED_MSB_DATA6 =
+                    EVSE_ENERGY_TO_DELIVERED_DATA0;
+            _200msmsg.DATA[7] = _2_PLC_tx_200_t._404_EVSE_ENERGY_TO_DELIVERED_LSB_DATA7 =
+                    EVSE_ENERGY_TO_DELIVERED_DATA1;
+
+            _200msmsg.ID_t = _004;
+            xQueueSend(_200msQUEUE, &_200msmsg, 100);
+            vTaskDelay(300);
+
+            _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_CPD));
+            _50msmsg.ID_t = _402;
+            xQueueSend(_50msQUEUE, &_50msmsg, 100);
+            vTaskDelay(100);
+            ////////////HMI//////////////////
+            Change_Page_to(GUN2_PREPARING_TO_CHARGE_PAGE);
+            ////////////HMI//////////////////
+            xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0);
+            if ((_c50bmsg._50B_SECC_STATUS3_t > seccStatus_ChargeParameterDiscovery) && (_c50bmsg._50B_SECC_STATUS3_t < seccStatus_PreCharge)) {
+                CURRENT_PLC2_STATE = _2_PLC_STATE_CABLE_CHECK;
+                DC2_Contactor_Clear();
+            }
+            if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
+                CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
+                Stop_Code = 309;
+                Stop_connector_no = 2;
+                Update_GUN2_Session_End_Reason(0x08);
+                Change_Page_to(GUN2_FAILING_REASON_PAGE);
+            }
+        }
+        memset(mac_id_data.MAC_ID_IS, 0, sizeof (mac_id_data.MAC_ID_IS));
+        xQueueOverwrite(ESP_S_MAC_ID_QUEUE, &mac_id_data);
+        mac_id_conn_no_data.MAC_ID_CONN_NO[0] = CONNECTOR_NO_0;
+        xQueueOverwrite(ESP_S_MAC_ID_CONN_NO_QUEUE, &mac_id_conn_no_data);
+        memset(START_STOP_AR1, 0, sizeof (START_STOP_AR1));
+        break;
+        case _2_PLC_STATE_CABLE_CHECK:
 
 
-                //                }
-                if (xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0)) {
-                    if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_CurrentDemand) {
-                        xTimerStart(all_rec_timer, 60000);
-                        xTimerStart(rec1_timer, 60000);
-                        xTimerStart(rec2_timer, 60000);
-                        xTimerStart(rec3_timer, 60000);
-                        xTimerStart(rec4_timer, 60000);
-                        xTimerStart(Gun2_Charging_timer, 60000);
-                        //                        vTaskSuspend(HMI_GUN2_STATUS_TASKHandle);
-                        Change_Page_to(GUN2_PARAM_PAGE);
-                        Change_gun2_status_to(CHARGING);
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_CURRENT_DEMAND_1;
-                        Update_GUN2_Charging_Start_date(day);
-                        vTaskDelay(100);
-                        Update_GUN2_Charging_Start_month(month);
-                        vTaskDelay(100);
-                        Update_GUN2_Charging_Start_year(year);
-                        vTaskDelay(100);
-                        Update_GUN2_Charging_Start_mins(minute);
-                        vTaskDelay(100);
-                        Update_GUN2_Charging_Start_hour(hour);
-                        vTaskDelay(100);
-                        Update_GUN2_Charging_Start_sec(sec);
-                        vTaskDelay(100);
+        xQueueReceive(_C502_QUEUE, &_c502msg, 0);
+        if ((_c502msg.cpVoltage_msb) / 10 >= 5) {
+            if (DEFAULT_IMD2_ALARM_t == 1) {
+                if (!IMD2_RESPONSE_Get()) {
 
-                        STARTING_UNIT = IMPORT_ENERGY2;
-                        //                        vTaskResume(LED_TASKHandle);
-                        flashmsg.START_DATE = (year << 16) | (month << 8) | day;
-                        flashmsg.START_TIME = (hour << 16) | (minute << 8) | sec;
-
-                    }
-                    if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
-                        Stop_Code = 310;
-                        Stop_connector_no = 2;
-                        Update_GUN2_Session_End_Reason(0x08);
-                        Change_Page_to(GUN2_FAILING_REASON_PAGE);
-                    }
-                }
-
-
-                break;
-            case _2_PLC_STATE_CURRENT_DEMAND_1:
-                vTaskResume(FAN_TASKHandle);
-                //                leddata.GUN2 = 1;
-                //                xQueueOverwrite(LED2_QUEUE, &leddata);
-
-                Update_GUN2_Duration(GUN2_CHARGING_TIME);
-                if (initial_SOC2 == 7) {
-                    Update_GUN2_Initial_SOC(FINAL_INITIAL_SOC);
-                }
-                if (xQueueReceive(_C509_QUEUE, &_c509msg, 0)) {
-                    current_to_give =
-                            ((uint16_t) (((((_c509msg.targetCurrentlsb) << 8) + _c509msg.targetCurrentmsb)) / 10));
-
-                    voltage_to_give =
-                            ((uint16_t) (((((_c509msg.targetVoltagelsb) << 8) + _c509msg.targetVoltagemsb)) / 10));
-                                        if (current_to_give > GUN2_CURR_VAL) {
-                                            current_to_give = GUN2_CURR_VAL;
-                                        }
-                    sprintf(buffffffffff, "current : %f\r\n", current_to_give);
-                    SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
-                    while (!SERCOM5_USART_TransmitComplete());
-                    power = (current_to_give * voltage_to_give);
-                    if (current_to_give == 0) {
-                        chg_stop_count++;
-                        if (chg_stop_count > 300) {
-                            CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
-                            CP_Level_2 = 9;
-                            Stop_Code = 201;
-                            Stop_connector_no = 2;
-                            Update_GUN2_Session_End_Reason(0x09);
-                            memset(START_STOP_AR1, 0, 3);
-                            STOPING_UNIT = IMPORT_ENERGY2;
-                            chg_stop_count = 0;
-                        }
-
-                    }
-                    if (SINGLE_GUN2_POWER == 0) {
-                        POWER_VALUE = POWER_VALUE_X;
-                        if ((power) < POWER_VALUE) {
-                            if (GUN1_CONNECTED == 0) {
-                                rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE) / act_volt_2;
-                                if (act_current_to_give <= current_to_give) {
-                                    rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
-                                } else if (act_current_to_give > current_to_give) {
-
-                                    rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
-                                }
-                                rectimsg.PLC_ID[0] = 0x03;
-                                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                            }
-                            if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE >= _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
-                                MERGER_Contactor_Set();
-
-                                rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE) / act_volt_2;
-
-                                if (act_current_to_give <= current_to_give) {
-                                    rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
-                                } else if (act_current_to_give > current_to_give) {
-
-                                    rectimsg.CURRENT_VALUE[0] = current_to_give / (NO_OF_RECTIFIER >> 1);
-                                }
-                                rectimsg.PLC_ID[0] = 0x02;
-                                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                            } else if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE < _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
-                                rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE) / act_volt_2;
-                                if (act_current_to_give <= current_to_give) {
-                                    rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
-                                } else if (act_current_to_give > current_to_give) {
-
-                                    rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
-                                }
-                                rectimsg.PLC_ID[0] = 0x03;
-                                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                            }
-                        }
-                        if (power > POWER_VALUE) {
-
-                            if (GUN1_CONNECTED == 0) {
-                                rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE) / act_volt_2;
-                                if (act_current_to_give <= current_to_give) {
-                                    rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
-                                } else if (act_current_to_give > current_to_give) {
-
-                                    rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
-                                }
-                                rectimsg.PLC_ID[0] = 0x03;
-                                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                            }
-                            if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE >= _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
-                                MERGER_Contactor_Set();
-
-                                rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE) / act_volt_2;
-                                if (act_current_to_give <= current_to_give) {
-                                    rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
-                                } else if (act_current_to_give > current_to_give) {
-
-                                    rectimsg.CURRENT_VALUE[0] = current_to_give / (NO_OF_RECTIFIER >> 1);
-                                }
-                                rectimsg.PLC_ID[0] = 0x02;
-                                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                            } else if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE < _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
-                                rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                                act_current_to_give = (POWER_VALUE) / act_volt_2;
-                                if (act_current_to_give <= current_to_give) {
-                                    rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
-                                } else if (act_current_to_give > current_to_give) {
-
-                                    rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
-                                }
-                                rectimsg.PLC_ID[0] = 0x03;
-                                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                            }
-                        }
-                    }
-                    if (SINGLE_GUN2_POWER == 1) {
-                        if (GUN1_CONNECTED == 0) {
-                            rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                            act_current_to_give = (POWER_VALUE_X2) / act_volt_2;
-                            if (act_current_to_give <= current_to_give) {
-                                rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
-                            } else if (act_current_to_give > current_to_give) {
-
-                                rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
-                            }
-                            rectimsg.PLC_ID[0] = 0x03;
-                            rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                            xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                        }
-                        if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE >= _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
-                            MERGER_Contactor_Set();
-                            if (POWER_VALUE_X2 > ((MAX_POWER_LIMIT * 1000) / 2)) {
-                                POWER_VALUE_X2 = ((MAX_POWER_LIMIT * 1000) / 2);
-                            }
-                            rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                            act_current_to_give = (POWER_VALUE_X2) / act_volt_2;
-                            if (act_current_to_give <= current_to_give) {
-                                rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
-                            } else if (act_current_to_give > current_to_give) {
-
-                                rectimsg.CURRENT_VALUE[0] = current_to_give / (NO_OF_RECTIFIER >> 1);
-                            }
-                            rectimsg.PLC_ID[0] = 0x02;
-                            rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                            xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                        } else if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE < _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
-                            rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
-                            act_current_to_give = (POWER_VALUE_X2) / act_volt_2;
-                            if (act_current_to_give <= current_to_give) {
-                                rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
-                            } else if (act_current_to_give > current_to_give) {
-
-                                rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
-                            }
-                            rectimsg.PLC_ID[0] = 0x03;
-                            rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
-                            xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                        }
-                    }
-                    Demand_Current2_ARRAY[j_count] = ((uint16_t) (((((_c509msg.targetCurrentlsb) << 8) + _c509msg.targetCurrentmsb)) / 10));
-                    ;
-                    Demand_Voltage2_ARRAY[j_count] = act_volt_2;
-                    j_count = j_count + 1;
-
-                    _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 =
-                            _c509msg.targetVoltagemsb;
-                    _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 =
-                            _c509msg.targetVoltagelsb;
-                    _50msmsg.DATA[2] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_MSB_DATA2 =
-                            _c509msg.targetCurrentmsb;
-                    _50msmsg.DATA[3] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_LSB_DATA3 =
-                            _c509msg.targetCurrentlsb;
-                    _50msmsg.ID_t = _405;
+                    _50msmsg.DATA[4] = _2_PLC_tx_50_t._402_EVSE_ISOLATION_STATUS_DATA4_t =
+                            Isolation_Status_Valid;
+                    _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Cable_check) | (1 << EVSE_Isolation_Mointor));
+                    _50msmsg.ID_t = _402;
                     xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                    vTaskDelay(50);
+                    vTaskDelay(100);
+                    CURRENT_PLC2_STATE = _2_PLC_STATE_PRE_CHARGE;
+                } else {
+                    CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
+                    Stop_Code = 309;
+                    Stop_connector_no = 2;
+                    Update_GUN2_Session_End_Reason(0x07);
+                    Change_Page_to(GUN2_FAILING_REASON_PAGE);
                 }
+            } else {
+                _50msmsg.DATA[4] = _2_PLC_tx_50_t._402_EVSE_ISOLATION_STATUS_DATA4_t =
+                        Isolation_Status_Valid;
+                _50msmsg.DATA[6] = _2_PLC_tx_50_t._402_EVSE_PROCESSING_DATA6_t = (0x00 | (1 << EVSE_Processing_Cable_check) | (1 << EVSE_Isolation_Mointor));
+                _50msmsg.ID_t = _402;
+                xQueueSend(_50msQUEUE, &_50msmsg, 100);
+                vTaskDelay(100);
+                CURRENT_PLC2_STATE = _2_PLC_STATE_PRE_CHARGE;
+            }
+        }
+        break;
+        case _2_PLC_STATE_PRE_CHARGE:
 
-                if (xQueueReceive(_C508_QUEUE, &_c508msg, 0)) {
+        //                                if (xQueueReceive(_C509_QUEUE, &_c509msg, 0)) {
+        xQueueReceive(_C509_QUEUE, &_c509msg, 0);
+        voltage_to_give = ((((_c509msg.targetVoltagelsb) << 8) + _c509msg.targetVoltagemsb)) / 10;
+        current_to_give = (((_c509msg.targetCurrentlsb) << 8) + _c509msg.targetCurrentmsb) / 10;
+        rectimsg.CURRENT_VALUE[0] = 2;
+        rectimsg.VOLTAGE_VALUE[0] = voltage_to_give;
+        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+        rectimsg.PLC_ID[0] = 0x02;
+        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+        vTaskResume(RECTIFIER_TASKHandle);
+        //                vTaskDelay(2000);
+        _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 =
+                _c509msg.targetVoltagemsb;
+        _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 =
+                _c509msg.targetVoltagelsb;
+        //                _50msmsg.DATA[2] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_MSB_DATA2 =
+        //                        _c509msg.targetCurrentmsb;
+        //                _50msmsg.DATA[3] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_LSB_DATA3 =
+        //                        _c509msg.targetCurrentlsb;
+        _50msmsg.ID_t = _405;
+        xQueueSend(_50msQUEUE, &_50msmsg, 100);
+        vTaskDelay(100);
+        /////////HMI/////////////////////
 
-                    SOC_2_ARRAY[i_count] = _c508msg.evSOC;
-                    CP_Level_2 = 6;
-                    i_count = i_count + 1;
-                    if (initial_SOC2 < 5) {
-                        Update_GUN2_Initial_SOC(_c508msg.evSOC);
-                        FINAL_INITIAL_SOC = _c508msg.evSOC;
-                        initial_SOC2 = initial_SOC2 + 1;
-                    }
-                    if (initial_SOC2 == 5) {
-                        initial_SOC2 = 7;
-                        SOC2_INITIAL = _c508msg.evSOC;
-                    }
-                }
-                if (j_count == 5) {
-                    j_count = 0;
-                    for (uint8_t i = 0; i < 5; i++) {
-                        if (Demand_Current2_ARRAY[0] <= Demand_Current2_ARRAY[i]) {
-                            Demand_Current2_ARRAY[0] = Demand_Current2_ARRAY[i];
-                            Demand_Current2 = Demand_Current2_ARRAY[0];
-                        }
-                        if (Demand_Voltage2_ARRAY[0] <= Demand_Voltage2_ARRAY[i]) {
-                            Demand_Voltage2_ARRAY[0] = Demand_Voltage2_ARRAY[i];
-                            Demand_Voltage2 = Demand_Voltage2_ARRAY[0];
-                        }
-                    }
-                    Update_GUN2_Demand_Current(Demand_Current2_ARRAY[0]);
-                    Update_GUN2_Demand_Voltage(Demand_Voltage2_ARRAY[0]);
-                }
-                if (i_count == 5) {
-                    i_count = 0;
-                    for (uint8_t i = 0; i < 5; i++) {
-                        if (SOC_2_ARRAY[0] <= SOC_2_ARRAY[i]) {
-                            SOC_2_ARRAY[0] = SOC_2_ARRAY[i];
-                            SOC_2 = SOC_2_ARRAY[0];
-                        }
-                    }
-                    Update_GUN2_Battery_SOC(SOC_2_ARRAY[0]);
-                }
 
-                if ((GUN1_CONNECTED == 0) && (GUN2_CONNECTED == 1)) {
-                    rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
-                    xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
-                }
-                if ((GUN1_CONNECTED == 1) && (GUN2_CONNECTED == 1) && (CURRENT_PLC1_STATE >= _1_PLC_STATE_PRE_CHARGE)) {
-                    rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
-                    xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
-                }
-                if (xQueueReceive(_C501_QUEUE, &_c501msg, 2000)) {
-                    if (_c501msg._501_SECC_seccERROR_CODES_t != 0) {
-                        otherstopcode = (int) _c501msg._501_SECC_seccERROR_CODES_t + 700;
-                        //                        sprintf(buffffffffff, "SECC_ERROR_CODE %d \r\n", otherstopcode);
-                        //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
-                        //                        while (!SERCOM5_USART_TransmitComplete());
+        //                }
+        if (xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0)) {
+            if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_CurrentDemand) {
+                xTimerStart(all_rec_timer, 60000);
+                xTimerStart(rec1_timer, 60000);
+                xTimerStart(rec2_timer, 60000);
+                xTimerStart(rec3_timer, 60000);
+                xTimerStart(rec4_timer, 60000);
+                xTimerStart(Gun2_Charging_timer, 60000);
+                //                        vTaskSuspend(HMI_GUN2_STATUS_TASKHandle);
+                Change_Page_to(GUN2_PARAM_PAGE);
+                Change_gun2_status_to(CHARGING);
+                CURRENT_PLC2_STATE = _2_PLC_STATE_CURRENT_DEMAND_1;
+                Update_GUN2_Charging_Start_date(day);
+                vTaskDelay(100);
+                Update_GUN2_Charging_Start_month(month);
+                vTaskDelay(100);
+                Update_GUN2_Charging_Start_year(year);
+                vTaskDelay(100);
+                Update_GUN2_Charging_Start_mins(minute);
+                vTaskDelay(100);
+                Update_GUN2_Charging_Start_hour(hour);
+                vTaskDelay(100);
+                Update_GUN2_Charging_Start_sec(sec);
+                vTaskDelay(100);
 
-                    }
+                STARTING_UNIT = IMPORT_ENERGY2;
+                //                        vTaskResume(LED_TASKHandle);
+                flashmsg.START_DATE = (year << 16) | (month << 8) | day;
+                flashmsg.START_TIME = (hour << 16) | (minute << 8) | sec;
 
-                }
-                if (xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0)) {
-                    if ((_c50bmsg._50B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR)) {
-                        CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
-                        CP_Level_2 = 9;
-                        Stop_Code = 202;
-                        Stop_connector_no = 2;
-                        Update_GUN2_Session_End_Reason(0x0A);
-                        STOPING_UNIT = IMPORT_ENERGY2;
-                    }
-                }
+            }
+            if (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR || _c50bmsg._50B_SECC_STATUS3_t == seccStatus_IDLE) {
+                CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+                Stop_Code = 310;
+                Stop_connector_no = 2;
+                Update_GUN2_Session_End_Reason(0x08);
+                Change_Page_to(GUN2_FAILING_REASON_PAGE);
+            }
+        }
 
-                if (_c508msg.Charging_Complete_t == CHARGING_COMPLETE) {
+
+        break;
+        case _2_PLC_STATE_CURRENT_DEMAND_1:
+        vTaskResume(FAN_TASKHandle);
+        //                leddata.GUN2 = 1;
+        //                xQueueOverwrite(LED2_QUEUE, &leddata);
+
+        Update_GUN2_Duration(GUN2_CHARGING_TIME);
+        if (initial_SOC2 == 7) {
+            Update_GUN2_Initial_SOC(FINAL_INITIAL_SOC);
+        }
+        if (xQueueReceive(_C509_QUEUE, &_c509msg, 0)) {
+            current_to_give =
+                    ((uint16_t) (((((_c509msg.targetCurrentlsb) << 8) + _c509msg.targetCurrentmsb)) / 10));
+
+            voltage_to_give =
+                    ((uint16_t) (((((_c509msg.targetVoltagelsb) << 8) + _c509msg.targetVoltagemsb)) / 10));
+            if (current_to_give > GUN2_CURR_VAL) {
+                current_to_give = GUN2_CURR_VAL;
+            }
+            //                    sprintf(buffffffffff, "current : %f\r\n", current_to_give);
+            //                    SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
+            //                    while (!SERCOM5_USART_TransmitComplete());
+            power = (current_to_give * voltage_to_give);
+            if (current_to_give == 0) {
+                chg_stop_count++;
+                if (chg_stop_count > 300) {
                     CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
                     CP_Level_2 = 9;
                     Stop_Code = 201;
                     Stop_connector_no = 2;
-                    Update_GUN2_Session_End_Reason(0x0A);
-                    STOPING_UNIT = IMPORT_ENERGY2;
-                }
-                if (xQueueReceive(_C502_QUEUE, &_c502msg, 0)) {
-                    if ((((_c502msg.cpVoltage_msb) / 10) >= 7) && (((_c502msg.cpVoltage_msb) / 10) <= 12)) {
-                        count_9v++;
-                        if (count_9v > 5) {
-                            CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
-                            CP_Level_2 = 9;
-                            //                        Stop_Code = 201;
-                            Stop_connector_no = 2;
-                            Update_GUN2_Session_End_Reason(0x09);
-                            STOPING_UNIT = IMPORT_ENERGY2;
-                        }
-
-                    }
-                }
-                if (START_STOP_AR1[0] == 2 && START_STOP_AR1[2] == 1) {
-                    CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
-                    CP_Level_2 = 9;
+                    Update_GUN2_Session_End_Reason(0x09);
                     memset(START_STOP_AR1, 0, 3);
                     STOPING_UNIT = IMPORT_ENERGY2;
+                    chg_stop_count = 0;
                 }
-                if (otherstopcode == 740 || otherstopcode == 743 || otherstopcode == 744) {
-                    Stop_Code = otherstopcode;
-                    otherstopcode = 0;
-                }
-                break;
-            case _2_PLC_STATE_TERMINATED:
 
-                if (GUN2_CONNECTED == 1 && GUN1_CONNECTED == 0) {
-                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+            }
+            if (SINGLE_GUN2_POWER == 0) {
+                POWER_VALUE = POWER_VALUE_X;
+                if ((power) < POWER_VALUE) {
+                    if (GUN1_CONNECTED == 0) {
+                        rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                        act_current_to_give = (POWER_VALUE) / act_volt_2;
+                        if (act_current_to_give <= current_to_give) {
+                            rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
+                        } else if (act_current_to_give > current_to_give) {
+
+                            rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
+                        }
+                        rectimsg.PLC_ID[0] = 0x03;
+                        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+                        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    }
+                    if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE >= _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
+                        MERGER_Contactor_Set();
+
+                        rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                        act_current_to_give = (POWER_VALUE) / act_volt_2;
+
+                        if (act_current_to_give <= current_to_give) {
+                            rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
+                        } else if (act_current_to_give > current_to_give) {
+
+                            rectimsg.CURRENT_VALUE[0] = current_to_give / (NO_OF_RECTIFIER >> 1);
+                        }
+                        rectimsg.PLC_ID[0] = 0x02;
+                        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+                        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    } else if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE < _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
+                        rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                        act_current_to_give = (POWER_VALUE) / act_volt_2;
+                        if (act_current_to_give <= current_to_give) {
+                            rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
+                        } else if (act_current_to_give > current_to_give) {
+
+                            rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
+                        }
+                        rectimsg.PLC_ID[0] = 0x03;
+                        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+                        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    }
+                }
+                if (power > POWER_VALUE) {
+
+                    if (GUN1_CONNECTED == 0) {
+                        rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                        act_current_to_give = (POWER_VALUE) / act_volt_2;
+                        if (act_current_to_give <= current_to_give) {
+                            rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
+                        } else if (act_current_to_give > current_to_give) {
+
+                            rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
+                        }
+                        rectimsg.PLC_ID[0] = 0x03;
+                        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+                        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    }
+                    if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE >= _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
+                        MERGER_Contactor_Set();
+
+                        rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                        act_current_to_give = (POWER_VALUE) / act_volt_2;
+                        if (act_current_to_give <= current_to_give) {
+                            rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
+                        } else if (act_current_to_give > current_to_give) {
+
+                            rectimsg.CURRENT_VALUE[0] = current_to_give / (NO_OF_RECTIFIER >> 1);
+                        }
+                        rectimsg.PLC_ID[0] = 0x02;
+                        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+                        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    } else if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE < _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
+                        rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                        act_current_to_give = (POWER_VALUE) / act_volt_2;
+                        if (act_current_to_give <= current_to_give) {
+                            rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
+                        } else if (act_current_to_give > current_to_give) {
+
+                            rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
+                        }
+                        rectimsg.PLC_ID[0] = 0x03;
+                        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+                        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                    }
+                }
+            }
+            if (SINGLE_GUN2_POWER == 1) {
+                if (GUN1_CONNECTED == 0) {
+                    rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                    act_current_to_give = (POWER_VALUE_X2) / act_volt_2;
+                    if (act_current_to_give <= current_to_give) {
+                        rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
+                    } else if (act_current_to_give > current_to_give) {
+
+                        rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
+                    }
                     rectimsg.PLC_ID[0] = 0x03;
+                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
                     xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                    vTaskDelay(3000);
                 }
-                if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 1) {
-                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+                if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE >= _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
+                    MERGER_Contactor_Set();
+                    if (POWER_VALUE_X2 > ((MAX_POWER_LIMIT * 1000) / 2)) {
+                        POWER_VALUE_X2 = ((MAX_POWER_LIMIT * 1000) / 2);
+                    }
+                    rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                    act_current_to_give = (POWER_VALUE_X2) / act_volt_2;
+                    if (act_current_to_give <= current_to_give) {
+                        rectimsg.CURRENT_VALUE[0] = act_current_to_give / (NO_OF_RECTIFIER >> 1);
+                    } else if (act_current_to_give > current_to_give) {
+
+                        rectimsg.CURRENT_VALUE[0] = current_to_give / (NO_OF_RECTIFIER >> 1);
+                    }
                     rectimsg.PLC_ID[0] = 0x02;
+                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
                     xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                    vTaskDelay(3000);
-                }
+                } else if (GUN1_CONNECTED == 1 && CURRENT_PLC1_STATE < _1_PLC_STATE_CHARGE_PARAMETER_DISCOVERY) {
+                    rectimsg.VOLTAGE_VALUE[0] = voltage_to_give + Difference_in_VOLTAGE2;
+                    act_current_to_give = (POWER_VALUE_X2) / act_volt_2;
+                    if (act_current_to_give <= current_to_give) {
+                        rectimsg.CURRENT_VALUE[0] = act_current_to_give / NO_OF_RECTIFIER;
+                    } else if (act_current_to_give > current_to_give) {
 
-                _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
-                        Charging_Control_Normal_Stop;
-                _50msmsg.ID_t = _402;
-                xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                vTaskDelay(50);
-                _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
-                _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
-                _50msmsg.ID_t = _405;
-                xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                vTaskDelay(50);
-                DC2_Contactor_Set();
+                        rectimsg.CURRENT_VALUE[0] = current_to_give / NO_OF_RECTIFIER;
+                    }
+                    rectimsg.PLC_ID[0] = 0x03;
+                    rectimsg.RECTI_ON_OFF[0] = RECTIFIER_ON;
+                    xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+                }
+            }
+            Demand_Current2_ARRAY[j_count] = ((uint16_t) (((((_c509msg.targetCurrentlsb) << 8) + _c509msg.targetCurrentmsb)) / 10));
+            ;
+            Demand_Voltage2_ARRAY[j_count] = act_volt_2;
+            j_count = j_count + 1;
+
+            _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 =
+                    _c509msg.targetVoltagemsb;
+            _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 =
+                    _c509msg.targetVoltagelsb;
+            _50msmsg.DATA[2] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_MSB_DATA2 =
+                    _c509msg.targetCurrentmsb;
+            _50msmsg.DATA[3] = _2_PLC_tx_50_t._405_EVSE_PRESENT_CURRENT_LSB_DATA3 =
+                    _c509msg.targetCurrentlsb;
+            _50msmsg.ID_t = _405;
+            xQueueSend(_50msQUEUE, &_50msmsg, 100);
+            vTaskDelay(50);
+        }
+
+        if (xQueueReceive(_C508_QUEUE, &_c508msg, 0)) {
+
+            SOC_2_ARRAY[i_count] = _c508msg.evSOC;
+            CP_Level_2 = 6;
+            i_count = i_count + 1;
+            if (initial_SOC2 < 5) {
+                Update_GUN2_Initial_SOC(_c508msg.evSOC);
+                FINAL_INITIAL_SOC = _c508msg.evSOC;
+                initial_SOC2 = initial_SOC2 + 1;
+            }
+            if (initial_SOC2 == 5) {
+                initial_SOC2 = 7;
+                SOC2_INITIAL = _c508msg.evSOC;
+            }
+        }
+        if (j_count == 5) {
+            j_count = 0;
+            for (uint8_t i = 0; i < 5; i++) {
+                if (Demand_Current2_ARRAY[0] <= Demand_Current2_ARRAY[i]) {
+                    Demand_Current2_ARRAY[0] = Demand_Current2_ARRAY[i];
+                    Demand_Current2 = Demand_Current2_ARRAY[0];
+                }
+                if (Demand_Voltage2_ARRAY[0] <= Demand_Voltage2_ARRAY[i]) {
+                    Demand_Voltage2_ARRAY[0] = Demand_Voltage2_ARRAY[i];
+                    Demand_Voltage2 = Demand_Voltage2_ARRAY[0];
+                }
+            }
+            Update_GUN2_Demand_Current(Demand_Current2_ARRAY[0]);
+            Update_GUN2_Demand_Voltage(Demand_Voltage2_ARRAY[0]);
+        }
+        if (i_count == 5) {
+            i_count = 0;
+            for (uint8_t i = 0; i < 5; i++) {
+                if (SOC_2_ARRAY[0] <= SOC_2_ARRAY[i]) {
+                    SOC_2_ARRAY[0] = SOC_2_ARRAY[i];
+                    SOC_2 = SOC_2_ARRAY[0];
+                }
+            }
+            Update_GUN2_Battery_SOC(SOC_2_ARRAY[0]);
+        }
+
+        if ((GUN1_CONNECTED == 0) && (GUN2_CONNECTED == 1)) {
+            rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
+            xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
+        }
+        if ((GUN1_CONNECTED == 1) && (GUN2_CONNECTED == 1) && (CURRENT_PLC1_STATE >= _1_PLC_STATE_PRE_CHARGE)) {
+            rfid_conn_no_data.RFID_CONN_NO[0] = CONNECTOR_NO_0;
+            xQueueOverwrite(ESP_S_RFID_CONN_NO_QUEUE, &rfid_conn_no_data);
+        }
+        if (xQueueReceive(_C501_QUEUE, &_c501msg, 2000)) {
+            if (_c501msg._501_SECC_seccERROR_CODES_t != 0) {
+                otherstopcode = (int) _c501msg._501_SECC_seccERROR_CODES_t + 700;
+                //                        sprintf(buffffffffff, "SECC_ERROR_CODE %d \r\n", otherstopcode);
+                //                        SERCOM5_USART_Write(buffffffffff, sizeof (buffffffffff));
+                //                        while (!SERCOM5_USART_TransmitComplete());
+
+            }
+
+        }
+        if (xQueueReceive(_C50B_QUEUE, &_c50bmsg, 0)) {
+            if ((_c50bmsg._50B_SECC_STATUS3_t == seccStatus_SessionStop) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_TERMINATE) || (_c50bmsg._50B_SECC_STATUS3_t == seccStatus_ERROR)) {
+                CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+                CP_Level_2 = 9;
+                Stop_Code = 202;
+                Stop_connector_no = 2;
+                Update_GUN2_Session_End_Reason(0x0A);
                 STOPING_UNIT = IMPORT_ENERGY2;
-                //                leddata.GUN2 = 0;
-                //                xQueueOverwrite(LED2_QUEUE, &leddata);
-                GUN2_CONNECTED = 0;
-
-                //                rectimsg.PLC_ID[0] = 0x02;
-                //
-                rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
-                rectimsg.PLC_ID[0] = 0x02;
-                xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
-                vTaskDelay(3000);
-                _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
-                        Charging_Control_Normal_Stop;
-                _50msmsg.ID_t = _402;
-                xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                vTaskDelay(50);
-                _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
-                _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
-                _50msmsg.ID_t = _405;
-                xQueueSend(_50msQUEUE, &_50msmsg, 100);
-                vTaskDelay(50);
-                DC2_Contactor_Set();
-                //                if ((GUN2_CONNECTED == 0) && (GUN1_CONNECTED == 0)) {
-                //                    vTaskSuspend(LED_TASKHandle);
-                //                }
-                xTimerStop(Gun2_Charging_timer, 10);
-                /////////HMI/////////////////////
-                Update_GUN2_Charging_Stop_date(day);
-                Update_GUN2_Charging_Stop_month(month);
-                Update_GUN2_Charging_Stop_year(year);
-                Update_GUN2_Charging_Stop_mins(minute);
-                Update_GUN2_Charging_Stop_hour(hour);
-                Update_GUN2_Charging_Stop_sec(sec);
-                Update_GUN2_Booking_ID(BOOKING_ID2);
-                if (STOP_BY == BY_RFID) {
-                    Update_GUN2_Session_End_Reason(BY_RFID);
-                }
-                if (STOP_BY == BY_REMOTE) {
-                    Update_GUN2_Session_End_Reason(BY_REMOTE);
-                }
-                if (STOP_BY == BY_DE_AUTH) {
-                    Update_GUN2_Session_End_Reason(BY_DE_AUTH);
-                }
-                DIFF_UNIT = (((uint32_t) STOPING_UNIT) - ((uint32_t) STARTING_UNIT));
-                if (DIFF_UNIT < 0) {
-                    DIFF_UNIT = 0;
-                }
-                Update_GUN2_Uint_Consumed(DIFF_UNIT);
-                CURRENT_PAGE = GUN2_SUMMARY_PAGE;
-                Change_gun2_status_to(CHARGING_COMPLETED);
-                /////////HMI/////////////////////
-                flashmsg.BOOKING_ID = BOOKING_ID2;
-                flashmsg.STOP_DATE = (year << 16) | (month << 8) | day;
-                flashmsg.STOP_TIME = (hour << 16) | (minute << 8) | sec;
-                flashmsg.START_SOC_AND_END_SOC = (FINAL_INITIAL_SOC << 16) | SOC_2;
-                flashmsg.UNIT_CONSUMED_AND_CONN_ID = (0x02 << 16) | (uint32_t) DIFF_UNIT;
-                flashmsg.SESSION_STOP_REASON_AND_DURATION = (STOP_BY << 16) | GUN2_CHARGING_TIME;
-                flashmsg.WHAT_TYPE_OF_DATA = CHARGING_DATA;
-                xQueueSend(FLASH_WRITE_QUEUE, &flashmsg, 100);
-                vTaskResume(FLASH_WRITE_TASKHandle);
-                count = 1;
-                GUN2_CHARGING_TIME = 0;
-                count_9v = 0;
-                GUN2_200_clear = GUN2_500_clear = GUN2_50_clear = GUN2_1000_clear = 1;
-                break;
-        }
-        esp_s_gun2_p.CP_Level_2 = CP_Level_2;
-        esp_s_gun2_p.Demand_Current2 = Demand_Current2;
-        esp_s_gun2_p.Demand_Volatge2 = Demand_Voltage2;
-        esp_s_gun2_p.Initial_SOC2 = SOC2_INITIAL;
-        esp_s_gun2_p.SOC_2 = SOC_2;
-        cplevel2.CP_LEVEL2[0] = CP_Level_2;
-        xQueueOverwrite(ESP_S_GUN2_P_QUEUE, &esp_s_gun2_p);
-        xQueueOverwrite(CP_LEVEL2_QUEUE, &cplevel2);
-        if (count == 1) {
-
-            count = 0;
-            CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
-            vTaskResume(GUN2_PARAM_TASKHandle);
-            vTaskSuspend(_2_PLC_MANAGE_TASKHandle);
+            }
         }
 
-        vTaskDelay(800);
+        if (_c508msg.Charging_Complete_t == CHARGING_COMPLETE) {
+            CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+            CP_Level_2 = 9;
+            Stop_Code = 201;
+            Stop_connector_no = 2;
+            Update_GUN2_Session_End_Reason(0x0A);
+            STOPING_UNIT = IMPORT_ENERGY2;
+        }
+        if (xQueueReceive(_C502_QUEUE, &_c502msg, 0)) {
+            if ((((_c502msg.cpVoltage_msb) / 10) >= 7) && (((_c502msg.cpVoltage_msb) / 10) <= 12)) {
+                count_9v++;
+                if (count_9v > 10) {
+                    CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+                    CP_Level_2 = 9;
+                    //                        Stop_Code = 201;
+                    Stop_connector_no = 2;
+                    Update_GUN2_Session_End_Reason(0x09);
+                    STOPING_UNIT = IMPORT_ENERGY2;
+                }
+
+            }
+        }
+        if (START_STOP_AR1[0] == 2 && START_STOP_AR1[2] == 1) {
+            CURRENT_PLC2_STATE = _2_PLC_STATE_TERMINATED;
+            CP_Level_2 = 9;
+            memset(START_STOP_AR1, 0, 3);
+            STOPING_UNIT = IMPORT_ENERGY2;
+        }
+        if (otherstopcode == 740 || otherstopcode == 743 || otherstopcode == 744) {
+            Stop_Code = otherstopcode;
+            otherstopcode = 0;
+        }
+        break;
+        case _2_PLC_STATE_TERMINATED:
+
+        if (GUN2_CONNECTED == 1 && GUN1_CONNECTED == 0) {
+            rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+            rectimsg.PLC_ID[0] = 0x03;
+            xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+            vTaskDelay(3000);
+        }
+        if (GUN1_CONNECTED == 1 && GUN2_CONNECTED == 1) {
+            rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+            rectimsg.PLC_ID[0] = 0x02;
+            xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+            vTaskDelay(3000);
+        }
+
+        _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
+                Charging_Control_Normal_Stop;
+        _50msmsg.ID_t = _402;
+        xQueueSend(_50msQUEUE, &_50msmsg, 100);
+        vTaskDelay(50);
+        _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
+        _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
+        _50msmsg.ID_t = _405;
+        xQueueSend(_50msQUEUE, &_50msmsg, 100);
+        vTaskDelay(50);
+        DC2_Contactor_Set();
+        STOPING_UNIT = IMPORT_ENERGY2;
+        //                leddata.GUN2 = 0;
+        //                xQueueOverwrite(LED2_QUEUE, &leddata);
+        GUN2_CONNECTED = 0;
+
+        //                rectimsg.PLC_ID[0] = 0x02;
+        //
+        rectimsg.RECTI_ON_OFF[0] = RECTIFIER_OFF;
+        rectimsg.PLC_ID[0] = 0x02;
+        xQueueOverwrite(RECTIFIER_QUEUE, &rectimsg);
+        vTaskDelay(3000);
+        _50msmsg.DATA[1] = _2_PLC_tx_50_t._402_EVSE_CHARGING_CONTROL_DATA1_t =
+                Charging_Control_Normal_Stop;
+        _50msmsg.ID_t = _402;
+        xQueueSend(_50msQUEUE, &_50msmsg, 100);
+        vTaskDelay(50);
+        _50msmsg.DATA[0] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_MSB_DATA0 = 0;
+        _50msmsg.DATA[1] = _2_PLC_tx_50_t._405_EVSE_PRESENT_VOLTAGE_LSB_DATA1 = 0;
+        _50msmsg.ID_t = _405;
+        xQueueSend(_50msQUEUE, &_50msmsg, 100);
+        vTaskDelay(50);
+        DC2_Contactor_Set();
+        //                if ((GUN2_CONNECTED == 0) && (GUN1_CONNECTED == 0)) {
+        //                    vTaskSuspend(LED_TASKHandle);
+        //                }
+        xTimerStop(Gun2_Charging_timer, 10);
+        /////////HMI/////////////////////
+        Update_GUN2_Charging_Stop_date(day);
+        Update_GUN2_Charging_Stop_month(month);
+        Update_GUN2_Charging_Stop_year(year);
+        Update_GUN2_Charging_Stop_mins(minute);
+        Update_GUN2_Charging_Stop_hour(hour);
+        Update_GUN2_Charging_Stop_sec(sec);
+        Update_GUN2_Booking_ID(BOOKING_ID2);
+        if (STOP_BY == BY_RFID) {
+            Update_GUN2_Session_End_Reason(BY_RFID);
+        }
+        if (STOP_BY == BY_REMOTE) {
+            Update_GUN2_Session_End_Reason(BY_REMOTE);
+        }
+        if (STOP_BY == BY_DE_AUTH) {
+            Update_GUN2_Session_End_Reason(BY_DE_AUTH);
+        }
+        DIFF_UNIT = (((uint32_t) STOPING_UNIT) - ((uint32_t) STARTING_UNIT));
+        if (DIFF_UNIT < 0) {
+            DIFF_UNIT = 0;
+        }
+        Update_GUN2_Uint_Consumed(DIFF_UNIT);
+        CURRENT_PAGE = GUN2_SUMMARY_PAGE;
+        Change_gun2_status_to(CHARGING_COMPLETED);
+        /////////HMI/////////////////////
+        flashmsg.BOOKING_ID = BOOKING_ID2;
+        flashmsg.STOP_DATE = (year << 16) | (month << 8) | day;
+        flashmsg.STOP_TIME = (hour << 16) | (minute << 8) | sec;
+        flashmsg.START_SOC_AND_END_SOC = (FINAL_INITIAL_SOC << 16) | SOC_2;
+        flashmsg.UNIT_CONSUMED_AND_CONN_ID = (0x02 << 16) | (uint32_t) DIFF_UNIT;
+        flashmsg.SESSION_STOP_REASON_AND_DURATION = (STOP_BY << 16) | GUN2_CHARGING_TIME;
+        flashmsg.WHAT_TYPE_OF_DATA = CHARGING_DATA;
+        xQueueSend(FLASH_WRITE_QUEUE, &flashmsg, 100);
+        vTaskResume(FLASH_WRITE_TASKHandle);
+        count = 1;
+        GUN2_CHARGING_TIME = 0;
+        count_9v = 0;
+        GUN2_200_clear = GUN2_500_clear = GUN2_50_clear = GUN2_1000_clear = 1;
+        memset(START_STOP_AR1, 0, sizeof (START_STOP_AR1));
+        break;
     }
+    esp_s_gun2_p.CP_Level_2 = CP_Level_2;
+    esp_s_gun2_p.Demand_Current2 = Demand_Current2;
+    esp_s_gun2_p.Demand_Volatge2 = Demand_Voltage2;
+    esp_s_gun2_p.Initial_SOC2 = SOC2_INITIAL;
+    esp_s_gun2_p.SOC_2 = SOC_2;
+    cplevel2.CP_LEVEL2[0] = CP_Level_2;
+    xQueueOverwrite(ESP_S_GUN2_P_QUEUE, &esp_s_gun2_p);
+    xQueueOverwrite(CP_LEVEL2_QUEUE, &cplevel2);
+    if (count == 1) {
+
+        count = 0;
+        CURRENT_PLC2_STATE = _2_PLC_STATE_IDLE_1;
+        vTaskResume(GUN2_PARAM_TASKHandle);
+        vTaskSuspend(_2_PLC_MANAGE_TASKHandle);
+    }
+
+    vTaskDelay(800);
+}
 }
 
 void Start_RECTIFIER_TASK(void *argument) {
@@ -6506,9 +6513,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                         setRectifierVoltMode(RECTIFIER2_GROUP1, LOW_V_MODE);
                         vTaskDelay(50);
                     }
-//                    if ((current_t * 2) >= GUN1_CURR_VAL) {
-//                        current_t = GUN1_CURR_VAL / 2;
-//                    }
+                    //                    if ((current_t * 2) >= GUN1_CURR_VAL) {
+                    //                        current_t = GUN1_CURR_VAL / 2;
+                    //                    }
 
                     setRectifierVoltage(RECTIFIER1_GROUP1, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
@@ -6553,9 +6560,9 @@ void Start_RECTIFIER_TASK(void *argument) {
                     if (current_t < 1) {
                         current_t = 1;
                     }
-//                    if ((current_t * 2) >= GUN2_CURR_VAL) {
-//                        current_t = GUN2_CURR_VAL / 2;
-//                    }
+                    //                    if ((current_t * 2) >= GUN2_CURR_VAL) {
+                    //                        current_t = GUN2_CURR_VAL / 2;
+                    //                    }
                     setRectifierVoltage_2(RECTIFIER1_GROUP2, (uint32_t) (voltage_t * 1000));
                     vTaskDelay(50);
                     setRectifierCurrent_2(RECTIFIER1_GROUP2, (uint32_t) (current_t * 1000));
@@ -6589,15 +6596,15 @@ void Start_RECTIFIER_TASK(void *argument) {
                     //                    sprintf(buffer, "merger_current : %f\r\n", current_t);
                     //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
                     //                    while (!(SERCOM5_USART_TransmitComplete()));
-//                    if ((current_t * 4) >= (GUN1_CURR_VAL || GUN2_CURR_VAL)) {
-//                        if (GUN1_CONNECTED) {
-//                            current_t = GUN1_CURR_VAL / 4;
-//                        } else if (GUN2_CONNECTED) {
-//                            current_t = GUN2_CURR_VAL / 4;
-//                        } else {
-//                            current_t = 10;
-//                        }
-//                    }
+                    //                    if ((current_t * 4) >= (GUN1_CURR_VAL || GUN2_CURR_VAL)) {
+                    //                        if (GUN1_CONNECTED) {
+                    //                            current_t = GUN1_CURR_VAL / 4;
+                    //                        } else if (GUN2_CONNECTED) {
+                    //                            current_t = GUN2_CURR_VAL / 4;
+                    //                        } else {
+                    //                            current_t = 10;
+                    //                        }
+                    //                    }
                     //                    sprintf(buffer, "current : %f and the GUN1_CURR_VAL : %f \r\n", current_t, GUN1_CURR_VAL);
                     //                    SERCOM5_USART_Write(buffer, sizeof (buffer));
                     //                    while (!(SERCOM5_USART_TransmitComplete()));
@@ -8725,12 +8732,12 @@ void Start_DATA_POPULATE_TASK(void *argument) {
         if (BT_DATA_ARRAY_0_127[GUN1_DC_CURRENT_MAX_CAP_IDX] == BLANK_DATA) {
             BT_DATA_ARRAY_0_127[GUN1_DC_CURRENT_MAX_CAP_IDX] = GUN1_MAX_CURR_LIMIT;
         } else {
-            GUN1_CURR_VAL = BT_DATA_ARRAY_0_127[GUN1_DC_CURRENT_MAX_CAP_IDX];
+            GUN1_CURR_VAL = 200; //BT_DATA_ARRAY_0_127[GUN1_DC_CURRENT_MAX_CAP_IDX];
         }
         if (BT_DATA_ARRAY_0_127[GUN2_DC_CURRENT_MAX_CAP_IDX] == BLANK_DATA) {
             BT_DATA_ARRAY_0_127[GUN2_DC_CURRENT_MAX_CAP_IDX] = GUN2_MAX_CURR_LIMIT;
         } else {
-            GUN2_CURR_VAL = BT_DATA_ARRAY_0_127[GUN2_DC_CURRENT_MAX_CAP_IDX];
+            GUN2_CURR_VAL = 200; // BT_DATA_ARRAY_0_127[GUN2_DC_CURRENT_MAX_CAP_IDX];
         }
 
         if (BT_DATA_ARRAY_0_127[POWER_MERGE_IDX] == BLANK_DATA) {
