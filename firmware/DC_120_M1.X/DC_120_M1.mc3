@@ -42955,7 +42955,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\definitions.h</file>
-         <hash>4d6cf55438f2bc24bf12ea609aa06a39bc2b83ca3fc07418c0c1938cef1d13c3</hash>
+         <hash>50e228393d28c46eabce0f5db6864de5128994b2a2135c5e24e03c3cd73073c1</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>
@@ -42979,7 +42979,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\initialization.c</file>
-         <hash>45b0ff7bd07e07edc01bca910c966129ae9a64a3a68202189cbe985155990238</hash>
+         <hash>f57ccf1f6364de88c3fe170ae04fa48dbd9b52fda2885b8d14beb729745f9582</hash>
       </entry>
       <entry>
          <file>..\src\config\default\interrupts.c</file>
@@ -43159,7 +43159,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\tc\plib_tc1.c</file>
-         <hash>99924dd9c9b8a8bd5f0b734a0659eafc05cc05e6ad35872d6e9e93dd6cadb05c</hash>
+         <hash>6bc2992fddac28904000745ee80c939eee007ac4a9931062de6b1311060df023</hash>
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\tc\plib_tc1.h</file>
@@ -43167,7 +43167,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\tc\plib_tc5.c</file>
-         <hash>49e0a6e590a604de3caad8adf719a42b4b9aaf8cdbb152dddef5e944f303078c</hash>
+         <hash>f98c2fcfbc792108c4ba2c35c099497c75f30ad5eb2e59e9b185c3dada8802d8</hash>
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\tc\plib_tc5.h</file>
