@@ -49,8 +49,8 @@ Pin Number,Pin ID,Custom Name,Function,Mode, Direction,Latch,Pull Up,Pull Down,D
 58,PC18,POWER_BANK_RELAY,GPIO,Digital,Out,High,,,NORMAL
 59,PC19,DC1_Contactor,GPIO,Digital,Out,High,,,NORMAL
 60,PC20,DC2_Contactor,GPIO,Digital,Out,High,,,NORMAL
-61,PC21,MERGER_Contactor,GPIO,Digital,Out,High,,,NORMAL
-64,PB16,AC_Contactor_Relay,GPIO,Digital,Out,High,,,NORMAL
+61,PC21,AC_Contactor_Relay,GPIO,Digital,Out,High,,,NORMAL
+64,PB16,MERGER_Contactor,GPIO,Digital,Out,High,,,NORMAL
 65,PB17,EMERGENCY_BUT,EIC_EXTINT1,Digital,High Impedance,n/a,No,Yes,NORMAL
 66,PB18,SPD_RESPONSE,EIC_EXTINT2,Digital,High Impedance,n/a,No,Yes,NORMAL
 67,PB19,,Available,,,,,,NORMAL

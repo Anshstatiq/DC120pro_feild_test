@@ -22682,7 +22682,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;PIN_61_FUNCTION_NAME&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;MERGER_Contactor&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;AC_Contactor_Relay&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -22759,7 +22759,7 @@
          <value>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;core&gt;
   &lt;core dnOrder=&quot;0&quot; id=&quot;PIN_64_FUNCTION_NAME&quot;&gt;
     &lt;Values dnOrder=&quot;0&quot;&gt;
-      &lt;User dnOrder=&quot;0&quot; value=&quot;AC_Contactor_Relay&quot;/&gt;
+      &lt;User dnOrder=&quot;0&quot; value=&quot;MERGER_Contactor&quot;/&gt;
     &lt;/Values&gt;
   &lt;/core&gt;
 &lt;/core&gt;
@@ -42955,7 +42955,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\definitions.h</file>
-         <hash>50e228393d28c46eabce0f5db6864de5128994b2a2135c5e24e03c3cd73073c1</hash>
+         <hash>2371e46f11a8022c10c20a95db0938235849764dfb8b03355ef197fc378c2956</hash>
       </entry>
       <entry>
          <file>..\src\config\default\device.h</file>
@@ -42979,7 +42979,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\initialization.c</file>
-         <hash>f57ccf1f6364de88c3fe170ae04fa48dbd9b52fda2885b8d14beb729745f9582</hash>
+         <hash>e050db7bc85c6586a5359ea4b6f86a00a78666e8c088f3640c2393c5cbd72377</hash>
       </entry>
       <entry>
          <file>..\src\config\default\interrupts.c</file>
@@ -43087,7 +43087,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\port\plib_port.h</file>
-         <hash>bd83d49834076521c2599fc5f0e328e2cc52b97f11abeb1339cd5dc819adac09</hash>
+         <hash>2035cf9e175d378ae83f090737c792968a522f44ac0b83d9a1b561423b8ec629</hash>
       </entry>
       <entry>
          <file>..\src\config\default\peripheral\sercom\i2c_master\plib_sercom3_i2c_master.c</file>
@@ -43215,7 +43215,7 @@
       </entry>
       <entry>
          <file>..\src\config\default\pin_configurations.csv</file>
-         <hash>8c3370c86e04c39486c74bcbb528d7a5a7762ca6e9eef83e0b4cd42aab2ef9bc</hash>
+         <hash>ed7cb2ce425d540170ec12b6e250acb6690f26f8e4f91e1295911f657cf88e3a</hash>
       </entry>
       <entry>
          <file>..\src\config\default\startup_xc32.c</file>

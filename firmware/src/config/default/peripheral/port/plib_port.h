@@ -203,23 +203,23 @@
 #define DC2_Contactor_Get()               (((PORT_REGS->GROUP[2].PORT_IN >> 20U)) & 0x01U)
 #define DC2_Contactor_PIN                  PORT_PIN_PC20
 
-/*** Macros for MERGER_Contactor pin ***/
-#define MERGER_Contactor_Set()               (PORT_REGS->GROUP[2].PORT_OUTSET = ((uint32_t)1U << 21U))
-#define MERGER_Contactor_Clear()             (PORT_REGS->GROUP[2].PORT_OUTCLR = ((uint32_t)1U << 21U))
-#define MERGER_Contactor_Toggle()            (PORT_REGS->GROUP[2].PORT_OUTTGL = ((uint32_t)1U << 21U))
-#define MERGER_Contactor_OutputEnable()      (PORT_REGS->GROUP[2].PORT_DIRSET = ((uint32_t)1U << 21U))
-#define MERGER_Contactor_InputEnable()       (PORT_REGS->GROUP[2].PORT_DIRCLR = ((uint32_t)1U << 21U))
-#define MERGER_Contactor_Get()               (((PORT_REGS->GROUP[2].PORT_IN >> 21U)) & 0x01U)
-#define MERGER_Contactor_PIN                  PORT_PIN_PC21
-
 /*** Macros for AC_Contactor_Relay pin ***/
-#define AC_Contactor_Relay_Set()               (PORT_REGS->GROUP[1].PORT_OUTSET = ((uint32_t)1U << 16U))
-#define AC_Contactor_Relay_Clear()             (PORT_REGS->GROUP[1].PORT_OUTCLR = ((uint32_t)1U << 16U))
-#define AC_Contactor_Relay_Toggle()            (PORT_REGS->GROUP[1].PORT_OUTTGL = ((uint32_t)1U << 16U))
-#define AC_Contactor_Relay_OutputEnable()      (PORT_REGS->GROUP[1].PORT_DIRSET = ((uint32_t)1U << 16U))
-#define AC_Contactor_Relay_InputEnable()       (PORT_REGS->GROUP[1].PORT_DIRCLR = ((uint32_t)1U << 16U))
-#define AC_Contactor_Relay_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 16U)) & 0x01U)
-#define AC_Contactor_Relay_PIN                  PORT_PIN_PB16
+#define AC_Contactor_Relay_Set()               (PORT_REGS->GROUP[2].PORT_OUTSET = ((uint32_t)1U << 21U))
+#define AC_Contactor_Relay_Clear()             (PORT_REGS->GROUP[2].PORT_OUTCLR = ((uint32_t)1U << 21U))
+#define AC_Contactor_Relay_Toggle()            (PORT_REGS->GROUP[2].PORT_OUTTGL = ((uint32_t)1U << 21U))
+#define AC_Contactor_Relay_OutputEnable()      (PORT_REGS->GROUP[2].PORT_DIRSET = ((uint32_t)1U << 21U))
+#define AC_Contactor_Relay_InputEnable()       (PORT_REGS->GROUP[2].PORT_DIRCLR = ((uint32_t)1U << 21U))
+#define AC_Contactor_Relay_Get()               (((PORT_REGS->GROUP[2].PORT_IN >> 21U)) & 0x01U)
+#define AC_Contactor_Relay_PIN                  PORT_PIN_PC21
+
+/*** Macros for MERGER_Contactor pin ***/
+#define MERGER_Contactor_Set()               (PORT_REGS->GROUP[1].PORT_OUTSET = ((uint32_t)1U << 16U))
+#define MERGER_Contactor_Clear()             (PORT_REGS->GROUP[1].PORT_OUTCLR = ((uint32_t)1U << 16U))
+#define MERGER_Contactor_Toggle()            (PORT_REGS->GROUP[1].PORT_OUTTGL = ((uint32_t)1U << 16U))
+#define MERGER_Contactor_OutputEnable()      (PORT_REGS->GROUP[1].PORT_DIRSET = ((uint32_t)1U << 16U))
+#define MERGER_Contactor_InputEnable()       (PORT_REGS->GROUP[1].PORT_DIRCLR = ((uint32_t)1U << 16U))
+#define MERGER_Contactor_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 16U)) & 0x01U)
+#define MERGER_Contactor_PIN                  PORT_PIN_PB16
 
 /*** Macros for EMERGENCY_BUT pin ***/
 #define EMERGENCY_BUT_Get()               (((PORT_REGS->GROUP[1].PORT_IN >> 17U)) & 0x01U)
